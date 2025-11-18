@@ -1,6 +1,11 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'auth_screen.dart';
+import 'auth_screen.dart'; // Make sure this path is correct
+import 'auth_service.dart'; // Make sure this path is correct
+import 'auth_service.dart';
 
+// --- THIS IS THE MISSING PART ---
 class SignupScreen extends StatefulWidget {
   final UserRole role;
   final VoidCallback onBack;
@@ -18,9 +23,13 @@ class SignupScreen extends StatefulWidget {
   @override
   State<SignupScreen> createState() => _SignupScreenState();
 }
+// --- END OF MISSING PART ---
 
+// Your State class (which is correct) starts here
 class _SignupScreenState extends State<SignupScreen>
     with SingleTickerProviderStateMixin {
+  final AuthService _auth = AuthService();
+
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -49,27 +58,73 @@ class _SignupScreenState extends State<SignupScreen>
     super.dispose();
   }
 
+  // --- ADD THIS HELPER FUNCTION ---
+  void _showError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.redAccent),
+    );
+  }
+  // --- END ADD ---
+
+  // --- THIS IS THE UPDATED SIGNUP FUNCTION ---
   void _handleSignup() async {
     setState(() => _isLoading = true);
 
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      // 1. Get text from controllers
+      final name = _nameController.text.trim();
+      final email = _emailController.text.trim();
+      final password = _passwordController.text;
 
-    final userData = {
-      'id': DateTime.now().millisecondsSinceEpoch.toString(),
-      'name': _nameController.text,
-      'email': _emailController.text,
-      'role': widget.role.toString(),
-      'createdAt': DateTime.now().toIso8601String(),
-      if (widget.role == UserRole.companion || widget.role == UserRole.parent)
-        'linkedUsers': [],
-    };
+      // 2. Call AuthService to create user in Firebase Auth
+      final user = await _auth.signUp(email, password);
 
-    setState(() => _isLoading = false);
-    widget.onSignup(widget.role, userData);
+      if (user == null) {
+        throw FirebaseAuthException(code: 'user-creation-failed');
+      }
+
+      // 3. Create the user data map for Firestore
+      final userData = {
+        'id': user.uid, // Use the REAL Firebase UID
+        'name': name,
+        'email': email,
+        'role': widget.role.name, // Use .name to get 'user', 'parent', etc.
+        'createdAt': FieldValue.serverTimestamp(), // Use server time
+        if (widget.role == UserRole.companion || widget.role == UserRole.parent)
+          'linkedUsers': [],
+      };
+
+      // 4. Save the user data to Firestore
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .set(userData);
+
+      // 5. Call the onSignup callback to proceed
+      if (!mounted) return;
+      widget.onSignup(widget.role, userData);
+    } on FirebaseAuthException catch (e) {
+      // Handle Firebase errors (e.g., email-already-in-use)
+      _showError(e.message ?? 'Signup failed.');
+    } catch (e) {
+      // Handle any other errors
+      _showError('An unexpected error occurred.');
+    } finally {
+      // 6. Stop loading
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
+  // --- END UPDATED FUNCTION ---
 
   @override
   Widget build(BuildContext context) {
+    //
+    // NO CHANGES NEEDED to your build() method.
+    // Your UI code is already correctly calling _handleSignup.
+    //
     final roleConfig = {
       UserRole.user: {
         'title': 'Student Signup',

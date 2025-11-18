@@ -1,6 +1,10 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'auth_screen.dart';
+import 'auth_screen.dart'; // Make sure this path is correct
+import 'auth_service.dart'; // Make sure this path is correct
 
+// --- This is the StatefulWidget class ---
 class LoginScreen extends StatefulWidget {
   final UserRole role;
   final VoidCallback onBack;
@@ -18,9 +22,16 @@ class LoginScreen extends StatefulWidget {
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
+// --- End of StatefulWidget class ---
 
+
+// --- This is the updated State class ---
 class _LoginScreenState extends State<LoginScreen>
     with SingleTickerProviderStateMixin {
+  // --- ADD THIS ---
+  final AuthService _auth = AuthService();
+  // --- END ADD ---
+
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _showPassword = false;
@@ -47,27 +58,84 @@ class _LoginScreenState extends State<LoginScreen>
     super.dispose();
   }
 
+  // --- ADD THIS HELPER FUNCTION ---
+  void _showError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.redAccent,
+      ),
+    );
+  }
+  // --- END ADD ---
+
+  // --- THIS IS THE UPDATED LOGIN FUNCTION ---
   void _handleLogin() async {
     setState(() => _isLoading = true);
 
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      // 1. Get text from controllers
+      final email = _emailController.text.trim();
+      final password = _passwordController.text;
 
-    final userData = {
-      'id': DateTime.now().millisecondsSinceEpoch.toString(),
-      'email': _emailController.text,
-      'name': _emailController.text.split('@')[0],
-      'role': widget.role.toString(),
-      'createdAt': DateTime.now().toIso8601String(),
-      if (widget.role == UserRole.companion || widget.role == UserRole.parent)
-        'linkedUsers': [],
-    };
+      // 2. Call AuthService to sign in
+      final user = await _auth.signIn(email, password);
 
-    setState(() => _isLoading = false);
-    widget.onLogin(widget.role, userData);
+      if (user == null) {
+        // AuthService returns null on failure
+        throw FirebaseAuthException(code: 'user-not-found', message: 'Invalid email or password.');
+      }
+
+      // 3. Fetch user data from Firestore
+      final docSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+
+      if (!docSnapshot.exists) {
+        // This is an edge case, but good to check
+        await _auth.signOut(); // Sign out the auth user
+        throw Exception('User data not found. Please sign up again.');
+      }
+
+      // 4. CRITICAL: Verify the role
+      final userData = docSnapshot.data()!;
+      final storedRole = userData['role']; // e.g., 'parent'
+      final selectedRole = widget.role.name; // e.g., 'user'
+
+      if (storedRole != selectedRole) {
+        // Mismatch! Log them out immediately and show an error.
+        await _auth.signOut();
+        throw Exception(
+            'Role mismatch. You are registered as a $storedRole.');
+      }
+
+      // 5. Role matches! Proceed.
+      if (!mounted) return;
+      widget.onLogin(widget.role, userData);
+
+    } on FirebaseAuthException catch (e) {
+      // Handle Firebase errors (e.g., wrong-password)
+      _showError(e.message ?? 'Login failed.');
+    } catch (e) {
+      // Handle other errors (like our custom role mismatch)
+      _showError(e.toString());
+    } finally {
+      // 6. Stop loading
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
+  // --- END UPDATED FUNCTION ---
 
   @override
   Widget build(BuildContext context) {
+    //
+    // NO CHANGES NEEDED to your build() method.
+    // Your UI code is already correctly calling _handleLogin.
+    //
     final roleConfig = {
       UserRole.user: {
         'title': 'Student Login',
