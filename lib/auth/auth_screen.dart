@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
 import 'signup_screen.dart';
+import '../theme/app_colors.dart';
 
 enum UserRole { user, companion, parent }
 
@@ -22,8 +23,8 @@ class _AuthScreenState extends State<AuthScreen> {
       'type': UserRole.user,
       'title': 'Student',
       'description': 'Take control of your focus and study habits',
-      'color': [Colors.cyan, Colors.blue],
-      'bg': [Color(0xFF082D30), Color(0xFF0A1F3A)],
+      'color': AppColors.roleGradients['user'],
+      'bg': AppColors.roleBackgrounds['user'],
       'icon': Icons.person,
       'features': [
         'Smart app locking',
@@ -36,8 +37,8 @@ class _AuthScreenState extends State<AuthScreen> {
       'type': UserRole.companion,
       'title': 'Companion',
       'description': 'Support and monitor study progress',
-      'color': [Colors.purple, Colors.pink],
-      'bg': [Color(0xFF1A0A3A), Color(0xFF3A0A30)],
+      'color': AppColors.roleGradients['companion'],
+      'bg': AppColors.roleBackgrounds['companion'],
       'icon': Icons.group,
       'features': [
         'Remote monitoring',
@@ -50,8 +51,8 @@ class _AuthScreenState extends State<AuthScreen> {
       'type': UserRole.parent,
       'title': 'Parent',
       'description': 'Guide and protect digital wellbeing',
-      'color': [Colors.orange, Colors.red],
-      'bg': [Color(0xFF3D1E00), Color(0xFF3A0505)],
+      'color': AppColors.roleGradients['parent'],
+      'bg': AppColors.roleBackgrounds['parent'],
       'icon': Icons.shield,
       'features': [
         'Full parental controls',
@@ -78,33 +79,26 @@ class _AuthScreenState extends State<AuthScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // LOGIN VIEW
     if (authMode == 'login' && selectedRole != null) {
       return LoginScreen(
         role: selectedRole!,
         onBack: backToSelect,
         onLogin: widget.onAuthComplete,
-        onSwitchToSignup: () {
-          setState(() => authMode = 'signup');
-        },
+        onSwitchToSignup: () => setState(() => authMode = 'signup'),
       );
     }
 
-    // SIGNUP VIEW
     if (authMode == 'signup' && selectedRole != null) {
       return SignupScreen(
         role: selectedRole!,
         onBack: backToSelect,
         onSignup: widget.onAuthComplete,
-        onSwitchToLogin: () {
-          setState(() => authMode = 'login');
-        },
+        onSwitchToLogin: () => setState(() => authMode = 'login'),
       );
     }
 
-    // ROLE SELECTION VIEW
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.background,
       body: Padding(
         padding: const EdgeInsets.all(18.0),
         child: Center(
@@ -113,7 +107,6 @@ class _AuthScreenState extends State<AuthScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Header
                 ShaderMask(
                   shaderCallback: (bounds) => const LinearGradient(
                     colors: [Colors.cyan, Colors.blue, Colors.purple],
@@ -123,7 +116,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: AppColors.white,
                     ),
                   ),
                 ),
@@ -134,7 +127,6 @@ class _AuthScreenState extends State<AuthScreen> {
                 ),
                 const SizedBox(height: 40),
 
-                // ROLE CARDS
                 Expanded(
                   child: ListView.builder(
                     itemCount: roles.length,
@@ -149,132 +141,17 @@ class _AuthScreenState extends State<AuthScreen> {
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(16),
                             gradient: LinearGradient(
-                              colors: role['bg'].cast<Color>(),
+                              colors: (role['bg'] as List<Color>),
                             ),
-                            border: Border.all(color: Colors.white12),
+                            border: Border.all(color: AppColors.cardBorder),
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // icon + title + description
-                              Row(
-                                children: [
-                                  Container(
-                                    height: 55,
-                                    width: 55,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(12),
-                                      gradient: LinearGradient(
-                                        colors: role['color'].cast<Color>(),
-                                      ),
-                                    ),
-                                    child: Icon(
-                                      role['icon'],
-                                      color: Colors.white,
-                                      size: 30,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          role['title'],
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                        Text(
-                                          role['description'],
-                                          style: TextStyle(
-                                            color: Colors.grey.shade400,
-                                            fontSize: 13,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-
-                              const SizedBox(height: 14),
-
-                              // features
-                              GridView.builder(
-                                physics: const NeverScrollableScrollPhysics(),
-                                shrinkWrap: true,
-                                itemCount: role['features'].length,
-                                gridDelegate:
-                                    const SliverGridDelegateWithFixedCrossAxisCount(
-                                      crossAxisCount: 2,
-                                      mainAxisExtent: 20,
-                                    ),
-                                itemBuilder: (context, idx) {
-                                  return Row(
-                                    children: [
-                                      Container(
-                                        width: 6,
-                                        height: 6,
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            colors: role['color'].cast<Color>(),
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            50,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Expanded(
-                                        child: Text(
-                                          role['features'][idx],
-                                          style: const TextStyle(
-                                            color: Colors.white70,
-                                            fontSize: 11,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  );
-                                },
-                              ),
-
-                              const SizedBox(height: 20),
-
-                              // button
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 12,
-                                ),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(10),
-                                  gradient: LinearGradient(
-                                    colors: role['color'].cast<Color>(),
-                                  ),
-                                ),
-                                alignment: Alignment.center,
-                                child: const Text(
-                                  "Get Started →",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+                          child: buildRoleCard(role),
                         ),
                       );
                     },
                   ),
                 ),
 
-                // Footer
                 const SizedBox(height: 10),
                 Text(
                   "Secure authentication • All data is encrypted",
@@ -286,6 +163,101 @@ class _AuthScreenState extends State<AuthScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget buildRoleCard(Map role) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              height: 55,
+              width: 55,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                gradient: LinearGradient(
+                  colors: (role['color'] as List<Color>),
+                ),
+              ),
+              child: Icon(role['icon'], color: Colors.white, size: 30),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    role['title'],
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    role['description'],
+                    style: TextStyle(color: Colors.grey.shade400, fontSize: 13),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+
+        GridView.builder(
+          physics: const NeverScrollableScrollPhysics(),
+          shrinkWrap: true,
+          itemCount: role['features'].length,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            mainAxisExtent: 20,
+          ),
+          itemBuilder: (context, idx) {
+            return Row(
+              children: [
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: (role['color'] as List<Color>),
+                    ),
+                    borderRadius: BorderRadius.circular(50),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    role['features'][idx],
+                    style: const TextStyle(color: Colors.white70, fontSize: 11),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+        const SizedBox(height: 20),
+
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            gradient: LinearGradient(colors: (role['color'] as List<Color>)),
+          ),
+          alignment: Alignment.center,
+          child: const Text(
+            "Get Started →",
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
