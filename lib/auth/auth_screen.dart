@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:focus_mate/core/dashboard_router.dart';
 import 'login_screen.dart';
 import 'signup_screen.dart';
 import '../theme/app_colors.dart';
-
-enum UserRole { user, companion, parent }
 
 class AuthScreen extends StatefulWidget {
   final Function(UserRole role, dynamic userData) onAuthComplete;

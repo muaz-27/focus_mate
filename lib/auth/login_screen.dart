@@ -1,8 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'auth_screen.dart';
-import 'auth_service.dart';
+import 'package:focus_mate/core/dashboard_router.dart';
+import '../core/auth_service.dart';
 
 // ----------------- ROLE COLORS (GLOBAL) -----------------
 final Map<UserRole, Color> roleAccent = {
@@ -42,17 +42,6 @@ class _LoginScreenState extends State<LoginScreen>
   bool _isLoading = false;
 
   late AnimationController _iconController;
-  late Animation<double> _iconAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _iconController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 3),
-    )..repeat();
-    _iconAnimation = Tween<double>(begin: 0, end: 1).animate(_iconController);
-  }
 
   @override
   void dispose() {
@@ -154,13 +143,10 @@ class _LoginScreenState extends State<LoginScreen>
                   child: Column(
                     children: [
                       // ROTATING ICON
-                      RotationTransition(
-                        turns: _iconAnimation,
-                        child: CircleAvatar(
-                          radius: 36,
-                          backgroundColor: accent.withValues(alpha: 0.15),
-                          child: Icon(Icons.lock, color: accent, size: 32),
-                        ),
+                      CircleAvatar(
+                        radius: 36,
+                        backgroundColor: accent.withValues(alpha: 0.15),
+                        child: Icon(Icons.lock, color: accent, size: 32),
                       ),
                       const SizedBox(height: 16),
 

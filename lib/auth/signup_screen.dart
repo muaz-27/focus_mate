@@ -1,8 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'auth_screen.dart';
-import 'auth_service.dart';
+import 'package:focus_mate/core/dashboard_router.dart';
+import '../core/auth_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_theme.dart';
 
@@ -36,17 +36,6 @@ class _SignupScreenState extends State<SignupScreen>
   bool _isLoading = false;
 
   late AnimationController _iconController;
-  late Animation<double> _iconAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _iconController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat();
-    _iconAnimation = Tween<double>(begin: 0, end: 1).animate(_iconController);
-  }
 
   @override
   void dispose() {
@@ -141,16 +130,13 @@ class _SignupScreenState extends State<SignupScreen>
                   decoration: AppTheme.cardContainer(config),
                   child: Column(
                     children: [
-                      RotationTransition(
-                        turns: _iconAnimation,
-                        child: const CircleAvatar(
-                          radius: 32,
-                          backgroundColor: AppColors.white24,
-                          child: Icon(
-                            Icons.person_add,
-                            color: AppColors.white,
-                            size: 32,
-                          ),
+                      const CircleAvatar(
+                        radius: 32,
+                        backgroundColor: AppColors.white24,
+                        child: Icon(
+                          Icons.person_add,
+                          color: AppColors.white,
+                          size: 32,
                         ),
                       ),
                       const SizedBox(height: 12),
