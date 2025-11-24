@@ -4,14 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:focus_mate/core/dashboard_router.dart';
 import '../core/auth_service.dart';
 
-// ----------------- ROLE COLORS (GLOBAL) -----------------
+// ----------------- ROLE COLORS -----------------
 final Map<UserRole, Color> roleAccent = {
   UserRole.user: Colors.cyanAccent,
   UserRole.companion: Colors.purpleAccent,
   UserRole.parent: Colors.orangeAccent,
 };
 
-// ----------------- MAIN WIDGET -----------------
 class LoginScreen extends StatefulWidget {
   final UserRole role;
   final VoidCallback onBack;
@@ -30,18 +29,28 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-// ----------------- STATE -----------------
 class _LoginScreenState extends State<LoginScreen>
     with SingleTickerProviderStateMixin {
+  
   final AuthService _auth = AuthService();
-
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
   bool _showPassword = false;
   bool _isLoading = false;
 
+  // Animation controller for potential visual effects
   late AnimationController _iconController;
+
+  @override
+  void initState() {
+    super.initState();
+    // FIX 1: Initialize the controller to prevent crashes
+    _iconController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    );
+  }
 
   @override
   void dispose() {
@@ -54,11 +63,15 @@ class _LoginScreenState extends State<LoginScreen>
   void _showError(String message) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.redAccent),
+      SnackBar(
+        content: Text(message), 
+        backgroundColor: Colors.redAccent,
+        behavior: SnackBarBehavior.floating,
+      ),
     );
   }
 
-  // ----------------- LOGIN FUNCTION -----------------
+  // ----------------- LOGIN LOGIC -----------------
   void _handleLogin() async {
     setState(() => _isLoading = true);
 
@@ -66,6 +79,7 @@ class _LoginScreenState extends State<LoginScreen>
       final email = _emailController.text.trim();
       final password = _passwordController.text;
 
+      // 1. Attempt Firebase Auth Login
       final user = await _auth.signIn(email, password);
 
       if (user == null) {
@@ -75,35 +89,42 @@ class _LoginScreenState extends State<LoginScreen>
         );
       }
 
+      // 2. Fetch User Data from Firestore
       final doc = await FirebaseFirestore.instance
           .collection("users")
           .doc(user.uid)
           .get();
 
       if (!doc.exists) {
-        await _auth.signOut();
-        throw Exception("User data not found.");
+        // FIX 2: Use static signOut if data is missing
+        await AuthService.signOut(context);
+        throw Exception("User profile not found.");
       }
 
       final data = doc.data()!;
       final storedRole = data["role"];
-      final selectedRole = widget.role.name;
+      final selectedRole = widget.role.name; 
 
+      // 3. Verify Role Match
+      // Prevents a Student from logging in via the Parent screen
       if (storedRole != selectedRole) {
-        await _auth.signOut();
-        throw Exception("Role mismatch. You are registered as a $storedRole.");
+        // FIX 3: Force logout if role is incorrect
+        await AuthService.signOut(context);
+        throw Exception("Role mismatch. This account is registered as a $storedRole.");
       }
 
+      // 4. Success - Notify Parent Widget
       if (!mounted) return;
       widget.onLogin(widget.role, data);
+
     } catch (e) {
-      _showError(e.toString());
+      _showError(e.toString().replaceAll("Exception:", "").trim());
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  // ----------------- BUILD UI -----------------
+  // ----------------- UI BUILD -----------------
   @override
   Widget build(BuildContext context) {
     final accent = roleAccent[widget.role]!;
@@ -117,18 +138,15 @@ class _LoginScreenState extends State<LoginScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // BACK BUTTON
+                // Back Button
                 TextButton.icon(
                   onPressed: widget.onBack,
                   icon: const Icon(Icons.arrow_back, color: Colors.white70),
-                  label: const Text(
-                    "Back",
-                    style: TextStyle(color: Colors.white70),
-                  ),
+                  label: const Text("Back", style: TextStyle(color: Colors.white70)),
                 ),
                 const SizedBox(height: 10),
 
-                // MAIN CARD
+                // Login Card
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(26),
@@ -142,7 +160,7 @@ class _LoginScreenState extends State<LoginScreen>
                   ),
                   child: Column(
                     children: [
-                      // ROTATING ICON
+                      // Role Icon
                       CircleAvatar(
                         radius: 36,
                         backgroundColor: accent.withValues(alpha: 0.15),
@@ -159,14 +177,13 @@ class _LoginScreenState extends State<LoginScreen>
                         ),
                       ),
                       const SizedBox(height: 6),
-                      Text(
+                      const Text(
                         "Enter your details to continue",
                         style: TextStyle(color: Colors.white70),
                       ),
-
                       const SizedBox(height: 26),
 
-                      // EMAIL FIELD
+                      // Input Fields
                       _buildInputField(
                         controller: _emailController,
                         hint: "Email",
@@ -175,7 +192,6 @@ class _LoginScreenState extends State<LoginScreen>
                       ),
                       const SizedBox(height: 18),
 
-                      // PASSWORD FIELD
                       _buildInputField(
                         controller: _passwordController,
                         hint: "Password",
@@ -184,19 +200,16 @@ class _LoginScreenState extends State<LoginScreen>
                         obscure: !_showPassword,
                         suffix: IconButton(
                           icon: Icon(
-                            _showPassword
-                                ? Icons.visibility_off
-                                : Icons.visibility,
+                            _showPassword ? Icons.visibility_off : Icons.visibility,
                             color: Colors.white54,
                           ),
-                          onPressed: () =>
-                              setState(() => _showPassword = !_showPassword),
+                          onPressed: () => setState(() => _showPassword = !_showPassword),
                         ),
                       ),
 
                       const SizedBox(height: 26),
 
-                      // LOGIN BUTTON
+                      // Action Button
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
@@ -229,7 +242,7 @@ class _LoginScreenState extends State<LoginScreen>
 
                       const SizedBox(height: 14),
 
-                      // SWITCH TO SIGNUP
+                      // Switch to Signup
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -257,7 +270,6 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  // ----------------- REUSABLE INPUT FIELD -----------------
   Widget _buildInputField({
     required TextEditingController controller,
     required String hint,

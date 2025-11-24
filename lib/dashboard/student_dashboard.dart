@@ -1,8 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import '../core/auth_service.dart';
+import '../core/usage_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_theme.dart';
+import 'analytics_screen.dart';
 
 class StudentDashboard extends StatefulWidget {
   final Map<String, dynamic> userData;
@@ -35,11 +37,28 @@ class _StudentDashboardState extends State<StudentDashboard> {
   final TextEditingController _companionCodeController =
       TextEditingController();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  final UsageService _usageService = UsageService(); // UsageService instance
   late bool companionActive;
+
   @override
   void initState() {
     super.initState();
-    companionActive = widget.companionActive; // initialize from widget
+    companionActive = widget.companionActive;
+
+    // 🔹 Trigger background usage data sync
+    _syncUsageData();
+  }
+
+  // 🔹 Sync usage stats to Firebase with logs
+  Future<void> _syncUsageData() async {
+    if (widget.userData['id'] != null) {
+      print("Starting usage data sync for user: ${widget.userData['id']}");
+      await _usageService.syncUsageToFirebase(widget.userData['id']);
+      print("Usage data sync completed");
+    } else {
+      print("User ID is null, cannot sync usage data");
+    }
   }
 
   @override
@@ -55,7 +74,9 @@ class _StudentDashboardState extends State<StudentDashboard> {
         actions: [
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.redAccent),
-            onPressed: () => widget.onLogout(),
+            onPressed: () {
+              AuthService.signOut(context);
+            },
           ),
         ],
       ),
@@ -63,7 +84,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // Quick Action Tiles
+            // 🔹 Quick Action Tiles
             Row(
               children: [
                 Expanded(
@@ -102,14 +123,24 @@ class _StudentDashboardState extends State<StudentDashboard> {
                     "Analytics",
                     "Track Progress",
                     AppColors.roleGradients['user']!,
-                    () {},
+                    () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AnalyticsScreen(
+                            userId: widget.userData['id'],
+                            userName: widget.userData['name'] ?? "My",
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
 
-            // Daily Focus Card
+            // 🔹 Daily Focus Card
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -161,32 +192,30 @@ class _StudentDashboardState extends State<StudentDashboard> {
 
             const SizedBox(height: 16),
 
-            // Companion Mode Card (Prominent)
-            // Inside _StudentDashboardState build()
-            // Inside StudentDashboard build method, replace Companion Mode section
+            // 🔹 Companion Mode Card
             GestureDetector(
-              onTap: () {}, // Could later open more companion info if needed
+              onTap: () {},
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  gradient: widget.companionActive
-                      ? LinearGradient(
+                  gradient: companionActive
+                      ? const LinearGradient(
                           colors: [Color(0xFF4F46E5), Color(0xFF3B82F6)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         )
-                      : LinearGradient(
+                      : const LinearGradient(
                           colors: [Color(0xFF1F2937), Color(0xFF374151)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                   borderRadius: BorderRadius.circular(20),
-                  boxShadow: widget.companionActive
+                  boxShadow: companionActive
                       ? [
                           BoxShadow(
                             color: Colors.blueAccent.withOpacity(0.5),
                             blurRadius: 12,
-                            offset: Offset(0, 4),
+                            offset: const Offset(0, 4),
                           ),
                         ]
                       : [],
@@ -198,13 +227,11 @@ class _StudentDashboardState extends State<StudentDashboard> {
                       children: [
                         Icon(
                           Icons.group,
-                          color: widget.companionActive
-                              ? Colors.white
-                              : Colors.grey,
+                          color: companionActive ? Colors.white : Colors.grey,
                           size: 28,
                         ),
                         const SizedBox(width: 12),
-                        Text(
+                        const Text(
                           "Companion Mode",
                           style: TextStyle(
                             color: Colors.white,
@@ -213,7 +240,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                           ),
                         ),
                         const Spacer(),
-                        if (widget.companionActive)
+                        if (companionActive)
                           Container(
                             width: 12,
                             height: 12,
@@ -232,13 +259,13 @@ class _StudentDashboardState extends State<StudentDashboard> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      widget.companionActive
+                      companionActive
                           ? "Connected to ${widget.userData['companionName'] ?? 'Unknown'}"
                           : "No active companion",
                       style: TextStyle(color: Colors.grey.shade200),
                     ),
                     const SizedBox(height: 12),
-                    if (!widget.companionActive)
+                    if (!companionActive)
                       Row(
                         children: [
                           Expanded(
@@ -252,7 +279,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                                   borderRadius: BorderRadius.circular(12),
                                   borderSide: BorderSide.none,
                                 ),
-                                contentPadding: EdgeInsets.symmetric(
+                                contentPadding: const EdgeInsets.symmetric(
                                   horizontal: 12,
                                   vertical: 8,
                                 ),
@@ -272,7 +299,6 @@ class _StudentDashboardState extends State<StudentDashboard> {
                                 return;
                               }
 
-                              // Search companion by linkCode
                               final query = await _firestore
                                   .collection('users')
                                   .where('linkCode', isEqualTo: code)
@@ -290,7 +316,6 @@ class _StudentDashboardState extends State<StudentDashboard> {
                               final companionId = companionDoc.id;
                               final companionData = companionDoc.data();
 
-                              // Update Firestore: link student ↔ companion
                               await _firestore
                                   .collection('users')
                                   .doc(widget.userData['id'])
@@ -324,7 +349,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              padding: EdgeInsets.symmetric(
+                              padding: const EdgeInsets.symmetric(
                                 horizontal: 16,
                                 vertical: 12,
                               ),
@@ -338,7 +363,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
               ),
             ),
 
-            // Mode Selector Modal
+            // 🔹 Mode Selector Modal
             if (showModeSelector)
               AlertDialog(
                 title: const Text("Select Session Mode"),
@@ -347,18 +372,14 @@ class _StudentDashboardState extends State<StudentDashboard> {
                   children: [
                     ElevatedButton(
                       onPressed: () {
-                        setState(() {
-                          showModeSelector = false;
-                        });
+                        setState(() => showModeSelector = false);
                         widget.onStartSession("Focused");
                       },
                       child: const Text("Focused Mode"),
                     ),
                     ElevatedButton(
                       onPressed: () {
-                        setState(() {
-                          showModeSelector = false;
-                        });
+                        setState(() => showModeSelector = false);
                         widget.onStartSession("Pomodoro");
                       },
                       child: const Text("Pomodoro Mode"),

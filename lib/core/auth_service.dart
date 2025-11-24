@@ -1,9 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import '../main.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // Sign up with email & password
   Future<User?> signUp(String email, String password) async {
     try {
       UserCredential result = await _auth.createUserWithEmailAndPassword(
@@ -12,12 +13,11 @@ class AuthService {
       );
       return result.user;
     } on FirebaseAuthException catch (e) {
-      print(e.message); // For debugging
+      print(e.message);
       return null;
     }
   }
 
-  // Sign in with email & password
   Future<User?> signIn(String email, String password) async {
     try {
       UserCredential result = await _auth.signInWithEmailAndPassword(
@@ -26,13 +26,23 @@ class AuthService {
       );
       return result.user;
     } on FirebaseAuthException catch (e) {
-      print(e.message); // For debugging
+      print(e.message);
       return null;
     }
   }
 
-  // Sign out
-  Future<void> signOut() async {
-    await _auth.signOut();
+  static Future<void> signOut(BuildContext context) async {
+    try {
+      await FirebaseAuth.instance.signOut();
+
+      if (context.mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const FocusMateApp()),
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      print("Error signing out: $e");
+    }
   }
 }

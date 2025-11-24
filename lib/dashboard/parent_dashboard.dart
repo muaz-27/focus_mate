@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_theme.dart';
+import '../core/auth_service.dart';
 
 class ParentDashboard extends StatelessWidget {
   final Map<String, dynamic> userData;
@@ -22,7 +23,9 @@ class ParentDashboard extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.redAccent),
-            onPressed: () => onLogout(),
+            onPressed: () {
+              AuthService.signOut(context);
+            }
           ),
         ],
       ),
