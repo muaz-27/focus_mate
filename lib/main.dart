@@ -3,10 +3,12 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-
+// 🔹 IMPORTS
 import 'firebase_options.dart';
 import 'auth/auth_screen.dart';
-import 'core/dashboard_router.dart'; // This contains UserRole enum
+import 'core/dashboard_router.dart';
+
+
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,13 +25,13 @@ class FocusMateApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'FocusMate',
       theme: ThemeData.dark(useMaterial3: true),
-      home: const AuthGate(), 
+      home: const AuthGate(), // Persistent Login Logic
     );
   }
 }
 
 // ---------------------------------------------------------------------------
-// 🔹 AUTH GATE (Persistent Login)
+// 🔹 AUTH GATE (Checks Login Status & Routes to Dashboard)
 // ---------------------------------------------------------------------------
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
@@ -37,22 +39,21 @@ class AuthGate extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
+      // 1. Listen to Auth Changes
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
         
-        // 1. Loading
+        // Loading...
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
         }
 
-        // 2. Not Logged In
+        // Not Logged In -> Show Auth Screen
         if (!snapshot.hasData) {
           return AuthScreen(onAuthComplete: (_, __) {});
         }
 
-        // 3. Logged In -> Fetch Data
+        // Logged In -> Fetch User Data
         User currentUser = snapshot.data!;
 
         return FutureBuilder<DocumentSnapshot>(
@@ -60,27 +61,24 @@ class AuthGate extends StatelessWidget {
           builder: (context, userSnapshot) {
             
             if (userSnapshot.connectionState == ConnectionState.waiting) {
-              return const Scaffold(
-                body: Center(child: CircularProgressIndicator()),
-              );
+              return const Scaffold(body: Center(child: CircularProgressIndicator()));
             }
 
+            // Safety Check: Auth exists but Data is missing
             if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
               FirebaseAuth.instance.signOut();
               return AuthScreen(onAuthComplete: (_,__) {});
             }
 
-            // 4. Prepare Data
+            // Get Data
             Map<String, dynamic> userData = userSnapshot.data!.data() as Map<String, dynamic>;
             userData['id'] = currentUser.uid;
 
-            // 🔹 FIX: Map the role string to your UserRole enum
+            // Determine Role
             String roleStr = userData['role'] ?? 'user';
-            
-            // Logic: If it says 'companion', use companion. Otherwise, default to 'user' (Student)
             UserRole role = (roleStr == 'companion') ? UserRole.companion : UserRole.user;
 
-            // 5. Open Dashboard
+            // Route to Correct Dashboard
             return DashboardRouter(
               role: role,
               userData: userData,

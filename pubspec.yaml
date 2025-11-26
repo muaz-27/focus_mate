@@ -38,6 +38,9 @@ dependencies:
   firebase_auth: ^6.1.2
   cloud_firestore: ^6.1.0
   installed_apps: ^1.0.0
+  
+  android_intent_plus: ^5.0.2
+
 
 
   

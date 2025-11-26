@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:usage_stats/usage_stats.dart';
-import 'package:installed_apps/installed_apps.dart'; // ✅ Using your preferred package
+import 'package:installed_apps/installed_apps.dart';
 import 'package:installed_apps/app_info.dart';
 
 class UsageService {
@@ -31,25 +31,33 @@ class UsageService {
     return ignored.contains(packageName);
   }
 
+  // For App Lock Screen
+  Future<List<AppInfo>> getInstalledAppsList() async {
+    try {
+      return await InstalledApps.getInstalledApps(true, false);
+    } catch (e) {
+      print("Error fetching apps: $e");
+      return [];
+    }
+  }
+
+  // 🔹 MAIN SYNC FUNCTION
   Future<void> syncUsageToFirebase(String userId) async {
     try {
       if (!await hasPermission()) return;
 
       DateTime end = DateTime.now();
-      DateTime start = end.subtract(const Duration(hours: 24));
 
-      // 1. Fetch Raw Stats from Android
+      // 🚀 CHANGED LOGIC: Start from Midnight (00:00:00) today
+      DateTime start = DateTime(end.year, end.month, end.day);
+
+      // 1. Fetch Raw Stats
       List<UsageInfo> rawStats = await UsageStats.queryUsageStats(start, end);
 
-      // ---------------------------------------------------------
-      // 🔹 STEP 1: AGGREGATE DUPLICATES
-      // We sum up time for apps that appear multiple times
-      // ---------------------------------------------------------
+      // 2. Aggregate Duplicates (Sum up usage for same app)
       Map<String, double> appUsageMap = {};
-
       for (var info in rawStats) {
         if (info.packageName == null) continue;
-
         double ms = double.tryParse(info.totalTimeInForeground ?? "0") ?? 0;
 
         if (appUsageMap.containsKey(info.packageName)) {
@@ -59,18 +67,16 @@ class UsageService {
         }
       }
 
-      // 2. Fetch Real App Names using installed_apps
-      // We fetch the whole list once to create a lookup map (Much faster)
+      // 3. Fetch Real Names
       List<AppInfo> installedApps = await InstalledApps.getInstalledApps(
         true,
-        true,
+        false,
       );
-
       Map<String, String> appNameMap = {
         for (var app in installedApps) app.packageName: app.name ?? "Unknown",
       };
 
-      // 3. Process & Filter
+      // 4. Process & Filter
       List<Map<String, dynamic>> processedApps = [];
       int totalMinutes = 0;
 
@@ -79,16 +85,14 @@ class UsageService {
         double totalMs = entry.value;
         int minutes = (totalMs / 1000 / 60).round();
 
-        // Filter: Usage > 1 minute AND not ignored
-        if (minutes > 1 && !_isIgnoredApp(pkg)) {
-          // Get Real Name from our map
+        // Filter: Show apps used for at least 1 minute today
+        if (minutes >= 1 && !_isIgnoredApp(pkg)) {
           String realName = appNameMap[pkg] ?? pkg;
 
-          // Manual Fixes for common apps
+          // Manual Fixes
           if (pkg == 'com.google.android.youtube') realName = 'YouTube';
-          if (pkg == 'com.instagram.android') realName = 'Instagram';
           if (pkg == 'com.whatsapp') realName = 'WhatsApp';
-          if (pkg == 'com.snapchat.android') realName = 'Snapchat';
+          if (pkg == 'com.instagram.android') realName = 'Instagram';
 
           totalMinutes += minutes;
           processedApps.add({
@@ -100,17 +104,14 @@ class UsageService {
         }
       }
 
-      // Sort by usage
       processedApps.sort(
         (a, b) => b['usageMinutes'].compareTo(a['usageMinutes']),
       );
 
-      // 4. Upload
+      // 5. Upload
       final todayDocId = DateTime.now().toIso8601String().split('T')[0];
 
-      print(
-        "✅ Uploading Sync: $totalMinutes mins, ${processedApps.length} apps.",
-      );
+      print("✅ Uploading Today's Stats: $totalMinutes mins.");
 
       await _firestore
           .collection('users')

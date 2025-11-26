@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../core/usage_service.dart'; // 🔹 IMPORT THIS
 
 class AnalyticsScreen extends StatefulWidget {
   final String userId;
@@ -16,14 +17,38 @@ class AnalyticsScreen extends StatefulWidget {
 }
 
 class _AnalyticsScreenState extends State<AnalyticsScreen> {
+  final UsageService _usageService = UsageService(); // 🔹 Service Instance
   int totalMinutes = 0;
   List<Map<String, dynamic>> appsUsed = [];
   bool loading = true;
+  bool isRefreshing = false; // To show spinner on the button
 
   @override
   void initState() {
     super.initState();
     _loadUsage();
+  }
+
+  // 🔹 NEW: Manual Refresh Function
+  Future<void> _handleRefresh() async {
+    setState(() => isRefreshing = true);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Syncing latest data from phone...")),
+    );
+
+    // Force the service to read Android OS data and upload to Firebase
+    await _usageService.syncUsageToFirebase(widget.userId);
+
+    if (mounted) {
+      setState(() => isRefreshing = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Analytics Updated! ✅"),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
   }
 
   // Listen to Realtime Changes from Firebase
@@ -77,6 +102,26 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           fontSize: 20,
           fontWeight: FontWeight.bold,
         ),
+        actions: [
+          // 🔹 REFRESH BUTTON
+          isRefreshing
+              ? const Padding(
+                  padding: EdgeInsets.all(12.0),
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  ),
+                )
+              : IconButton(
+                  icon: const Icon(Icons.refresh),
+                  tooltip: "Sync Now",
+                  onPressed: _handleRefresh,
+                ),
+        ],
       ),
       body: loading
           ? const Center(
@@ -146,7 +191,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   ),
                 ),
 
-                // 2. App List (Text Icons Only)
+                // 2. App List (Text Icons Only - Safe Mode)
                 Expanded(
                   child: appsUsed.isEmpty
                       ? const Center(
@@ -183,7 +228,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: ListTile(
-                                // 🔹 SIMPLE LETTER ICON (No External Packages)
+                                // Simple Letter Icon
                                 leading: CircleAvatar(
                                   backgroundColor: Colors.white10,
                                   child: Text(
