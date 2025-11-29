@@ -15,7 +15,6 @@ class UsageService {
     await UsageStats.grantUsagePermission();
   }
 
-  // Helper to filter system junk
   bool _isIgnoredApp(String packageName) {
     final List<String> ignored = [
       'com.android.systemui',
@@ -31,7 +30,6 @@ class UsageService {
     return ignored.contains(packageName);
   }
 
-  // For App Lock Screen
   Future<List<AppInfo>> getInstalledAppsList() async {
     try {
       return await InstalledApps.getInstalledApps(true, false);
@@ -47,19 +45,16 @@ class UsageService {
       if (!await hasPermission()) return;
 
       DateTime end = DateTime.now();
-
-      // 🚀 CHANGED LOGIC: Start from Midnight (00:00:00) today
       DateTime start = DateTime(end.year, end.month, end.day);
 
       // 1. Fetch Raw Stats
       List<UsageInfo> rawStats = await UsageStats.queryUsageStats(start, end);
 
-      // 2. Aggregate Duplicates (Sum up usage for same app)
+      // 2. Aggregate Duplicates
       Map<String, double> appUsageMap = {};
       for (var info in rawStats) {
         if (info.packageName == null) continue;
         double ms = double.tryParse(info.totalTimeInForeground ?? "0") ?? 0;
-
         if (appUsageMap.containsKey(info.packageName)) {
           appUsageMap[info.packageName!] = appUsageMap[info.packageName!]! + ms;
         } else {
@@ -67,11 +62,8 @@ class UsageService {
         }
       }
 
-      // 3. Fetch Real Names
-      List<AppInfo> installedApps = await InstalledApps.getInstalledApps(
-        true,
-        false,
-      );
+      // 3. Fetch App Names
+      List<AppInfo> installedApps = await InstalledApps.getInstalledApps(true, false);
       Map<String, String> appNameMap = {
         for (var app in installedApps) app.packageName: app.name ?? "Unknown",
       };
@@ -85,7 +77,6 @@ class UsageService {
         double totalMs = entry.value;
         int minutes = (totalMs / 1000 / 60).round();
 
-        // Filter: Show apps used for at least 1 minute today
         if (minutes >= 1 && !_isIgnoredApp(pkg)) {
           String realName = appNameMap[pkg] ?? pkg;
 
@@ -104,11 +95,9 @@ class UsageService {
         }
       }
 
-      processedApps.sort(
-        (a, b) => b['usageMinutes'].compareTo(a['usageMinutes']),
-      );
+      processedApps.sort((a, b) => b['usageMinutes'].compareTo(a['usageMinutes']));
 
-      // 5. Upload
+      // 5. Upload (Overwrite previous stats)
       final todayDocId = DateTime.now().toIso8601String().split('T')[0];
 
       print("✅ Uploading Today's Stats: $totalMinutes mins.");
@@ -119,10 +108,10 @@ class UsageService {
           .collection('daily_stats')
           .doc(todayDocId)
           .set({
-            'lastUpdated': FieldValue.serverTimestamp(),
-            'totalScreenTime': totalMinutes,
-            'apps': processedApps,
-          }, SetOptions(merge: true));
+        'lastUpdated': FieldValue.serverTimestamp(),
+        'totalScreenTime': totalMinutes,
+        'apps': processedApps,
+      }); // Removed merge to overwrite
     } catch (e) {
       print("❌ Error syncing usage: $e");
     }

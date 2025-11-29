@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:focus_mate/core/dashboard_router.dart';
 import '../core/auth_service.dart';
+import '../core/usage_service.dart';
 
 // ----------------- ROLE COLORS -----------------
 final Map<UserRole, Color> roleAccent = {
@@ -31,21 +32,19 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen>
     with SingleTickerProviderStateMixin {
-  
   final AuthService _auth = AuthService();
+  final UsageService _usageService = UsageService(); // Added UsageService
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
   bool _showPassword = false;
   bool _isLoading = false;
 
-  // Animation controller for potential visual effects
   late AnimationController _iconController;
 
   @override
   void initState() {
     super.initState();
-    // FIX 1: Initialize the controller to prevent crashes
     _iconController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 1),
@@ -64,7 +63,7 @@ class _LoginScreenState extends State<LoginScreen>
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message), 
+        content: Text(message),
         backgroundColor: Colors.redAccent,
         behavior: SnackBarBehavior.floating,
       ),
@@ -79,7 +78,6 @@ class _LoginScreenState extends State<LoginScreen>
       final email = _emailController.text.trim();
       final password = _passwordController.text;
 
-      // 1. Attempt Firebase Auth Login
       final user = await _auth.signIn(email, password);
 
       if (user == null) {
@@ -89,34 +87,34 @@ class _LoginScreenState extends State<LoginScreen>
         );
       }
 
-      // 2. Fetch User Data from Firestore
       final doc = await FirebaseFirestore.instance
           .collection("users")
           .doc(user.uid)
           .get();
 
       if (!doc.exists) {
-        // FIX 2: Use static signOut if data is missing
         await AuthService.signOut(context);
         throw Exception("User profile not found.");
       }
 
       final data = doc.data()!;
       final storedRole = data["role"];
-      final selectedRole = widget.role.name; 
+      final selectedRole = widget.role.name;
 
-      // 3. Verify Role Match
-      // Prevents a Student from logging in via the Parent screen
       if (storedRole != selectedRole) {
-        // FIX 3: Force logout if role is incorrect
         await AuthService.signOut(context);
-        throw Exception("Role mismatch. This account is registered as a $storedRole.");
+        throw Exception(
+          "Role mismatch. This account is registered as a $storedRole.",
+        );
       }
 
-      // 4. Success - Notify Parent Widget
+      // ----------------- NEW: Sync usage immediately -----------------
+      if (widget.role == UserRole.user) {
+        await _usageService.syncUsageToFirebase(user.uid);
+      }
+
       if (!mounted) return;
       widget.onLogin(widget.role, data);
-
     } catch (e) {
       _showError(e.toString().replaceAll("Exception:", "").trim());
     } finally {
@@ -138,36 +136,34 @@ class _LoginScreenState extends State<LoginScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Back Button
                 TextButton.icon(
                   onPressed: widget.onBack,
                   icon: const Icon(Icons.arrow_back, color: Colors.white70),
-                  label: const Text("Back", style: TextStyle(color: Colors.white70)),
+                  label: const Text(
+                    "Back",
+                    style: TextStyle(color: Colors.white70),
+                  ),
                 ),
                 const SizedBox(height: 10),
-
-                // Login Card
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(26),
                   decoration: BoxDecoration(
-                    color: Colors.grey[900]!.withValues(alpha: 0.8),
+                    color: Colors.grey[900]!.withOpacity(0.8),
                     borderRadius: BorderRadius.circular(18),
                     border: Border.all(
-                      color: accent.withValues(alpha: 0.3),
+                      color: accent.withOpacity(0.3),
                       width: 1,
                     ),
                   ),
                   child: Column(
                     children: [
-                      // Role Icon
                       CircleAvatar(
                         radius: 36,
-                        backgroundColor: accent.withValues(alpha: 0.15),
+                        backgroundColor: accent.withOpacity(0.15),
                         child: Icon(Icons.lock, color: accent, size: 32),
                       ),
                       const SizedBox(height: 16),
-
                       Text(
                         "Login",
                         style: TextStyle(
@@ -182,8 +178,6 @@ class _LoginScreenState extends State<LoginScreen>
                         style: TextStyle(color: Colors.white70),
                       ),
                       const SizedBox(height: 26),
-
-                      // Input Fields
                       _buildInputField(
                         controller: _emailController,
                         hint: "Email",
@@ -191,7 +185,6 @@ class _LoginScreenState extends State<LoginScreen>
                         accent: accent,
                       ),
                       const SizedBox(height: 18),
-
                       _buildInputField(
                         controller: _passwordController,
                         hint: "Password",
@@ -200,16 +193,16 @@ class _LoginScreenState extends State<LoginScreen>
                         obscure: !_showPassword,
                         suffix: IconButton(
                           icon: Icon(
-                            _showPassword ? Icons.visibility_off : Icons.visibility,
+                            _showPassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
                             color: Colors.white54,
                           ),
-                          onPressed: () => setState(() => _showPassword = !_showPassword),
+                          onPressed: () =>
+                              setState(() => _showPassword = !_showPassword),
                         ),
                       ),
-
                       const SizedBox(height: 26),
-
-                      // Action Button
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
@@ -239,10 +232,7 @@ class _LoginScreenState extends State<LoginScreen>
                                 ),
                         ),
                       ),
-
                       const SizedBox(height: 14),
-
-                      // Switch to Signup
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -291,18 +281,15 @@ class _LoginScreenState extends State<LoginScreen>
         fillColor: Colors.white12,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: accent.withValues(alpha: 0.2)),
+          borderSide: BorderSide(color: accent.withOpacity(0.2)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: accent.withValues(alpha: 0.2)),
+          borderSide: BorderSide(color: accent.withOpacity(0.2)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(
-            color: accent.withValues(alpha: 0.5),
-            width: 1.4,
-          ),
+          borderSide: BorderSide(color: accent.withOpacity(0.5), width: 1.4),
         ),
       ),
     );
