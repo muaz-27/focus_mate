@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
-import '../theme/app_theme.dart';
 import '../core/auth_service.dart';
 
 class ParentDashboard extends StatelessWidget {
@@ -24,8 +23,8 @@ class ParentDashboard extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.redAccent),
             onPressed: () {
-              AuthService.signOut(context);
-            }
+              AuthService().signOut();
+            },
           ),
         ],
       ),

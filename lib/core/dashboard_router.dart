@@ -1,25 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:focus_mate/core/models/user_model.dart';
 import 'package:focus_mate/dashboard/companion_dashboard.dart';
 import 'package:focus_mate/dashboard/parent_dashboard.dart';
 import 'package:focus_mate/dashboard/student_dashboard.dart';
 
-enum UserRole { user, companion, parent }
-
 class DashboardRouter extends StatelessWidget {
-  final UserRole role;
-  final Map<String, dynamic> userData;
-  final int studyTime;
-  final int dailyGoal;
+  final UserModel user;
   final bool activeSession;
   final bool companionActive;
   final bool appsUnlocked;
 
   const DashboardRouter({
     super.key,
-    required this.role,
-    required this.userData,
-    required this.studyTime,
-    required this.dailyGoal,
+    required this.user,
     required this.activeSession,
     required this.companionActive,
     required this.appsUnlocked,
@@ -35,12 +28,18 @@ class DashboardRouter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    switch (role) {
+    // Convert UserModel to Map for legacy dashboards
+    // TODO: Refactor dashboards to use UserModel directly
+    final userData = user.toMap();
+    // Add ID explicitly as it might not be in toMap depending on implementation
+    userData['id'] = user.id; 
+
+    switch (user.role) {
       case UserRole.user:
         return StudentDashboard(
           userData: userData,
-          studyTime: studyTime,
-          dailyGoal: dailyGoal,
+          studyTime: user.studyTime,
+          dailyGoal: user.dailyGoal,
           activeSession: activeSession,
           companionActive: companionActive,
           appsUnlocked: appsUnlocked,
@@ -57,8 +56,6 @@ class DashboardRouter extends StatelessWidget {
           userData: userData,
           onLogout: () => handleLogout(context),
         );
-      default:
-        return const SizedBox.shrink();
     }
   }
 }

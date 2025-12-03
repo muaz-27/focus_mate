@@ -30,7 +30,7 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
   }
 
   Future<void> _loadLinkCode() async {
-    // 1. Check if code already exists in passed data to avoid network call
+    // First, we check if the code was passed from the previous screen
     if (widget.userData['linkCode'] != null) {
       setState(() {
         linkCode = widget.userData['linkCode'];
@@ -38,7 +38,7 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
       return;
     }
 
-    // 2. Fetch from DB if missing
+    // If not, we fetch it from the database
     final doc = await _firestore
         .collection('users')
         .doc(widget.userData['id'])
@@ -79,7 +79,7 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
         elevation: 0,
         actions: [
           IconButton(
-            onPressed: () => AuthService.signOut(context),
+            onPressed: () => AuthService().signOut(),
             icon: const Icon(Icons.logout, color: Colors.redAccent),
           ),
         ],
@@ -89,7 +89,7 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Link Code Card (Improved UI)
+            // This card displays your unique link code
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -164,7 +164,7 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
             ),
             const SizedBox(height: 12),
 
-            // 2. List of Students
+            // This list shows all the students connected to you
             Expanded(
               child: StreamBuilder<DocumentSnapshot>(
                 stream: _firestore
@@ -215,14 +215,14 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
                           return Container(
                             margin: const EdgeInsets.only(bottom: 12),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.05),
+                              color: Colors.white.withValues(alpha: 0.05),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(color: Colors.white10),
                             ),
                             child: ListTile(
                               leading: CircleAvatar(
-                                backgroundColor: Colors.blueAccent.withOpacity(
-                                  0.2,
+                                backgroundColor: Colors.blueAccent.withValues(
+                                  alpha: 0.2,
                                 ),
                                 child: Text(
                                   studentName[0].toUpperCase(),
@@ -246,7 +246,7 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
                                 color: Colors.white54,
                               ),
 
-                              // 🚀 THIS IS THE MAGIC PART
+                              // When you tap a student, it opens their analytics
                               onTap: () {
                                 Navigator.push(
                                   context,

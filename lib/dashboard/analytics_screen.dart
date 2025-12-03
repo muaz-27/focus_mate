@@ -3,6 +3,8 @@ import 'dart:typed_data'; // For Uint8List
 
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_theme.dart';
 
 class AnalyticsScreen extends StatefulWidget {
   final String userId;
@@ -46,10 +48,13 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           setState(() {
             totalMinutes = data['totalScreenTime'] ?? 0;
             appsUsed = List<Map<String, dynamic>>.from(data['apps'] ?? []);
-            
+
             if (appsUsed.isNotEmpty) {
-               appsUsed.sort((a, b) => (b['usageMinutes'] ?? 0).compareTo(a['usageMinutes'] ?? 0));
-               topApp = appsUsed.first;
+              appsUsed.sort(
+                (a, b) =>
+                    (b['usageMinutes'] ?? 0).compareTo(a['usageMinutes'] ?? 0),
+              );
+              topApp = appsUsed.first;
             } else {
               topApp = null;
             }
@@ -72,7 +77,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   Future<void> _calculateWeeklyAvg(CollectionReference statsRef) async {
     try {
-      final query = await statsRef.orderBy('lastUpdated', descending: true).limit(7).get();
+      final query = await statsRef
+          .orderBy('lastUpdated', descending: true)
+          .limit(7)
+          .get();
       if (query.docs.isEmpty) return;
       int sum = 0;
       for (var doc in query.docs) {
@@ -96,16 +104,18 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text("${widget.userName}'s Insights"),
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
-        titleTextStyle: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+        titleTextStyle: AppTheme.headerTitle,
       ),
       body: loading
-          ? const Center(child: CircularProgressIndicator(color: Colors.cyanAccent))
+          ? const Center(
+              child: CircularProgressIndicator(color: Colors.cyanAccent),
+            )
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -115,11 +125,21 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   Row(
                     children: [
                       Expanded(
-                        child: _buildInfoCard("Today", formatTime(totalMinutes), Icons.today, Colors.blueAccent),
+                        child: _buildInfoCard(
+                          "Today",
+                          formatTime(totalMinutes),
+                          Icons.today,
+                          Colors.blueAccent,
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: _buildInfoCard("Weekly Avg", formatTime(weeklyAverage), Icons.calendar_view_week, Colors.purpleAccent),
+                        child: _buildInfoCard(
+                          "Weekly Avg",
+                          formatTime(weeklyAverage),
+                          Icons.calendar_view_week,
+                          Colors.purpleAccent,
+                        ),
                       ),
                     ],
                   ),
@@ -130,9 +150,11 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.05),
+                        color: AppColors.cardOverlay,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.redAccent.withOpacity(0.3)),
+                        border: Border.all(
+                          color: Colors.redAccent.withOpacity(0.3),
+                        ),
                       ),
                       child: Row(
                         children: [
@@ -142,17 +164,30 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                               color: Colors.redAccent.withOpacity(0.2),
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.warning_amber_rounded, color: Colors.redAccent),
+                            child: const Icon(
+                              Icons.warning_amber_rounded,
+                              color: Colors.redAccent,
+                            ),
                           ),
                           const SizedBox(width: 16),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text("Top Distraction", style: TextStyle(color: Colors.grey, fontSize: 12)),
+                                const Text(
+                                  "Top Distraction",
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 12,
+                                  ),
+                                ),
                                 Text(
                                   topApp!['appName'],
-                                  style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ],
@@ -163,22 +198,34 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                             children: [
                               Text(
                                 formatTime(topApp!['usageMinutes']),
-                                style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 16),
+                                style: const TextStyle(
+                                  color: Colors.redAccent,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
                               ),
                               const SizedBox(height: 4),
                               // 🔹 TOP APP ICON
                               SizedBox(
-                                width: 24, height: 24,
+                                width: 24,
+                                height: 24,
                                 child: _buildAppIcon(topApp!),
-                              )
+                              ),
                             ],
-                          )
+                          ),
                         ],
                       ),
                     ),
 
                   const SizedBox(height: 24),
-                  const Text("Detailed Breakdown", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text(
+                    "Detailed Breakdown",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const SizedBox(height: 12),
 
                   // App List
@@ -191,7 +238,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       final minutes = app['usageMinutes'] ?? 0;
                       final appName = app['appName'] ?? "Unknown";
 
-                      double percent = totalMinutes > 0 ? (minutes / totalMinutes) : 0.0;
+                      double percent = totalMinutes > 0
+                          ? (minutes / totalMinutes)
+                          : 0.0;
 
                       return Container(
                         margin: const EdgeInsets.only(bottom: 12),
@@ -199,21 +248,35 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                           children: [
                             // 🔹 LIST ITEM ICON
                             SizedBox(
-                              width: 40, height: 40,
+                              width: 40,
+                              height: 40,
                               child: _buildAppIcon(app),
                             ),
                             const SizedBox(width: 12),
-                            
+
                             // Name & Bar
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Text(appName, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
-                                      Text(formatTime(minutes), style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                                      Text(
+                                        appName,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      Text(
+                                        formatTime(minutes),
+                                        style: const TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 12,
+                                        ),
+                                      ),
                                     ],
                                   ),
                                   const SizedBox(height: 6),
@@ -222,7 +285,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                                     child: LinearProgressIndicator(
                                       value: percent,
                                       backgroundColor: Colors.white10,
-                                      color: index == 0 ? Colors.redAccent : Colors.blueAccent,
+                                      color: index == 0
+                                          ? Colors.redAccent
+                                          : Colors.blueAccent,
                                       minHeight: 6,
                                     ),
                                   ),
@@ -250,7 +315,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           child: Image.memory(
             bytes,
             fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) => _fallbackIcon(app['appName']),
+            errorBuilder: (context, error, stackTrace) =>
+                _fallbackIcon(app['appName']),
           ),
         );
       } catch (e) {
@@ -261,7 +327,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   Widget _fallbackIcon(String? appName) {
-    String letter = (appName != null && appName.isNotEmpty) ? appName[0].toUpperCase() : "?";
+    String letter = (appName != null && appName.isNotEmpty)
+        ? appName[0].toUpperCase()
+        : "?";
     return Container(
       decoration: BoxDecoration(
         color: Colors.white10,
@@ -270,17 +338,25 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       child: Center(
         child: Text(
           letter,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildInfoCard(String title, String value, IconData icon, Color color) {
+  Widget _buildInfoCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: AppColors.cardOverlay,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white10),
       ),
@@ -289,15 +365,26 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         children: [
           Container(
             padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: color.withOpacity(0.2), borderRadius: BorderRadius.circular(8)),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(8),
+            ),
             child: Icon(icon, color: color, size: 20),
           ),
           const SizedBox(height: 12),
           Text(title, style: const TextStyle(color: Colors.grey, fontSize: 12)),
           const SizedBox(height: 4),
-          Text(value, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );
   }
 }
+

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 extension ColorAlpha on Color {
-  Color withAlphaDouble(double alpha) => withOpacity(alpha);
+  Color withAlphaDouble(double alpha) => withValues(alpha: alpha);
 }
 
 class AppColors {
@@ -9,7 +9,7 @@ class AppColors {
   static const Color background = Colors.black;
 
   // Card overlay (glass/frost effect)
-  static Color cardOverlay = Colors.grey.shade900.withOpacity(0.8);
+  static Color cardOverlay = Colors.grey.shade900.withValues(alpha: 0.8);
 
   // Whites
   static const Color white = Colors.white;

@@ -8,18 +8,18 @@ import 'dart:convert';
 class UsageService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // 🔹 Check permission
+  // Check if the user has given us permission to see app usage
   Future<bool> hasPermission() async {
     final result = await UsageStats.checkUsagePermission();
     return result ?? false;
   }
 
-  // 🔹 Request permission
+  // Ask the user for permission
   Future<void> requestPermission() async {
     await UsageStats.grantUsagePermission();
   }
 
-  // 🔹 Ignore useless background/system packages
+  // We don't want to track system apps, so we ignore them
   bool _isIgnoredApp(String packageName) {
     final List<String> ignored = [
       'com.android.systemui',
@@ -37,7 +37,7 @@ class UsageService {
     return ignored.contains(packageName);
   }
 
-  // 🔹 Fetch all installed apps (with icons)
+  // Get a list of all apps installed on the phone
   Future<List<AppInfo>> getInstalledAppsList() async {
     try {
       return await InstalledApps.getInstalledApps(true, true); // include icons = true
@@ -47,7 +47,7 @@ class UsageService {
     }
   }
 
-  // 🔹 MAIN FUNCTION — Sync usage to Firebase
+  // This is the main function that sends usage data to the database
   Future<void> syncUsageToFirebase(String userId) async {
     try {
       if (!await hasPermission()) return;
@@ -55,10 +55,10 @@ class UsageService {
       DateTime end = DateTime.now();
       DateTime start = DateTime(end.year, end.month, end.day);
 
-      // 1️⃣ Fetch Raw Usage Stats
+      // 1. Get raw data from Android
       List<UsageInfo> rawStats = await UsageStats.queryUsageStats(start, end);
 
-      // 2️⃣ Aggregate usage per app
+      // 2. Add up the time for each app
       Map<String, double> appUsageMap = {};
       for (var info in rawStats) {
         if (info.packageName == null) continue;
@@ -73,7 +73,7 @@ class UsageService {
         }
       }
 
-      // 3️⃣ Fetch Installed Apps with Icons
+      // 3. Get app names and icons
       List<AppInfo> installedApps = await getInstalledAppsList();
 
       Map<String, String> appNameMap = {
@@ -87,7 +87,7 @@ class UsageService {
             app.packageName: base64Encode(app.icon!)
       };
 
-      // 4️⃣ Convert & Filter
+      // 4. Prepare the data for upload
       List<Map<String, dynamic>> processedApps = [];
       int totalMinutes = 0;
 
@@ -100,7 +100,7 @@ class UsageService {
           String realName = appNameMap[pkg] ?? pkg;
           String? iconBase64 = appIconMap[pkg];
 
-          // Manual cleaning of names
+          // Fix some common app names
           if (pkg == 'com.google.android.youtube') realName = 'YouTube';
           if (pkg == 'com.whatsapp') realName = 'WhatsApp';
           if (pkg == 'com.instagram.android') realName = 'Instagram';
@@ -112,15 +112,15 @@ class UsageService {
             'packageName': pkg,
             'usageMs': totalMs.toInt(),
             'usageMinutes': minutes,
-            'iconBytes': iconBase64, // 🔹 icon included!
+            'iconBytes': iconBase64, // We include the icon here
           });
         }
       }
 
-      // Sort by usage descending
+      // Sort so the most used apps are at the top
       processedApps.sort((a, b) => b['usageMinutes'].compareTo(a['usageMinutes']));
 
-      // 5️⃣ Upload to Firebase
+      // 5. Send everything to Firebase
       final todayDocId = DateTime.now().toIso8601String().split('T')[0];
 
       print("📤 Uploading Stats ($totalMinutes mins) with icons.");

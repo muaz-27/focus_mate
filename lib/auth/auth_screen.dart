@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:focus_mate/core/dashboard_router.dart';
+import 'package:focus_mate/core/models/user_model.dart';
 import 'login_screen.dart';
 import 'signup_screen.dart';
 import '../theme/app_colors.dart';

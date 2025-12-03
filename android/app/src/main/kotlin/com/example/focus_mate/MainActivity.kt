@@ -15,14 +15,37 @@ class MainActivity: FlutterActivity() {
                 // Receive list from Flutter
                 val apps = call.argument<List<String>>("apps")
                 if (apps != null) {
-                    FocusAccessibilityService.blockedPackageNames = apps
+                    FocusAccessibilityService.updateBlockedApps(context, apps)
                     result.success(true)
                 } else {
                     result.error("INVALID", "List was null", null)
                 }
+            } else if (call.method == "isAccessibilityEnabled") {
+                val enabled = isAccessibilityServiceEnabled(context, FocusAccessibilityService::class.java)
+                result.success(enabled)
             } else {
                 result.notImplemented()
             }
         }
+    }
+
+    private fun isAccessibilityServiceEnabled(context: android.content.Context, service: Class<out android.accessibilityservice.AccessibilityService>): Boolean {
+        val expectedComponentName = android.content.ComponentName(context, service)
+        val enabledServicesSetting = android.provider.Settings.Secure.getString(
+            context.contentResolver,
+            android.provider.Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+        ) ?: return false
+
+        val colonSplitter = android.text.TextUtils.SimpleStringSplitter(':')
+        colonSplitter.setString(enabledServicesSetting)
+
+        while (colonSplitter.hasNext()) {
+            val componentNameString = colonSplitter.next()
+            val enabledComponent = android.content.ComponentName.unflattenFromString(componentNameString)
+            if (enabledComponent != null && enabledComponent == expectedComponentName) {
+                return true
+            }
+        }
+        return false
     }
 }

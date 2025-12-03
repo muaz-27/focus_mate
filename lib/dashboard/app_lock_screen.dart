@@ -1,12 +1,13 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:installed_apps/app_info.dart';
 import 'package:android_intent_plus/android_intent.dart';
 import '../core/usage_service.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_theme.dart';
 import 'dart:typed_data';
-
 
 class AppLockScreen extends StatefulWidget {
   final String userId;
@@ -19,11 +20,11 @@ class AppLockScreen extends StatefulWidget {
 
 class _AppLockScreenState extends State<AppLockScreen> {
   final UsageService _usageService = UsageService();
+  static const platform = MethodChannel('com.example.focus_mate/blocker');
 
   List<AppInfo> installedApps = [];
   List<String> lockedPackages = [];
   DateTime? lockEndTime;
-  Timer? _uiTimer;
   bool loading = true;
 
   @override
@@ -32,19 +33,17 @@ class _AppLockScreenState extends State<AppLockScreen> {
     _loadData();
   }
 
-  @override
-  void dispose() {
-    _uiTimer?.cancel();
-    super.dispose();
-  }
-
   Future<void> _loadData() async {
-    final apps = await _usageService.getInstalledAppsList(); // already fetches icons
-    final doc = await FirebaseFirestore.instance.collection('users').doc(widget.userId).get();
+    final apps = await _usageService.getInstalledAppsList();
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.userId)
+        .get();
 
     if (mounted) {
       setState(() {
-        installedApps = apps;
+        // Filter out our own app to prevent accidental self-locking
+        installedApps = apps.where((app) => app.packageName != 'com.example.focus_mate').toList();
         installedApps.sort((a, b) => (a.name ?? "").compareTo(b.name ?? ""));
 
         if (doc.exists) {
@@ -53,7 +52,6 @@ class _AppLockScreenState extends State<AppLockScreen> {
 
           if (data['lockEndTime'] != null) {
             lockEndTime = (data['lockEndTime'] as Timestamp).toDate();
-            _startUiCountdown();
           }
         }
 
@@ -62,54 +60,67 @@ class _AppLockScreenState extends State<AppLockScreen> {
     }
   }
 
-  void _startUiCountdown() {
-    _uiTimer?.cancel();
-    _uiTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (mounted) {
-        setState(() {
-          if (lockEndTime != null && DateTime.now().isAfter(lockEndTime!)) {
-            _terminateLock();
-          }
-        });
-      }
-    });
+  Future<void> _syncToNative() async {
+    try {
+      final isActive = lockEndTime != null && DateTime.now().isBefore(lockEndTime!);
+      final appsToSend = isActive ? lockedPackages : <String>[];
+      await platform.invokeMethod('setBlockedApps', {'apps': appsToSend});
+    } catch (e) {
+      print("Error syncing to native: $e");
+    }
   }
 
   Future<void> _terminateLock() async {
-    _uiTimer?.cancel();
     setState(() => lockEndTime = null);
-    await FirebaseFirestore.instance.collection('users').doc(widget.userId).update({
-      'lockEndTime': null,
-    });
+    
+    // Sync immediately to unlock apps
+    await _syncToNative();
+
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.userId)
+        .update({'lockEndTime': null});
   }
 
   Future<void> _toggleLock(String packageName, bool isLocked) async {
     setState(() {
-      isLocked ? lockedPackages.add(packageName) : lockedPackages.remove(packageName);
+      isLocked
+          ? lockedPackages.add(packageName)
+          : lockedPackages.remove(packageName);
     });
 
-    await FirebaseFirestore.instance.collection('users').doc(widget.userId).update({
-      'lockedApps': lockedPackages,
-    });
+    // Sync immediately if lock is active
+    if (lockEndTime != null && DateTime.now().isBefore(lockEndTime!)) {
+      await _syncToNative();
+    }
+
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.userId)
+        .update({'lockedApps': lockedPackages});
   }
 
   void _openAccessibilitySettings() {
-    const AndroidIntent intent = AndroidIntent(action: 'android.settings.ACCESSIBILITY_SETTINGS');
+    const AndroidIntent intent = AndroidIntent(
+      action: 'android.settings.ACCESSIBILITY_SETTINGS',
+    );
     intent.launch();
   }
 
   void _showDurationPicker() {
     if (lockedPackages.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text("Select apps to lock first!"),
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Select apps to lock first!")),
+      );
       return;
     }
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF1E1E1E),
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      backgroundColor: AppColors.cardOverlay,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (ctx) {
         return Container(
           padding: const EdgeInsets.all(20),
@@ -117,8 +128,10 @@ class _AppLockScreenState extends State<AppLockScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text("Select Lock Duration",
-                  style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+              const Text(
+                "Select Lock Duration",
+                style: AppTheme.headerTitle,
+              ),
               const SizedBox(height: 20),
 
               Row(
@@ -135,7 +148,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
               SizedBox(
                 width: double.infinity,
                 child: _timeOption(120, "2 Hours (Deep Work)"),
-              )
+              ),
             ],
           ),
         );
@@ -162,33 +175,29 @@ class _AppLockScreenState extends State<AppLockScreen> {
     DateTime targetTime = DateTime.now().add(Duration(minutes: minutes));
 
     setState(() => lockEndTime = targetTime);
-    _startUiCountdown();
+    
+    // Sync immediately to start blocking
+    await _syncToNative();
 
-    await FirebaseFirestore.instance.collection('users').doc(widget.userId).update({
-      'lockEndTime': Timestamp.fromDate(targetTime),
-    });
-  }
-
-  String _getRemainingTime() {
-    if (lockEndTime == null) return "";
-    Duration diff = lockEndTime!.difference(DateTime.now());
-
-    return "${diff.inHours.toString().padLeft(2, '0')}:${(diff.inMinutes % 60).toString().padLeft(2, '0')}:${(diff.inSeconds % 60).toString().padLeft(2, '0')}";
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.userId)
+        .update({'lockEndTime': Timestamp.fromDate(targetTime)});
   }
 
   @override
   Widget build(BuildContext context) {
-    bool isLockActive = lockEndTime != null && DateTime.now().isBefore(lockEndTime!);
+    bool isLockActive =
+        lockEndTime != null && DateTime.now().isBefore(lockEndTime!);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
-
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text("Block Distractions"),
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
-        titleTextStyle: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+        titleTextStyle: AppTheme.headerTitle,
       ),
 
       body: Column(
@@ -203,49 +212,56 @@ class _AppLockScreenState extends State<AppLockScreen> {
                 const Icon(Icons.info_outline, color: Colors.blueAccent),
                 const SizedBox(width: 10),
                 const Expanded(
-                    child: Text("Enable Accessibility for instant blocking.",
-                        style: TextStyle(color: Colors.white70, fontSize: 12))),
-                TextButton(onPressed: _openAccessibilitySettings, child: const Text("OPEN"))
+                  child: Text(
+                    "Enable Accessibility for instant blocking.",
+                    style: TextStyle(color: Colors.white70, fontSize: 12),
+                  ),
+                ),
+                TextButton(
+                  onPressed: _openAccessibilitySettings,
+                  child: const Text("OPEN"),
+                ),
               ],
             ),
           ),
 
           // ============== LOCK TIMER DISPLAY ==============
-          if (isLockActive)
-            Container(
-              width: double.infinity,
-              color: Colors.green.withOpacity(0.2),
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                children: [
-                  const Text("🔒 LOCK ACTIVE UNTIL:",
-                      style: TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold)),
-                  Text(_getRemainingTime(),
-                      style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
-                ],
-              ),
+          if (isLockActive && lockEndTime != null)
+            LockTimerWidget(
+              endTime: lockEndTime!,
+              onTimerFinished: _terminateLock,
             ),
 
           // ============== APPS LIST ==============
           Expanded(
             child: loading
-                ? const Center(child: CircularProgressIndicator(color: Colors.cyanAccent))
+                ? const Center(
+                    child: CircularProgressIndicator(color: Colors.cyanAccent),
+                  )
                 : ListView.builder(
                     padding: const EdgeInsets.all(16),
                     itemCount: installedApps.length,
                     itemBuilder: (context, index) {
                       final app = installedApps[index];
-                      final isSelected = lockedPackages.contains(app.packageName);
+                      final isSelected = lockedPackages.contains(
+                        app.packageName,
+                      );
 
-                      // App icon extraction
-                      Uint8List? iconData = app.icon != null ? Uint8List.fromList(app.icon!) : null;
+                      Uint8List? iconData = app.icon != null
+                          ? Uint8List.fromList(app.icon!)
+                          : null;
 
                       return Container(
                         margin: const EdgeInsets.only(bottom: 14),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.06),
+                          color: AppColors.cardOverlay,
                           borderRadius: BorderRadius.circular(12),
-                          border: isSelected ? Border.all(color: Colors.redAccent.withOpacity(0.6), width: 1.4) : null,
+                          border: isSelected
+                              ? Border.all(
+                                  color: Colors.redAccent.withOpacity(0.6),
+                                  width: 1.4,
+                                )
+                              : null,
                         ),
 
                         child: ListTile(
@@ -254,7 +270,12 @@ class _AppLockScreenState extends State<AppLockScreen> {
                             radius: 22,
                             child: iconData != null
                                 ? ClipOval(
-                                    child: Image.memory(iconData, width: 40, height: 40, fit: BoxFit.cover),
+                                    child: Image.memory(
+                                      iconData,
+                                      width: 40,
+                                      height: 40,
+                                      fit: BoxFit.cover,
+                                    ),
                                   )
                                 : const Icon(Icons.apps, color: Colors.white70),
                           ),
@@ -262,16 +283,20 @@ class _AppLockScreenState extends State<AppLockScreen> {
                           title: Text(
                             app.name ?? "Unknown",
                             style: TextStyle(
-                                color: isSelected ? Colors.redAccent : Colors.white,
-                                fontWeight: FontWeight.w500,
-                                fontSize: 15),
+                              color: isSelected
+                                  ? Colors.redAccent
+                                  : Colors.white,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 15,
+                            ),
                           ),
 
                           trailing: Switch(
                             value: isSelected,
-                            activeColor: Colors.redAccent,
+                            activeThumbColor: Colors.redAccent,
                             inactiveThumbColor: Colors.grey,
-                            onChanged: (val) => _toggleLock(app.packageName!, val),
+                            onChanged: (val) =>
+                                _toggleLock(app.packageName, val),
                           ),
                         ),
                       );
@@ -297,3 +322,81 @@ class _AppLockScreenState extends State<AppLockScreen> {
     );
   }
 }
+
+class LockTimerWidget extends StatefulWidget {
+  final DateTime endTime;
+  final VoidCallback onTimerFinished;
+
+  const LockTimerWidget({
+    super.key,
+    required this.endTime,
+    required this.onTimerFinished,
+  });
+
+  @override
+  State<LockTimerWidget> createState() => _LockTimerWidgetState();
+}
+
+class _LockTimerWidgetState extends State<LockTimerWidget> {
+  late Timer _timer;
+  String _timeLeft = "";
+
+  @override
+  void initState() {
+    super.initState();
+    _updateTime();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) => _updateTime());
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  void _updateTime() {
+    final now = DateTime.now();
+    if (now.isAfter(widget.endTime)) {
+      widget.onTimerFinished();
+      _timer.cancel();
+      return;
+    }
+
+    final diff = widget.endTime.difference(now);
+    if (mounted) {
+      setState(() {
+        _timeLeft =
+            "${diff.inHours.toString().padLeft(2, '0')}:${(diff.inMinutes % 60).toString().padLeft(2, '0')}:${(diff.inSeconds % 60).toString().padLeft(2, '0')}";
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      color: Colors.green.withOpacity(0.2),
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        children: [
+          const Text(
+            "🔒 LOCK ACTIVE UNTIL:",
+            style: TextStyle(
+              color: Colors.greenAccent,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            _timeLeft,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+

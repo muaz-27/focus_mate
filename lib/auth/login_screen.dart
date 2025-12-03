@@ -1,11 +1,11 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:focus_mate/core/dashboard_router.dart';
+import 'package:focus_mate/core/models/user_model.dart';
+import 'package:focus_mate/core/widgets/custom_button.dart';
+import 'package:focus_mate/core/widgets/custom_text_field.dart';
 import '../core/auth_service.dart';
 import '../core/usage_service.dart';
 
-// ----------------- ROLE COLORS -----------------
+// These colors help us distinguish between different user roles
 final Map<UserRole, Color> roleAccent = {
   UserRole.user: Colors.cyanAccent,
   UserRole.companion: Colors.purpleAccent,
@@ -30,32 +30,35 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen>
-    with SingleTickerProviderStateMixin {
+class _LoginScreenState extends State<LoginScreen> {
   final AuthService _auth = AuthService();
-  final UsageService _usageService = UsageService(); // Added UsageService
+  final UsageService _usageService = UsageService();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-
-  bool _showPassword = false;
+  final _formKey = GlobalKey<FormState>();
+  bool _isFormValid = false;
   bool _isLoading = false;
-
-  late AnimationController _iconController;
 
   @override
   void initState() {
     super.initState();
-    _iconController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 1),
-    );
+    _emailController.addListener(_validateForm);
+    _passwordController.addListener(_validateForm);
+  }
+
+  void _validateForm() {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    final isValid = email.isNotEmpty && password.length >= 6;
+    if (_isFormValid != isValid) {
+      setState(() => _isFormValid = isValid);
+    }
   }
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
-    _iconController.dispose();
     super.dispose();
   }
 
@@ -70,51 +73,33 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  // ----------------- LOGIN LOGIC -----------------
-  void _handleLogin() async {
+  Future<void> _handleLogin() async {
+    if (!_formKey.currentState!.validate()) return;
+
     setState(() => _isLoading = true);
 
     try {
-      final email = _emailController.text.trim();
-      final password = _passwordController.text;
-
-      final user = await _auth.signIn(email, password);
+      final user = await _auth.signIn(
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
 
       if (user == null) {
-        throw FirebaseAuthException(
-          code: "invalid-credentials",
-          message: "Invalid email or password.",
-        );
+        throw Exception("Login failed. Please try again.");
       }
 
-      final doc = await FirebaseFirestore.instance
-          .collection("users")
-          .doc(user.uid)
-          .get();
-
-      if (!doc.exists) {
-        await AuthService.signOut(context);
-        throw Exception("User profile not found.");
+      // We make sure the user is logging in with the correct role
+      if (user.role != widget.role) {
+        await _auth.signOut();
+        throw Exception("Role mismatch. This account is registered as a ${user.role.name}.");
       }
 
-      final data = doc.data()!;
-      final storedRole = data["role"];
-      final selectedRole = widget.role.name;
-
-      if (storedRole != selectedRole) {
-        await AuthService.signOut(context);
-        throw Exception(
-          "Role mismatch. This account is registered as a $storedRole.",
-        );
-      }
-
-      // ----------------- NEW: Sync usage immediately -----------------
       if (widget.role == UserRole.user) {
-        await _usageService.syncUsageToFirebase(user.uid);
+        await _usageService.syncUsageToFirebase(user.id);
       }
 
       if (!mounted) return;
-      widget.onLogin(widget.role, data);
+      widget.onLogin(widget.role, user.toMap());
     } catch (e) {
       _showError(e.toString().replaceAll("Exception:", "").trim());
     } finally {
@@ -122,7 +107,6 @@ class _LoginScreenState extends State<LoginScreen>
     }
   }
 
-  // ----------------- UI BUILD -----------------
   @override
   Widget build(BuildContext context) {
     final accent = roleAccent[widget.role]!;
@@ -139,117 +123,93 @@ class _LoginScreenState extends State<LoginScreen>
                 TextButton.icon(
                   onPressed: widget.onBack,
                   icon: const Icon(Icons.arrow_back, color: Colors.white70),
-                  label: const Text(
-                    "Back",
-                    style: TextStyle(color: Colors.white70),
-                  ),
+                  label: const Text("Back", style: TextStyle(color: Colors.white70)),
                 ),
                 const SizedBox(height: 10),
+
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(26),
                   decoration: BoxDecoration(
                     color: Colors.grey[900]!.withOpacity(0.8),
                     borderRadius: BorderRadius.circular(18),
-                    border: Border.all(
-                      color: accent.withOpacity(0.3),
-                      width: 1,
-                    ),
+                    border: Border.all(color: accent.withOpacity(0.3), width: 1),
                   ),
-                  child: Column(
-                    children: [
-                      CircleAvatar(
-                        radius: 36,
-                        backgroundColor: accent.withOpacity(0.15),
-                        child: Icon(Icons.lock, color: accent, size: 32),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        "Login",
-                        style: TextStyle(
-                          color: accent,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      children: [
+                        CircleAvatar(
+                          radius: 36,
+                          backgroundColor: accent.withOpacity(0.15),
+                          child: Icon(Icons.lock, color: accent, size: 32),
                         ),
-                      ),
-                      const SizedBox(height: 6),
-                      const Text(
-                        "Enter your details to continue",
-                        style: TextStyle(color: Colors.white70),
-                      ),
-                      const SizedBox(height: 26),
-                      _buildInputField(
-                        controller: _emailController,
-                        hint: "Email",
-                        icon: Icons.mail,
-                        accent: accent,
-                      ),
-                      const SizedBox(height: 18),
-                      _buildInputField(
-                        controller: _passwordController,
-                        hint: "Password",
-                        icon: Icons.lock,
-                        accent: accent,
-                        obscure: !_showPassword,
-                        suffix: IconButton(
-                          icon: Icon(
-                            _showPassword
-                                ? Icons.visibility_off
-                                : Icons.visibility,
-                            color: Colors.white54,
+                        const SizedBox(height: 16),
+
+                        Text(
+                          "Login",
+                          style: TextStyle(
+                            color: accent,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
                           ),
-                          onPressed: () =>
-                              setState(() => _showPassword = !_showPassword),
                         ),
-                      ),
-                      const SizedBox(height: 26),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : _handleLogin,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: accent,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
+                        const SizedBox(height: 6),
+                        const Text(
+                          "Enter your details to continue",
+                          style: TextStyle(color: Colors.white70),
+                        ),
+                        const SizedBox(height: 26),
+
+                        CustomTextField(
+                          controller: _emailController,
+                          hint: "Email",
+                          icon: Icons.mail,
+                          accentColor: accent,
+                          validator: (value) =>
+                              (value == null || value.isEmpty) ? "Please enter your email" : null,
+                        ),
+                        const SizedBox(height: 18),
+
+                        CustomTextField(
+                          controller: _passwordController,
+                          hint: "Password",
+                          icon: Icons.lock,
+                          accentColor: accent,
+                          isPassword: true,
+                          validator: (value) =>
+                              (value == null || value.isEmpty) ? "Please enter your password" : null,
+                        ),
+
+                        const SizedBox(height: 26),
+
+                        CustomButton(
+                          onPressed: _isFormValid ? _handleLogin : null,
+                          text: "Sign In",
+                          isLoading: _isLoading,
+                          color: _isFormValid ? accent : Colors.grey,
+                        ),
+
+                        const SizedBox(height: 14),
+
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text(
+                              "Don't have an account?",
+                              style: TextStyle(color: Colors.white60),
                             ),
-                          ),
-                          child: _isLoading
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.black,
-                                  ),
-                                )
-                              : const Text(
-                                  "Sign In",
-                                  style: TextStyle(
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text(
-                            "Don't have an account?",
-                            style: TextStyle(color: Colors.white60),
-                          ),
-                          TextButton(
-                            onPressed: widget.onSwitchToSignup,
-                            child: Text(
-                              "Sign Up",
-                              style: TextStyle(color: accent),
+                            TextButton(
+                              onPressed: widget.onSwitchToSignup,
+                              child: Text(
+                                "Sign Up",
+                                style: TextStyle(color: accent),
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -259,39 +219,5 @@ class _LoginScreenState extends State<LoginScreen>
       ),
     );
   }
-
-  Widget _buildInputField({
-    required TextEditingController controller,
-    required String hint,
-    required IconData icon,
-    required Color accent,
-    bool obscure = false,
-    Widget? suffix,
-  }) {
-    return TextField(
-      controller: controller,
-      obscureText: obscure,
-      style: const TextStyle(color: Colors.white),
-      decoration: InputDecoration(
-        prefixIcon: Icon(icon, color: accent),
-        suffixIcon: suffix,
-        hintText: hint,
-        hintStyle: const TextStyle(color: Colors.white54),
-        filled: true,
-        fillColor: Colors.white12,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: accent.withOpacity(0.2)),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: accent.withOpacity(0.2)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: accent.withOpacity(0.5), width: 1.4),
-        ),
-      ),
-    );
-  }
 }
+

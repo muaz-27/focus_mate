@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_theme.dart';
 
 class FocusSessionScreen extends StatefulWidget {
   final String userId;
@@ -28,7 +30,7 @@ class _FocusSessionScreenState extends State<FocusSessionScreen> {
     super.initState();
     _totalSeconds = widget.durationMinutes * 60;
     _remainingSeconds = _totalSeconds;
-    _setSessionStatus(true); // 🟢 Tell Companion we started
+    _setSessionStatus(true); // Let the database know we started studying
     _startTimer();
   }
 
@@ -61,7 +63,7 @@ class _FocusSessionScreenState extends State<FocusSessionScreen> {
 
   Future<void> _finishSession() async {
     _timer?.cancel();
-    await _setSessionStatus(false); // 🔴 Tell Companion we finished
+    await _setSessionStatus(false); // Let the database know we stopped
 
     // Update Study Time
     await FirebaseFirestore.instance
@@ -110,11 +112,11 @@ class _FocusSessionScreenState extends State<FocusSessionScreen> {
 
     double progress = 1.0 - (_remainingSeconds / _totalSeconds);
 
-    // 🔒 PopScope prevents using the Android Back Button
+    // We use this widget to stop the user from accidentally going back
     return PopScope(
       canPop: false,
       child: Scaffold(
-        backgroundColor: Colors.black,
+        backgroundColor: AppColors.background,
         body: SafeArea(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -134,7 +136,7 @@ class _FocusSessionScreenState extends State<FocusSessionScreen> {
                     child: CircularProgressIndicator(
                       value: progress,
                       strokeWidth: 15,
-                      backgroundColor: Colors.grey[900],
+                      backgroundColor: AppColors.cardOverlay,
                       color: Colors.blueAccent,
                     ),
                   ),
@@ -151,20 +153,46 @@ class _FocusSessionScreenState extends State<FocusSessionScreen> {
 
               const SizedBox(height: 60),
 
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 40),
-                child: OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Colors.redAccent),
-                    foregroundColor: Colors.redAccent,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 15,
-                      horizontal: 30,
-                    ),
-                  ),
-                  onPressed: _giveUp,
-                  child: const Text("GIVE UP"),
+              // Companion Toggle Indicator
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white10,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.greenAccent.withOpacity(0.5)),
                 ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Icon(Icons.link, color: Colors.greenAccent, size: 16),
+                    SizedBox(width: 8),
+                    Text("Companion Control Active", style: TextStyle(color: Colors.greenAccent, fontSize: 12)),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 40),
+
+              // Controls
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Pause/Resume
+                  FloatingActionButton(
+                    backgroundColor: Colors.white,
+                    onPressed: () {
+                      // Toggle timer logic
+                    },
+                    child: const Icon(Icons.pause, color: Colors.black),
+                  ),
+                  const SizedBox(width: 24),
+                  
+                  // End Session
+                  FloatingActionButton(
+                    backgroundColor: Colors.redAccent,
+                    onPressed: _giveUp,
+                    child: const Icon(Icons.stop, color: Colors.white),
+                  ),
+                ],
               ),
             ],
           ),

@@ -26,7 +26,7 @@ class AppTheme {
   static BoxDecoration cardContainer(List<Color> gradientColors) {
     return BoxDecoration(
       gradient: LinearGradient(
-        colors: gradientColors.map((c) => c.withOpacity(0.15)).toList(),
+        colors: gradientColors.map((c) => c.withValues(alpha: 0.15)).toList(),
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),

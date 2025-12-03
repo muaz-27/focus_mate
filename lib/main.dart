@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:focus_mate/core/auth_service.dart';
+import 'package:focus_mate/core/models/user_model.dart';
 
 // 🔹 IMPORTS
 import 'firebase_options.dart';
 import 'auth/auth_screen.dart';
 import 'core/dashboard_router.dart';
-
-
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -56,8 +55,8 @@ class AuthGate extends StatelessWidget {
         // Logged In -> Fetch User Data
         User currentUser = snapshot.data!;
 
-        return FutureBuilder<DocumentSnapshot>(
-          future: FirebaseFirestore.instance.collection('users').doc(currentUser.uid).get(),
+        return FutureBuilder<UserModel?>(
+          future: AuthService().getUserData(currentUser.uid),
           builder: (context, userSnapshot) {
             
             if (userSnapshot.connectionState == ConnectionState.waiting) {
@@ -65,27 +64,19 @@ class AuthGate extends StatelessWidget {
             }
 
             // Safety Check: Auth exists but Data is missing
-            if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
-              FirebaseAuth.instance.signOut();
+            if (!userSnapshot.hasData || userSnapshot.data == null) {
+              AuthService().signOut();
               return AuthScreen(onAuthComplete: (_,__) {});
             }
 
             // Get Data
-            Map<String, dynamic> userData = userSnapshot.data!.data() as Map<String, dynamic>;
-            userData['id'] = currentUser.uid;
-
-            // Determine Role
-            String roleStr = userData['role'] ?? 'user';
-            UserRole role = (roleStr == 'companion') ? UserRole.companion : UserRole.user;
+            final user = userSnapshot.data!;
 
             // Route to Correct Dashboard
             return DashboardRouter(
-              role: role,
-              userData: userData,
-              studyTime: userData['studyTime'] ?? 0,
-              dailyGoal: userData['dailyGoal'] ?? 120,
+              user: user,
               activeSession: false,
-              companionActive: userData['linkedCompanion'] != null,
+              companionActive: user.linkedUsers?.isNotEmpty ?? false,
               appsUnlocked: false,
             );
           },
