@@ -1,22 +1,91 @@
+// student_dashboard.dart
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:usage_stats/usage_stats.dart';
-
 import '../core/auth_service.dart';
+import '../core/permission_manager.dart';
 import '../core/usage_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_theme.dart';
-import 'analytics_screen.dart';
-import 'app_lock_screen.dart';
-import 'focus_session_screen.dart';
-import 'session_setup_screen.dart';
-import 'study_pass_screen.dart';
-import 'study_workspace_screen.dart';
-import '../core/permission_manager.dart';
+import './analytics_screen.dart';
+import './app_lock_screen.dart';
+import './app_lock_mode_selection.dart';
+import './session_setup_screen.dart';
+import './study_workspace_screen.dart';
+import './companion_controlled_page.dart';
+import './waiting_for_companion_page.dart';
 
+// ==========================================
+// 1. LOADER (Entry Point) - ADD THIS BACK
+// ==========================================
+class StudentDashboardLoader extends StatelessWidget {
+  const StudentDashboardLoader({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      return const Scaffold(body: Center(child: Text("Please log in.")));
+    }
+
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            backgroundColor: AppColors.background,
+            body: Center(
+              child: CircularProgressIndicator(color: Colors.cyanAccent),
+            ),
+          );
+        }
+
+        if (snapshot.hasError || !snapshot.hasData || !snapshot.data!.exists) {
+          return const Scaffold(
+            backgroundColor: AppColors.background,
+            body: Center(
+              child: Text(
+                "Error loading profile",
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          );
+        }
+
+        final data = snapshot.data!.data() as Map<String, dynamic>;
+        data['id'] = user.uid;
+
+        final int studyTime = data['todayStudyMinutes'] ?? 0;
+        final int dailyGoal = data['dailyGoal'] ?? 120;
+        final bool appsUnlocked =
+            (data['appLockMode'] ?? 'normal') == 'unlocked';
+        final bool companionActive = data['linkedCompanion'] != null;
+
+        return StudentDashboard(
+          userData: data,
+          studyTime: studyTime,
+          dailyGoal: dailyGoal,
+          activeSession: false,
+          companionActive: companionActive,
+          appsUnlocked: appsUnlocked,
+          onLogout: () => AuthService().signOut(),
+          onStartSession: (_) {},
+        );
+      },
+    );
+  }
+}
+
+// ==========================================
+// 2. MAIN DASHBOARD (YOUR ORIGINAL VERSION)
+// ==========================================
 class StudentDashboard extends StatefulWidget {
   final Map<String, dynamic> userData;
   final int studyTime;
@@ -53,12 +122,17 @@ class _StudentDashboardState extends State<StudentDashboard>
   DateTime? _lockEndTime;
   List<String> _blockedList = [];
   bool companionActive = false;
-  final TextEditingController _companionCodeController = TextEditingController();
+  final TextEditingController _companionCodeController =
+      TextEditingController();
+  
+  // New state variable for active session re-entry
+  Map<String, dynamic>? _activeSessionData;
+  StreamSubscription? _activeSessionSubscription;
 
   @override
   void initState() {
     super.initState();
-    
+
     // Initialize companion state from passed user data
     if (widget.userData['linkedCompanion'] != null) {
       companionActive = true;
@@ -66,16 +140,55 @@ class _StudentDashboardState extends State<StudentDashboard>
 
     _startRuleSync();
     _getCompanionDetails();
+    _checkActiveSession(); // Check for existing active session
 
     // Sync usage data in background
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _usageService.syncUsageToFirebase(widget.userData['id']);
     });
   }
+  
+  void _checkActiveSession() {
+    _activeSessionSubscription = _firestore
+        .collection('companion_sessions')
+        .where('userId', isEqualTo: widget.userData['id'])
+        .where('status', whereIn: ['ACTIVE', 'REQUESTED'])
+        //.orderBy('createdAt', descending: true) // optimization: implies index
+        .snapshots()
+        .listen((snapshot) {
+      if (mounted) {
+        // Filter locally if needed or just take the first one
+        // Since we want the *latest* relevant one, and we can't easily orderBy with whereIn without index
+        // We can sort them in memory if strictly needed, but limit(1) might give arbitrary one.
+        
+        if (snapshot.docs.isNotEmpty) {
+           // Sort in memory to be safe (client side active/request usually just 1)
+           final docs = snapshot.docs;
+           docs.sort((a, b) {
+             final aTime = (a.data()['requestedAt'] as Timestamp?)?.toDate() ?? DateTime(2000);
+             final bTime = (b.data()['requestedAt'] as Timestamp?)?.toDate() ?? DateTime(2000);
+             return bTime.compareTo(aTime);
+           });
+           
+           final latest = docs.first;
+           
+          setState(() {
+            _activeSessionData = latest.data();
+            _activeSessionData!['id'] = latest.id;
+          });
+        } else {
+          setState(() {
+            _activeSessionData = null;
+          });
+        }
+      }
+    });
+  }
 
   @override
   void dispose() {
     _ruleSyncTimer?.cancel();
+    _activeSessionSubscription?.cancel();
     _companionCodeController.dispose();
     super.dispose();
   }
@@ -118,29 +231,24 @@ class _StudentDashboardState extends State<StudentDashboard>
   }
 
   Future<void> _getCompanionDetails() async {
+    if (widget.userData['companionName'] != null) return;
     String? companionId = widget.userData['linkedCompanion'];
-    if (companionId == null) return;
-
-    // If we already have the name, just ensure active state is true
-    if (widget.userData['companionName'] != null) {
-      if (mounted) setState(() => companionActive = true);
-      return;
-    }
-
-    try {
-      DocumentSnapshot doc = await _firestore
-          .collection('users')
-          .doc(companionId)
-          .get();
-      if (doc.exists) {
-        if (mounted) {
-          setState(() {
-            widget.userData['companionName'] = doc['name'];
-            companionActive = true;
-          });
+    if (companionId != null) {
+      try {
+        DocumentSnapshot doc = await _firestore
+            .collection('users')
+            .doc(companionId)
+            .get();
+        if (doc.exists) {
+          if (mounted) {
+            setState(() {
+              widget.userData['companionName'] = doc['name'];
+              companionActive = true;
+            });
+          }
         }
-      }
-    } catch (e) {}
+      } catch (e) {}
+    }
   }
 
   Future<void> _unlinkCompanion() async {
@@ -230,7 +338,7 @@ class _StudentDashboardState extends State<StudentDashboard>
         actions: [
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.redAccent),
-            onPressed: () => AuthService().signOut(),
+            onPressed: () => AuthService().signOut(), // This was working
           ),
         ],
       ),
@@ -238,15 +346,63 @@ class _StudentDashboardState extends State<StudentDashboard>
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
+            if (_activeSessionData != null)
+              Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    final status = _activeSessionData!['status'];
+                    final sessionId = _activeSessionData!['id'];
+
+                    if (status == 'ACTIVE') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => CompanionControlledPage(
+                            sessionId: sessionId,
+                            userId: widget.userData['id'],
+                          ),
+                        ),
+                      );
+                    } else if (status == 'REQUESTED') {
+                       Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => WaitingForCompanionPage(
+                            sessionId: sessionId,
+                            userId: widget.userData['id'],
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  icon: Icon(
+                    _activeSessionData!['status'] == 'ACTIVE' ? Icons.lock_clock : Icons.hourglass_empty, 
+                    color: Colors.white
+                  ),
+                  label: Text(
+                    _activeSessionData!['status'] == 'ACTIVE' 
+                        ? "Return to Locked Session" 
+                        : "Waiting for Companion...",
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _activeSessionData!['status'] == 'ACTIVE' 
+                        ? Colors.redAccent 
+                        : Colors.orange,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
             _buildQuickTiles(),
             const SizedBox(height: 16),
             _buildDailyFocusCard(progress, remaining),
             const SizedBox(height: 16),
-
-            // This card shows your companion status
             _buildCompanionCard(),
-
-
           ],
         ),
       ),
@@ -270,7 +426,7 @@ class _StudentDashboardState extends State<StudentDashboard>
           boxShadow: companionActive
               ? [
                   BoxShadow(
-                    color: Colors.blueAccent.withValues(alpha: 0.5),
+                    color: Colors.blueAccent.withOpacity(0.5),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -440,9 +596,8 @@ class _StudentDashboardState extends State<StudentDashboard>
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => SessionSetupScreen(
-                        userId: widget.userData['id'],
-                      ),
+                      builder: (_) =>
+                          SessionSetupScreen(userId: widget.userData['id']),
                     ),
                   );
                 },
@@ -458,9 +613,8 @@ class _StudentDashboardState extends State<StudentDashboard>
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => StudyWorkspaceScreen(
-                        userId: widget.userData['id'],
-                      ),
+                      builder: (_) =>
+                          StudyWorkspaceScreen(userId: widget.userData['id']),
                     ),
                   );
                 },
@@ -482,8 +636,11 @@ class _StudentDashboardState extends State<StudentDashboard>
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) =>
-                              AppLockScreen(userId: widget.userData['id']),
+                          builder: (_) => AppLockModeSelection(
+                            userId: widget.userData['id'],
+                            companionId: widget.userData['linkedCompanion'],
+                            companionName: widget.userData['companionName'],
+                          ),
                         ),
                       );
                     }
@@ -534,8 +691,6 @@ class _StudentDashboardState extends State<StudentDashboard>
       ],
     );
   }
-
-
 
   Widget _buildTile(
     String title,

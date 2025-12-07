@@ -20,12 +20,15 @@ class AppLockScreen extends StatefulWidget {
 
 class _AppLockScreenState extends State<AppLockScreen> {
   final UsageService _usageService = UsageService();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   static const platform = MethodChannel('com.example.focus_mate/blocker');
 
   List<AppInfo> installedApps = [];
   List<String> lockedPackages = [];
   DateTime? lockEndTime;
   bool loading = true;
+  bool _isCompanionControlled = false;
+  String? _companionName;
 
   @override
   void initState() {
@@ -34,29 +37,56 @@ class _AppLockScreenState extends State<AppLockScreen> {
   }
 
   Future<void> _loadData() async {
-    final apps = await _usageService.getInstalledAppsList();
-    final doc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(widget.userId)
-        .get();
+    try {
+      // Check if user is in companion session
+      final companionSession = await _firestore
+          .collection('companion_sessions')
+          .where('userId', isEqualTo: widget.userId)
+          .where('status', isEqualTo: 'ACTIVE')
+          .limit(1)
+          .get();
 
-    if (mounted) {
-      setState(() {
-        // Filter out our own app to prevent accidental self-locking
-        installedApps = apps.where((app) => app.packageName != 'com.example.focus_mate').toList();
-        installedApps.sort((a, b) => (a.name ?? "").compareTo(b.name ?? ""));
+      if (companionSession.docs.isNotEmpty) {
+        // User is in companion mode
+        final sessionData = companionSession.docs.first.data();
+        setState(() {
+          _isCompanionControlled = true;
+          _companionName = sessionData['companionName'];
+          loading = false;
+        });
+        return;
+      }
 
-        if (doc.exists) {
-          final data = doc.data()!;
-          lockedPackages = List<String>.from(data['lockedApps'] ?? []);
+      // Normal mode - load user's own app locks
+      final apps = await _usageService.getInstalledAppsList();
+      final doc = await _firestore
+          .collection('users')
+          .doc(widget.userId)
+          .get();
 
-          if (data['lockEndTime'] != null) {
-            lockEndTime = (data['lockEndTime'] as Timestamp).toDate();
+      if (mounted) {
+        setState(() {
+          // Filter out our own app to prevent accidental self-locking
+          installedApps = apps.where((app) => app.packageName != 'com.example.focus_mate').toList();
+          installedApps.sort((a, b) => (a.name ?? "").compareTo(b.name ?? ""));
+
+          if (doc.exists) {
+            final data = doc.data()!;
+            lockedPackages = List<String>.from(data['lockedApps'] ?? []);
+
+            if (data['lockEndTime'] != null) {
+              lockEndTime = (data['lockEndTime'] as Timestamp).toDate();
+            }
           }
-        }
 
-        loading = false;
-      });
+          loading = false;
+        });
+      }
+    } catch (e) {
+      print("Error loading app lock data: $e");
+      if (mounted) {
+        setState(() => loading = false);
+      }
     }
   }
 
@@ -76,7 +106,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
     // Sync immediately to unlock apps
     await _syncToNative();
 
-    await FirebaseFirestore.instance
+    await _firestore  // FIXED: Changed from _firestore.instance to just _firestore
         .collection('users')
         .doc(widget.userId)
         .update({'lockEndTime': null});
@@ -94,7 +124,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
       await _syncToNative();
     }
 
-    await FirebaseFirestore.instance
+    await _firestore  // FIXED: Changed from _firestore.instance to just _firestore
         .collection('users')
         .doc(widget.userId)
         .update({'lockedApps': lockedPackages});
@@ -179,14 +209,122 @@ class _AppLockScreenState extends State<AppLockScreen> {
     // Sync immediately to start blocking
     await _syncToNative();
 
-    await FirebaseFirestore.instance
+    await _firestore  // FIXED: Changed from _firestore.instance to just _firestore
         .collection('users')
         .doc(widget.userId)
         .update({'lockEndTime': Timestamp.fromDate(targetTime)});
   }
 
+  // Build companion controlled UI
+  Widget _buildCompanionControlledUI() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(30),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.group,
+              size: 80,
+              color: Colors.blueAccent.withOpacity(0.7),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              "App Lock Controlled by Companion",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              _companionName != null
+                  ? "Your companion '${_companionName!}' is managing your app locks"  // FIXED: Added ! to unwrap
+                  : "Your companion is managing your app locks",
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.grey, fontSize: 16),
+            ),
+            const SizedBox(height: 30),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: AppColors.cardOverlay,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.blueAccent.withOpacity(0.3)),
+              ),
+              child: Column(
+                children: [
+                  const Text(
+                    "During companion session:",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  _buildFeatureItem("❌ You cannot lock/unlock apps"),
+                  _buildFeatureItem("👤 Companion selects which apps to lock"),
+                  _buildFeatureItem("⏰ Companion controls the session duration"),
+                  _buildFeatureItem("🔓 Companion can manually unlock apps"),
+                  _buildFeatureItem("🚨 You can request emergency unlock"),
+                ],
+              ),
+            ),
+            const SizedBox(height: 30),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pop(context); // Go back to dashboard
+              },
+              icon: const Icon(Icons.arrow_back),
+              label: const Text("Back to Dashboard"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blueAccent,
+                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFeatureItem(String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(color: Colors.grey),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    // If companion controlled, show different UI
+    if (_isCompanionControlled) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          title: const Text("App Lock - Companion Mode"),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          iconTheme: const IconThemeData(color: Colors.white),
+          titleTextStyle: AppTheme.headerTitle,
+        ),
+        body: _buildCompanionControlledUI(),
+      );
+    }
+
     bool isLockActive =
         lockEndTime != null && DateTime.now().isBefore(lockEndTime!);
 
@@ -202,7 +340,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
 
       body: Column(
         children: [
-          // ============== ACCESSIBILITY REMINDER ==============
+          // Accessibility reminder
           Container(
             width: double.infinity,
             color: Colors.blueAccent.withOpacity(0.2),
@@ -225,14 +363,14 @@ class _AppLockScreenState extends State<AppLockScreen> {
             ),
           ),
 
-          // ============== LOCK TIMER DISPLAY ==============
+          // Lock timer display
           if (isLockActive && lockEndTime != null)
             LockTimerWidget(
               endTime: lockEndTime!,
               onTimerFinished: _terminateLock,
             ),
 
-          // ============== APPS LIST ==============
+          // Apps list
           Expanded(
             child: loading
                 ? const Center(
@@ -399,4 +537,3 @@ class _LockTimerWidgetState extends State<LockTimerWidget> {
     );
   }
 }
-

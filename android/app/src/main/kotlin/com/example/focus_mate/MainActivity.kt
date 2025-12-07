@@ -11,19 +11,33 @@ class MainActivity: FlutterActivity() {
         super.configureFlutterEngine(flutterEngine)
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
+            
+            // Handler 1: Update USER Blocked Apps
             if (call.method == "setBlockedApps") {
-                // Receive list from Flutter
                 val apps = call.argument<List<String>>("apps")
                 if (apps != null) {
-                    FocusAccessibilityService.updateBlockedApps(context, apps)
+                    FocusAccessibilityService.updateUserBlockedApps(context, apps)
                     result.success(true)
                 } else {
-                    result.error("INVALID", "List was null", null)
+                    result.error("INVALID", "App list was null", null)
                 }
-            } else if (call.method == "isAccessibilityEnabled") {
+            } 
+            // Handler 2: Update COMPANION Blocked Apps (New Logic)
+            else if (call.method == "setCompanionBlockedApps") {
+                val apps = call.argument<List<String>>("apps")
+                if (apps != null) {
+                    FocusAccessibilityService.updateCompanionBlockedApps(context, apps)
+                    result.success(true)
+                } else {
+                    result.error("INVALID", "App list was null", null)
+                }
+            }
+            // Handler 3: Check Permissions
+            else if (call.method == "isAccessibilityEnabled") {
                 val enabled = isAccessibilityServiceEnabled(context, FocusAccessibilityService::class.java)
                 result.success(enabled)
-            } else {
+            } 
+            else {
                 result.notImplemented()
             }
         }
