@@ -98,6 +98,33 @@ class _CompanionRequestPageState extends State<CompanionRequestPage> {
 
     setState(() => _isLoading = true);
     try {
+      // 1. Check for existing pending or active sessions
+      final existingParams = await FirebaseFirestore.instance
+          .collection('companion_sessions')
+          .where('userId', isEqualTo: widget.userId)
+          .where('status', whereIn: ['REQUESTED', 'ACTIVE'])
+          .limit(1)
+          .get();
+
+      if (existingParams.docs.isNotEmpty) {
+        if (!mounted) return;
+        await showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text("Session Active"),
+            content: const Text(
+                "You already have a pending or active session. Please finish your current session before starting a new one."),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text("OK"),
+              ),
+            ],
+          ),
+        );
+        return;
+      }
+
       final userDoc = await FirebaseFirestore.instance
           .collection('users')
           .doc(widget.userId)
@@ -125,6 +152,7 @@ class _CompanionRequestPageState extends State<CompanionRequestPage> {
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -135,7 +163,7 @@ class _CompanionRequestPageState extends State<CompanionRequestPage> {
         ),
       );
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 }

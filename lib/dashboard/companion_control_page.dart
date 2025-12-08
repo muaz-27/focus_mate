@@ -1,11 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:installed_apps/installed_apps.dart';
-import 'package:installed_apps/app_info.dart';
 import 'package:focus_mate/core/usage_service.dart';
 import 'package:focus_mate/theme/app_colors.dart';
 import 'dart:typed_data';
+import 'dart:convert';
 
 class CompanionControlPage extends StatefulWidget {
   final String sessionId;
@@ -26,7 +25,9 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
   final UsageService _usageService = UsageService();
   late StreamSubscription _sessionSubscription;
   Map<String, dynamic> _sessionData = {};
-  List<AppInfo> _installedApps = [];
+  
+  // CHANGED: Use Map instead of Application to support Firestore data
+  List<Map<String, dynamic>> _installedApps = [];
   List<String> _selectedApps = [];
   List<String> _lockedApps = [];
   bool _isLoading = true;
@@ -49,29 +50,48 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
 
   Future<void> _loadData() async {
     try {
-      // Get student's installed apps
-      final apps = await _usageService.getInstalledAppsList();
-      
-      // Get session data
+      // 1. Get session data first
       final sessionDoc = await _firestore
           .collection('companion_sessions')
           .doc(widget.sessionId)
           .get();
+
+      if (!sessionDoc.exists) return;
+
+      _sessionData = sessionDoc.data()!;
+      final studentId = _sessionData['userId'];
+
+      // 2. Get student's installed apps from Firestore (uploaded by StudentDashboard)
+      final userDoc = await _firestore.collection('users').doc(studentId).get();
       
-      if (sessionDoc.exists) {
+      List<Map<String, dynamic>> apps = [];
+      if (userDoc.exists && userDoc.data()!.containsKey('installedApps')) {
+        apps = List<Map<String, dynamic>>.from(userDoc.data()!['installedApps']);
+      }
+
+      if (mounted) {
         setState(() {
-          _sessionData = sessionDoc.data()!;
-          _installedApps = apps.where((app) => app.packageName != 'com.example.focus_mate').toList();
-          _installedApps.sort((a, b) => (a.name ?? "").compareTo(b.name ?? ""));
+          // Filter out our own app
+          _installedApps = apps
+              .where((app) => app['packageName'] != 'com.example.focus_mate')
+              .toList();
+          
+          // Sort
+          _installedApps.sort((a, b) => 
+              (a['appName'] as String).toLowerCase().compareTo((b['appName'] as String).toLowerCase())
+          );
+
           _lockedApps = List<String>.from(_sessionData['lockedApps'] ?? []);
-          _selectedApps = List.from(_lockedApps); // Pre-select already locked apps
+          _selectedApps = List.from(_lockedApps);
           _isLoading = false;
         });
+
         _updateTimeLeft();
         _timer = Timer.periodic(const Duration(seconds: 1), (_) => _updateTimeLeft());
       }
     } catch (e) {
       print("Error loading data: $e");
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -83,15 +103,34 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
         .listen((snapshot) {
       if (snapshot.exists) {
         final data = snapshot.data()!;
-        setState(() {
-          _sessionData = data;
-          _lockedApps = List<String>.from(data['lockedApps'] ?? []);
-          // Update selected apps to match locked apps
-          _selectedApps = List.from(_lockedApps);
-        });
+        
+        // 1. Check if session ended
+        if (data['status'] == 'ENDED') {
+          if (mounted) {
+             ScaffoldMessenger.of(context).showSnackBar(
+               const SnackBar(content: Text("Session ended")),
+             );
+             // Return to dashboard
+             Navigator.of(context).popUntil((route) => route.isFirst);
+          }
+          return; 
+        }
+
+        if (mounted) {
+          setState(() {
+            _sessionData = data;
+            _lockedApps = List<String>.from(data['lockedApps'] ?? []);
+            // Update selected apps to match locked apps
+            _selectedApps = List.from(_lockedApps);
+          });
+        }
         
         // Check for emergency requests
-        if (data['emergencyRequested'] == true) {
+        // Ensure we only show it if the status isn't ENDED (handled above)
+        if (data['emergencyRequested'] == true && mounted) {
+           // Basic check to see if we are already showing a dialog?
+           // For now, the existing logic is "show it". 
+           // But since we return early on ENDED, this won't fire if session is over.
           _showEmergencyRequestDialog(data);
         }
       }
@@ -206,15 +245,17 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
       final now = DateTime.now();
       
       if (now.isAfter(endTime)) {
-        setState(() => _timeLeft = "Session ended");
+        if (mounted) setState(() => _timeLeft = "Session ended");
         return;
       }
       
       final diff = endTime.difference(now);
-      setState(() {
-        _timeLeft =
-            "${diff.inHours.toString().padLeft(2, '0')}:${(diff.inMinutes % 60).toString().padLeft(2, '0')}:${(diff.inSeconds % 60).toString().padLeft(2, '0')}";
-      });
+      if (mounted) {
+        setState(() {
+          _timeLeft =
+              "${diff.inHours.toString().padLeft(2, '0')}:${(diff.inMinutes % 60).toString().padLeft(2, '0')}:${(diff.inSeconds % 60).toString().padLeft(2, '0')}";
+        });
+      }
     }
   }
 
@@ -267,10 +308,12 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
         SnackBar(content: Text("${_selectedApps.length} apps locked for student")),
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
-      );
-      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error: $e")),
+        );
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -321,11 +364,21 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
         'lockEndTime': null,
       });
       
-      Navigator.pop(context);
+      if (mounted) Navigator.pop(context);
     }
   }
 
   String _getAppName(String packageName) {
+    if (_installedApps.isNotEmpty) {
+       // Try to find it in our list first
+       try {
+         final app = _installedApps.firstWhere((a) => a['packageName'] == packageName);
+         return app['appName'];
+       } catch (e) {
+         // Not found
+       }
+    }
+
     final appNames = {
       'com.instagram.android': 'Instagram',
       'com.facebook.katana': 'Facebook',
@@ -337,6 +390,46 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
     };
     
     return appNames[packageName] ?? packageName.split('.').last;
+  }
+  
+  Widget _fallbackIcon(String appName) {
+    String letter = (appName.isNotEmpty)
+        ? appName[0].toUpperCase()
+        : "?";
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white10,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Center(
+        child: Text(
+          letter,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAppIcon(Map<String, dynamic> app) {
+    if (app['iconBytes'] != null) {
+      try {
+        Uint8List bytes = base64Decode(app['iconBytes']);
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Image.memory(
+            bytes,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) => _fallbackIcon(app['appName'] ?? '?'),
+          ),
+        );
+      } catch (e) {
+        // Fallback
+      }
+    }
+    return _fallbackIcon(app['appName'] ?? '?');
   }
 
   @override
@@ -426,15 +519,14 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
                     itemCount: _installedApps.length,
                     itemBuilder: (context, index) {
                       final app = _installedApps[index];
-                      final isSelected = _selectedApps.contains(app.packageName);
-                      final isLocked = _lockedApps.contains(app.packageName);
+                      final pkg = app['packageName'];
+                      final name = app['appName'];
                       
-                      Uint8List? iconData = app.icon != null
-                          ? Uint8List.fromList(app.icon!)
-                          : null;
-                      
+                      final isSelected = _selectedApps.contains(pkg);
+                      final isLocked = _lockedApps.contains(pkg);
+                                            
                       return GestureDetector(
-                        onTap: () => _toggleAppSelection(app.packageName),
+                        onTap: () => _toggleAppSelection(pkg),
                         child: Container(
                           decoration: BoxDecoration(
                             color: isLocked 
@@ -463,36 +555,20 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
                                   borderRadius: BorderRadius.circular(8),
                                   color: Colors.black.withOpacity(0.3),
                                 ),
-                                child: iconData != null
-                                    ? ClipRRect(
-                                        borderRadius: BorderRadius.circular(8),
-                                        child: Image.memory(
-                                          iconData,
-                                          fit: BoxFit.cover,
-                                        ),
-                                      )
-                                    : Center(
-                                        child: Text(
-                                          app.name?[0] ?? "?",
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
+                                child: _buildAppIcon(app),
                               ),
                               
                               // App Name
                               Padding(
                                 padding: const EdgeInsets.all(4),
                                 child: Text(
-                                  app.name ?? "Unknown",
+                                  name,
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     color: isLocked 
                                         ? Colors.redAccent
                                         : Colors.white,
-                                    fontSize: 10,
+                                    fontSize: 10, // Small text for grid
                                     fontWeight: FontWeight.w500,
                                   ),
                                   maxLines: 2,

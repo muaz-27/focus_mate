@@ -47,7 +47,18 @@ class StudentDashboardLoader extends StatelessWidget {
           );
         }
 
-        if (snapshot.hasError || !snapshot.hasData || !snapshot.data!.exists) {
+        if (snapshot.hasError) {
+          // If we have an error (likely permission denied due to logout), 
+          // just show loading while the AuthWrapper redirects us.
+          return const Scaffold(
+            backgroundColor: AppColors.background,
+            body: Center(
+              child: CircularProgressIndicator(color: Colors.cyanAccent),
+            ),
+          );
+        }
+
+        if (!snapshot.hasData || !snapshot.data!.exists) {
           return const Scaffold(
             backgroundColor: AppColors.background,
             body: Center(
@@ -145,6 +156,7 @@ class _StudentDashboardState extends State<StudentDashboard>
     // Sync usage data in background
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _usageService.syncUsageToFirebase(widget.userData['id']);
+      _usageService.syncInstalledAppsToFirebase(widget.userData['id']);
     });
   }
   
@@ -162,7 +174,7 @@ class _StudentDashboardState extends State<StudentDashboard>
         // We can sort them in memory if strictly needed, but limit(1) might give arbitrary one.
         
         if (snapshot.docs.isNotEmpty) {
-           // Sort in memory to be safe (client side active/request usually just 1)
+           // Sort in memory (newest first)
            final docs = snapshot.docs;
            docs.sort((a, b) {
              final aTime = (a.data()['requestedAt'] as Timestamp?)?.toDate() ?? DateTime(2000);
@@ -170,12 +182,37 @@ class _StudentDashboardState extends State<StudentDashboard>
              return bTime.compareTo(aTime);
            });
            
-           final latest = docs.first;
+           // Find the first valid doc (Active, or Recent Request)
+           DocumentSnapshot? validDoc;
+           final now = DateTime.now();
            
-          setState(() {
-            _activeSessionData = latest.data();
-            _activeSessionData!['id'] = latest.id;
-          });
+           for (var doc in docs) {
+             final data = doc.data();
+             final status = data['status'];
+             final requestedAt = (data['requestedAt'] as Timestamp?)?.toDate();
+             
+             if (status == 'ACTIVE') {
+               validDoc = doc;
+               break; 
+             } else if (status == 'REQUESTED') {
+               // Only show requests from the last 30 minutes
+               if (requestedAt != null && now.difference(requestedAt).inMinutes < 30) {
+                 validDoc = doc;
+                 break;
+               }
+             }
+           }
+           
+           if (validDoc != null) {
+              setState(() {
+                _activeSessionData = validDoc!.data() as Map<String, dynamic>;
+                _activeSessionData!['id'] = validDoc!.id;
+              });
+           } else {
+             setState(() {
+              _activeSessionData = null;
+             });
+           }
         } else {
           setState(() {
             _activeSessionData = null;

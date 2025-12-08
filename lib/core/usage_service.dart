@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:usage_stats/usage_stats.dart';
-import 'package:installed_apps/installed_apps.dart';
-import 'package:installed_apps/app_info.dart';
+import 'package:device_apps/device_apps.dart';
 import 'dart:convert';
 
 
@@ -29,6 +28,7 @@ class UsageService {
       'com.sec.android.app.launcher',
       'com.google.android.gms',
       'android',
+      'com.android.traceur', // System Tracing
     ];
 
     if (packageName.startsWith('com.android.providers')) return true;
@@ -38,9 +38,15 @@ class UsageService {
   }
 
   // Get a list of all apps installed on the phone
-  Future<List<AppInfo>> getInstalledAppsList() async {
+  Future<List<Application>> getInstalledAppsList() async {
     try {
-      return await InstalledApps.getInstalledApps(true, true); // include icons = true
+      final apps = await DeviceApps.getInstalledApplications(
+        includeAppIcons: true,
+        includeSystemApps: true,
+        onlyAppsWithLaunchIntent: true,
+      );
+      // Filter out ignored apps immediately so they don't show in App Lock or Analytics
+      return apps.where((app) => !_isIgnoredApp(app.packageName)).toList();
     } catch (e) {
       print("❌ Error fetching installed apps: $e");
       return [];
@@ -55,39 +61,85 @@ class UsageService {
       DateTime end = DateTime.now();
       DateTime start = DateTime(end.year, end.month, end.day);
 
-      // 1. Get raw data from Android
-      List<UsageInfo> rawStats = await UsageStats.queryUsageStats(start, end);
+      // 1. Get detailed event data for precise calculation
+      // 'queryEvents' gives us a stream of exactly when apps were opened/closed.
+      // We calculate the duration manually to ensure we ONLY count time after Midnight.
+      List<EventUsageInfo> events = await UsageStats.queryEvents(start, end);
 
-      // 2. Add up the time for each app
+      // 2. Calculate duration from events
       Map<String, double> appUsageMap = {};
-      for (var info in rawStats) {
-        if (info.packageName == null) continue;
+      Map<String, int> currentOpenStartTime = {};
 
-        double ms = double.tryParse(info.totalTimeInForeground ?? "0") ?? 0;
+      for (var event in events) {
+        int type = int.tryParse(event.eventType ?? "0") ?? 0;
+        int time = int.tryParse(event.timeStamp ?? "0") ?? 0;
+        String? pkg = event.packageName;
 
-        if (appUsageMap.containsKey(info.packageName)) {
-          appUsageMap[info.packageName!] =
-              appUsageMap[info.packageName!]! + ms;
-        } else {
-          appUsageMap[info.packageName!] = ms;
+        if (pkg == null) continue;
+
+        if (type == 1) { // MOVE_TO_FOREGROUND
+          currentOpenStartTime[pkg] = time;
+        } else if (type == 2) { // MOVE_TO_BACKGROUND
+          if (currentOpenStartTime.containsKey(pkg)) {
+            int startTime = currentOpenStartTime[pkg]!;
+            // Add the duration
+            double duration = (time - startTime).toDouble();
+            appUsageMap[pkg] = (appUsageMap[pkg] ?? 0) + duration;
+            
+            // Clear the start time as the session ended
+            currentOpenStartTime.remove(pkg);
+          }
         }
       }
 
-      // 3. Get app names and icons
-      List<AppInfo> installedApps = await getInstalledAppsList();
+      // Handle apps that are currently open (Foreground but no Background event yet)
+      for (var entry in currentOpenStartTime.entries) {
+        String pkg = entry.key;
+        int startTime = entry.value;
+        // Add time from start until Now
+        double duration = (end.millisecondsSinceEpoch - startTime).toDouble();
+        appUsageMap[pkg] = (appUsageMap[pkg] ?? 0) + duration;
+      }
+
+      // 3. Get app names and icons from our "Launchable" list
+      List<Application> installedApps = await getInstalledAppsList();
+
+      // 4. Resolve missing apps
+      // Some apps (like background services or specific helpers) might have usage
+      // but NOT have a launch intent, so they aren't in `installedApps`.
+      // We want to fetch their real names to avoid "com.blabla.bla" in analytics.
+      Set<String> knownPackages = installedApps.map((a) => a.packageName).toSet();
+      Set<String> usedPackages = appUsageMap.keys.toSet();
+      Set<String> missingPackages = usedPackages.difference(knownPackages);
+
+      for (String pkg in missingPackages) {
+        // Only fetch if it has significant usage (> 1 min) and isn't ignored
+        double usageMs = appUsageMap[pkg] ?? 0;
+        if ((usageMs / 1000 / 60) >= 1 && !_isIgnoredApp(pkg)) {
+           try {
+             // Try to fetch specific app details
+             Application? app = await DeviceApps.getApp(pkg, true);
+             if (app != null) {
+               installedApps.add(app);
+             }
+           } catch (e) {
+             print("Could not fetch info for missing pkg: $pkg");
+           }
+        }
+      }
 
       Map<String, String> appNameMap = {
         for (var app in installedApps)
-          app.packageName: app.name ?? "Unknown",
+          app.packageName: app.appName,
       };
 
       Map<String, String> appIconMap = {
         for (var app in installedApps)
-          if (app.icon != null)
-            app.packageName: base64Encode(app.icon!)
+          if (app is ApplicationWithIcon)
+            app.packageName: base64Encode(app.icon)
       };
 
-      // 4. Prepare the data for upload
+      // 5. Prepare the data for upload
       List<Map<String, dynamic>> processedApps = [];
       int totalMinutes = 0;
 
@@ -120,7 +172,7 @@ class UsageService {
       // Sort so the most used apps are at the top
       processedApps.sort((a, b) => b['usageMinutes'].compareTo(a['usageMinutes']));
 
-      // 5. Send everything to Firebase
+      // 6. Send everything to Firebase
       final todayDocId = DateTime.now().toIso8601String().split('T')[0];
 
       print("📤 Uploading Stats ($totalMinutes mins) with icons.");
@@ -139,6 +191,42 @@ class UsageService {
       print("✅ Upload success.");
     } catch (e) {
       print("❌ Error syncing usage: $e");
+    }
+  }
+
+  // NEW: Sync the full list of installed apps (names + package names) to Firestore
+  // This allows the companion to see apps even if they don't have them installed.
+  Future<void> syncInstalledAppsToFirebase(String userId) async {
+    try {
+      List<Application> apps = await getInstalledAppsList();
+      
+      // We only upload names and package names to save bandwidth/space.
+      // Icons are heavy and might exceed Firestore 1MB limit for a full list.
+      // UPDATE: User requested icons. We will try to include them. 
+      // Risk: Document size limit.
+      List<Map<String, String>> appList = apps.map((app) {
+        String? iconBase64;
+        if (app is ApplicationWithIcon) {
+          iconBase64 = base64Encode(app.icon);
+        }
+        
+        return {
+          'packageName': app.packageName,
+          'appName': app.appName,
+          if (iconBase64 != null) 'iconBytes': iconBase64,
+        };
+      }).toList();
+
+      appList.sort((a, b) => a['appName']!.toLowerCase().compareTo(b['appName']!.toLowerCase()));
+
+      await _firestore.collection('users').doc(userId).update({
+        'installedApps': appList,
+        'installedAppsLastUpdated': FieldValue.serverTimestamp(),
+      });
+      
+      print("✅ Synced ${appList.length} installed apps to Firestore.");
+    } catch (e) {
+      print("❌ Error syncing installed apps: $e");
     }
   }
 }

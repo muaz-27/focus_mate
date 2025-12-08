@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:installed_apps/app_info.dart';
+import 'package:device_apps/device_apps.dart';
 import 'package:android_intent_plus/android_intent.dart';
 import '../core/usage_service.dart';
 import '../theme/app_colors.dart';
@@ -23,7 +23,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   static const platform = MethodChannel('com.example.focus_mate/blocker');
 
-  List<AppInfo> installedApps = [];
+  List<Application> installedApps = [];
   List<String> lockedPackages = [];
   DateTime? lockEndTime;
   bool loading = true;
@@ -68,7 +68,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
         setState(() {
           // Filter out our own app to prevent accidental self-locking
           installedApps = apps.where((app) => app.packageName != 'com.example.focus_mate').toList();
-          installedApps.sort((a, b) => (a.name ?? "").compareTo(b.name ?? ""));
+          installedApps.sort((a, b) => a.appName.toLowerCase().compareTo(b.appName.toLowerCase()));
 
           if (doc.exists) {
             final data = doc.data()!;
@@ -106,7 +106,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
     // Sync immediately to unlock apps
     await _syncToNative();
 
-    await _firestore  // FIXED: Changed from _firestore.instance to just _firestore
+    await _firestore
         .collection('users')
         .doc(widget.userId)
         .update({'lockEndTime': null});
@@ -124,7 +124,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
       await _syncToNative();
     }
 
-    await _firestore  // FIXED: Changed from _firestore.instance to just _firestore
+    await _firestore
         .collection('users')
         .doc(widget.userId)
         .update({'lockedApps': lockedPackages});
@@ -209,7 +209,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
     // Sync immediately to start blocking
     await _syncToNative();
 
-    await _firestore  // FIXED: Changed from _firestore.instance to just _firestore
+    await _firestore
         .collection('users')
         .doc(widget.userId)
         .update({'lockEndTime': Timestamp.fromDate(targetTime)});
@@ -241,7 +241,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
             const SizedBox(height: 10),
             Text(
               _companionName != null
-                  ? "Your companion '${_companionName!}' is managing your app locks"  // FIXED: Added ! to unwrap
+                  ? "Your companion '${_companionName!}' is managing your app locks"
                   : "Your companion is managing your app locks",
               textAlign: TextAlign.center,
               style: const TextStyle(color: Colors.grey, fontSize: 16),
@@ -385,9 +385,11 @@ class _AppLockScreenState extends State<AppLockScreen> {
                         app.packageName,
                       );
 
-                      Uint8List? iconData = app.icon != null
-                          ? Uint8List.fromList(app.icon!)
-                          : null;
+                      // Check if app has icon
+                      Uint8List? iconData;
+                      if (app is ApplicationWithIcon) {
+                        iconData = app.icon;
+                      }
 
                       return Container(
                         margin: const EdgeInsets.only(bottom: 14),
@@ -419,7 +421,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
                           ),
 
                           title: Text(
-                            app.name ?? "Unknown",
+                            app.appName,
                             style: TextStyle(
                               color: isSelected
                                   ? Colors.redAccent

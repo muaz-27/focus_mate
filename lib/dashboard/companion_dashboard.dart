@@ -40,7 +40,7 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
         .collection('companion_sessions')
         .where('companionId', isEqualTo: widget.userData['id'])
         .where('status', isEqualTo: 'REQUESTED')
-        .orderBy('requestedAt', descending: true)
+        // Removing orderBy to avoid index issues
         .snapshots()
         .listen((snapshot) {
       if (mounted) {
@@ -52,18 +52,44 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
           final userId = data['userId'];
           
           // Only keep if we don't have a newer request for this user
+          // Simple client-side dedupe since we can't trust order without index
           if (!latestRequests.containsKey(userId)) {
-            latestRequests[userId] = {
+             latestRequests[userId] = {
               'id': doc.id,
               ...data,
             };
+          } else {
+             // If we found a duplicate, check which is newer
+             final existing = latestRequests[userId]!;
+             final Timestamp? newTime = data['requestedAt'];
+             final Timestamp? oldTime = existing['requestedAt'];
+             
+             if (newTime != null && (oldTime == null || newTime.compareTo(oldTime) > 0)) {
+                latestRequests[userId] = {
+                  'id': doc.id,
+                  ...data,
+                };
+             }
           }
         }
         
+        final requests = latestRequests.values.toList();
+        
+        // Sort client-side
+        requests.sort((a, b) {
+           Timestamp? tA = a['requestedAt'];
+           Timestamp? tB = b['requestedAt'];
+           if (tA == null) return 1;
+           if (tB == null) return -1;
+           return tB.compareTo(tA); // Descending
+        });
+        
         setState(() {
-          _pendingSessions = latestRequests.values.toList();
+          _pendingSessions = requests;
         });
       }
+    }, onError: (e) {
+      print("Error listening for requests: $e");
     });
   }
 

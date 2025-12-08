@@ -60,15 +60,20 @@ class _CompanionControlledPageState extends State<CompanionControlledPage> {
       if (snapshot.exists) {
         final data = snapshot.data()!;
         
+        // 1. Check if session was ended remotely (PRIORITY)
+        if (data['status'] == 'ENDED') {
+          _handleSessionEnded();
+          return; // Stop processing to prevent dialogs
+        }
+
         setState(() {
           _sessionData = data;
           _lockedApps = List<String>.from(data['lockedApps'] ?? []);
           
+          // Only update pending state if we are waiting, otherwise we might overwrite our local state
           if (data['emergencyRequested'] != null) {
-             _emergencyRequestPending = data['emergencyRequested'] == true;
-             if (_emergencyRequestPending && data['emergencyApp'] != null) {
-               _emergencyApp = data['emergencyApp'];
-             }
+             // We only sync this if we initiated it? 
+             // Actually, if we are 'pending', keep it.
           }
         });
         
@@ -78,13 +83,9 @@ class _CompanionControlledPageState extends State<CompanionControlledPage> {
         _updateTimeLeft();
 
         // Check for response from companion
-        if (data['emergencyResponded'] != null) {
+        // Only show if we are actually waiting for a response to prevent duplicate dialogs
+        if (data['emergencyResponded'] != null && _emergencyRequestPending) {
           _showEmergencyResponseDialog(data['emergencyResponded']);
-        }
-        
-        // Check if session was ended remotely
-        if (data['status'] == 'ENDED') {
-          _handleSessionEnded();
         }
       }
     });
@@ -102,10 +103,11 @@ class _CompanionControlledPageState extends State<CompanionControlledPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       
-      // FIX: Use pushReplacement to load the Dashboard via the Loader
-      Navigator.pushReplacement(
+      // FIX: Use pushAndRemoveUntil to clear the stack (including any open dialogs)
+      Navigator.pushAndRemoveUntil(
         context, 
-        MaterialPageRoute(builder: (context) => const StudentDashboardLoader())
+        MaterialPageRoute(builder: (context) => const StudentDashboardLoader()),
+        (route) => false,
       );
       
       ScaffoldMessenger.of(context).showSnackBar(
