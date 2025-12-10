@@ -12,7 +12,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_theme.dart';
 import './analytics_screen.dart';
 import './app_lock_screen.dart';
-import './app_lock_mode_selection.dart';
+import './companion_request_page.dart';
 import './session_setup_screen.dart';
 import './study_workspace_screen.dart';
 import './companion_controlled_page.dart';
@@ -180,7 +180,8 @@ class _StudentDashboardState extends State<StudentDashboard>
   DateTime? _lockEndTime;
   List<String> _blockedList = [];
   bool companionActive = false;
-  String? _companionName; // New local state
+  String? _companionName; // Local state
+  String? _companionId;   // Local state for ID
   int? _dailyGoal; // Local state for optimistic updates
   int? _localStudyTime; // Local state for immediate usage display
   bool _isLoading = false; 
@@ -199,7 +200,8 @@ class _StudentDashboardState extends State<StudentDashboard>
     // Initialize companion state from passed user data
     if (widget.userData['linkedCompanion'] != null) {
       companionActive = true;
-      _companionName = widget.userData['companionName']; // Init from props if avail
+      _companionName = widget.userData['companionName']; 
+      _companionId = widget.userData['linkedCompanion'];
     }
     _dailyGoal = widget.dailyGoal; // Init daily goal
     _localStudyTime = widget.studyTime; // Init usage
@@ -230,10 +232,10 @@ class _StudentDashboardState extends State<StudentDashboard>
         companionActive = widget.userData['linkedCompanion'] != null;
         if (!companionActive) {
           _companionName = null;
+          _companionId = null;
         } else {
-             // If we just got linked via stream (e.g. approved), we might need name
-             // but if we did it locally, we might already have it.
-             // _getCompanionDetails will handle fetching if missing.
+             // If linked via props (which should be handling locally now), update ID 
+             _companionId = widget.userData['linkedCompanion'];
         }
       });
       _getCompanionDetails();
@@ -858,6 +860,146 @@ class _StudentDashboardState extends State<StudentDashboard>
     }
   }
 
+  void _showAppLockModeDialog() {
+    int? selectedMode; // null=none, 1=self, 2=companion
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+              title: Text("Select Lock Mode", style: TextStyle(color: isDark ? Colors.white : Colors.black87)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildLockModeOption(
+                    isDark: isDark,
+                    title: "Self Control",
+                    subtitle: "You set the limits",
+                    icon: Icons.person_outline,
+                    color: Colors.blueAccent,
+                    isSelected: selectedMode == 1,
+                    onTap: () => setDialogState(() => selectedMode = 1),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildLockModeOption(
+                    isDark: isDark,
+                    title: "Companion Control",
+                    subtitle: companionActive ? "Request locks from companion" : "Link a companion first",
+                    icon: Icons.people_outline,
+                    color: Colors.purpleAccent,
+                    enabled: companionActive,
+                    isSelected: selectedMode == 2,
+                    onTap: () => setDialogState(() => selectedMode = 2),
+                  ),
+                  const SizedBox(height: 24),
+                  // Confirm Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: selectedMode == null ? null : () {
+                        Navigator.pop(context); // Close dialog
+                        if (selectedMode == 1) {
+                           Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => AppLockScreen(userId: widget.userData['id'])),
+                          );
+                        } else if (selectedMode == 2) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => CompanionRequestPage(
+                                userId: widget.userData['id'],
+                                companionId: _companionId!, // Use local updated state
+                                companionName: _companionName ?? "Companion",
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.cyanAccent,
+                        foregroundColor: Colors.black,
+                        disabledBackgroundColor: isDark ? Colors.white10 : Colors.grey.shade300,
+                        disabledForegroundColor: isDark ? Colors.white38 : Colors.grey,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: const Text("Confirm", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    ),
+                  )
+                ],
+              ),
+            );
+          }
+        );
+      },
+    );
+  }
+
+  Widget _buildLockModeOption({
+    required bool isDark,
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+    bool enabled = true,
+    bool isSelected = false,
+  }) {
+    // Active border color if selected
+    final borderColor = isSelected ? color : (enabled ? color.withOpacity(0.3) : Colors.transparent);
+    // Background color
+    final bgColor = isSelected 
+        ? color.withOpacity(0.15)
+        : (enabled 
+            ? (isDark ? Colors.black26 : Colors.grey.shade50) 
+            : (isDark ? Colors.white.withOpacity(0.05) : Colors.grey.shade200));
+
+    return InkWell(
+      onTap: enabled ? onTap : null,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: borderColor, width: isSelected ? 2 : 1),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: enabled ? color.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: enabled ? color : Colors.grey, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: TextStyle(color: enabled ? (isDark ? Colors.white : Colors.black87) : Colors.grey, fontWeight: FontWeight.bold, fontSize: 16)),
+                  const SizedBox(height: 2),
+                  Text(subtitle, style: TextStyle(color: enabled ? (isDark ? Colors.white70 : Colors.black54) : Colors.grey, fontSize: 12)),
+                ],
+              ),
+            ),
+            if (isSelected) 
+              Icon(Icons.check_circle, size: 20, color: color)
+            else if (enabled) 
+              Icon(Icons.radio_button_unchecked, size: 20, color: isDark ? Colors.white30 : Colors.black26),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildDailyFocusHero(double progress, int remaining, bool isDark) {
     final displayTime = _localStudyTime ?? widget.studyTime;
     if (_dailyGoal == null) {
@@ -1017,7 +1159,7 @@ class _StudentDashboardState extends State<StudentDashboard>
                           TextSpan(
                             text: _formatMinutes(displayTime), 
                             style: TextStyle(
-                              color: isDark ? Colors.white : Colors.black87, 
+                              color: isDark ? Colors.white : Colors.black, 
                               fontSize: 36, 
                               fontWeight: FontWeight.bold,
                               height: 1.0,
@@ -1026,7 +1168,7 @@ class _StudentDashboardState extends State<StudentDashboard>
                           TextSpan(
                             text: " / ${_formatMinutes(_dailyGoal!)}", 
                             style: TextStyle(
-                              color: isDark ? Colors.white54 : Colors.black45, 
+                              color: isDark ? Colors.white54 : Colors.black54, 
                               fontSize: 18, 
                               fontWeight: FontWeight.w500,
                               height: 1.0,
@@ -1134,16 +1276,7 @@ class _StudentDashboardState extends State<StudentDashboard>
               }
               if (await PermissionManager.checkAccessibility(context)) {
                 if (context.mounted) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => AppLockModeSelection(
-                        userId: widget.userData['id'],
-                        companionId: widget.userData['linkedCompanion'],
-                        companionName: widget.userData['companionName'],
-                      ),
-                    ),
-                  );
+                   _showAppLockModeDialog();
                 }
               }
             },
@@ -1198,7 +1331,7 @@ class _StudentDashboardState extends State<StudentDashboard>
             end: Alignment.bottomRight,
             colors: isDark 
                ? [Colors.white.withOpacity(0.07), Colors.white.withOpacity(0.03)]
-               : [Colors.white, Colors.white.withOpacity(0.9)],
+               : [Colors.white, Colors.grey.shade50],
           ),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(color: isDark ? Colors.white.withOpacity(0.08) : Colors.white, width: 1),
@@ -1279,10 +1412,10 @@ class _StudentDashboardState extends State<StudentDashboard>
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: companionActive ? Colors.cyan.withOpacity(0.2) : (isDark ? Colors.white.withOpacity(0.05) : Colors.grey.shade100),
+                    color: companionActive ? Colors.cyan.withOpacity(0.2) : (isDark ? Colors.white.withOpacity(0.05) : Colors.grey.shade200),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: Icon(Icons.group, color: companionActive ? Colors.cyanAccent : (isDark ? Colors.white70 : Colors.black54), size: 28),
+                  child: Icon(Icons.group, color: companionActive ? Colors.cyanAccent : (isDark ? Colors.white70 : Colors.black87), size: 28),
                 ),
                 const SizedBox(width: 16),
                 Column(

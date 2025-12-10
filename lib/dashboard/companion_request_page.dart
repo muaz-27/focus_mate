@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'waiting_for_companion_page.dart';
 import '../theme/app_colors.dart';
 import '../core/widgets/custom_dialog.dart';
+import 'package:flutter/cupertino.dart';
 
 class CompanionRequestPage extends StatefulWidget {
   final String userId;
@@ -21,78 +22,239 @@ class CompanionRequestPage extends StatefulWidget {
 }
 
 class _CompanionRequestPageState extends State<CompanionRequestPage> {
-  final List<int> _durationOptions = [15, 30, 45, 60, 90, 120];
   int _selectedDuration = 60;
   final TextEditingController _goalController = TextEditingController();
   bool _isLoading = false;
 
+  String _formatDuration(int minutes) {
+    if (minutes < 60) return "${minutes}m";
+    final int hours = minutes ~/ 60;
+    final int mins = minutes % 60;
+    if (mins == 0) return "${hours}h";
+    return "${hours}h ${mins}m";
+  }
+
+  void _showDurationPicker() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1E293B), // Match dark theme
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Container(
+          height: 300,
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              // Handle bar
+              Container(
+                width: 40, height: 4,
+                decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
+              ),
+              const SizedBox(height: 20),
+              const Text("Select Duration", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 20),
+              Expanded(
+                child: CupertinoTheme(
+                  data: const CupertinoThemeData(
+                    brightness: Brightness.dark,
+                    textTheme: CupertinoTextThemeData(
+                      pickerTextStyle: TextStyle(color: Colors.white, fontSize: 24),
+                    ),
+                  ),
+                  child: CupertinoTimerPicker(
+                    mode: CupertinoTimerPickerMode.hm,
+                    initialTimerDuration: Duration(minutes: _selectedDuration),
+                    onTimerDurationChanged: (Duration newDuration) {
+                        if (newDuration.inMinutes >= 15) {
+                          setState(() => _selectedDuration = newDuration.inMinutes);
+                        }
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    // 1. Theme Detection
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      extendBodyBehindAppBar: true, 
+      backgroundColor: Colors.transparent, // Important for gradient to show
       appBar: AppBar(
-        title: const Text("Request Companion Session"),
-        backgroundColor: AppColors.cardOverlay,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 12),
-            TextField(
-              controller: _goalController,
-              decoration: InputDecoration(
-                hintText: "Study goal (optional)",
-                hintStyle: const TextStyle(color: Colors.grey),
-                filled: true,
-                fillColor: Colors.white12,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-              ),
-              style: const TextStyle(color: Colors.white),
-            ),
-            const SizedBox(height: 20),
-            Wrap(
-              spacing: 10,
-              children: _durationOptions.map((minutes) {
-                final isSelected = _selectedDuration == minutes;
-                return ChoiceChip(
-                  label: Text("$minutes min"),
-                  selected: isSelected,
-                  selectedColor: Colors.blueAccent,
-                  labelStyle: TextStyle(
-                    color: isSelected ? Colors.white : Colors.grey,
-                  ),
-                  onSelected: (selected) {
-                    if (selected) {
-                      setState(() => _selectedDuration = minutes);
-                    }
-                  },
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 30),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _isLoading ? null : _requestCompanionSession,
-                child: _isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text("Request Session"),
-              ),
-            ),
-          ],
+        title: const Text("Request Session", style: TextStyle(fontWeight: FontWeight.bold)),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+          onPressed: () => Navigator.pop(context),
         ),
+      ),
+      body: Stack(
+        children: [
+          // 2. Gradient Background (Matches Dashboard) - Full Screen
+          Container(
+            height: double.infinity,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: isDark 
+                  ? [const Color(0xFF1A1F35), const Color(0xFF0B0E17)] 
+                  : [const Color(0xFFF8FAFC), const Color(0xFFE2E8F0)],
+              ),
+            ),
+          ),
+          
+          // 3. Scrollable Content
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 12),
+                  
+                  // 4. Session Name Input (Glassmorphism)
+                  Text(
+                    "SESSION DETAILS", 
+                    style: TextStyle(
+                      color: isDark ? Colors.cyanAccent : Colors.teal, 
+                      fontSize: 12, 
+                      fontWeight: FontWeight.bold, 
+                      letterSpacing: 1.2
+                    )
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.white.withOpacity(0.05) : Colors.white70,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: isDark ? Colors.white10 : Colors.black12),
+                    ),
+                    child: TextField(
+                      controller: _goalController,
+                      decoration: InputDecoration(
+                        hintText: "Name your session (e.g., Math Study)",
+                        hintStyle: TextStyle(color: isDark ? Colors.white38 : Colors.black38),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                        prefixIcon: Icon(Icons.edit, color: isDark ? Colors.white54 : Colors.black54, size: 20),
+                      ),
+                      style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+                    ),
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // 5. Duration Selector (Glassmorphism)
+                  Text(
+                    "DURATION", 
+                    style: TextStyle(
+                      color: isDark ? Colors.cyanAccent : Colors.teal, 
+                      fontSize: 12, 
+                      fontWeight: FontWeight.bold, 
+                      letterSpacing: 1.2
+                    )
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Tappable Duration Card
+                  InkWell(
+                    onTap: _showDurationPicker,
+                  borderRadius: BorderRadius.circular(24),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 32),
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.white.withOpacity(0.05) : Colors.white70,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: isDark ? Colors.white10 : Colors.black12),
+                      boxShadow: [
+                         BoxShadow(
+                           color: Colors.black.withOpacity(0.1),
+                           blurRadius: 20,
+                           offset: const Offset(0, 10),
+                         )
+                      ]
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          _formatDuration(_selectedDuration),
+                          style: TextStyle(
+                            color: isDark ? Colors.white : Colors.black87,
+                            fontSize: 48, 
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.touch_app, size: 14, color: isDark ? Colors.cyanAccent : Colors.teal),
+                            const SizedBox(width: 6),
+                            Text(
+                              "Tap to change duration",
+                              style: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontSize: 13),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(height: 48),
+
+                // 5. Action Button (Gradient)
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _requestCompanionSession,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent, // Use Container gradient
+                      padding: EdgeInsets.zero,
+                      shadowColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    child: Ink(
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(colors: [Colors.cyanAccent, Colors.blueAccent]),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(color: Colors.cyanAccent.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 4))
+                        ],
+                      ),
+                      child: Container(
+                        alignment: Alignment.center,
+                        child: _isLoading
+                            ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                            : const Text("Start Request", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 16)),
+                      ),
+                    ),
+                  ),
+                ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
+
 
   Future<void> _requestCompanionSession() async {
     if (widget.companionId == null) return;

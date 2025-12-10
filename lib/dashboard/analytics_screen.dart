@@ -103,205 +103,252 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // 1. Theme Detection
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      extendBodyBehindAppBar: true, 
+      backgroundColor: Colors.transparent, // Important for gradient
       appBar: AppBar(
         title: Text("${widget.userName}'s Insights"),
+        centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
-        titleTextStyle: AppTheme.headerTitle,
+        iconTheme: IconThemeData(color: isDark ? Colors.white : Colors.black87),
+        titleTextStyle: TextStyle(
+          color: isDark ? Colors.white : Colors.black87,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
       ),
-      body: loading
-          ? const Center(
-              child: CircularProgressIndicator(color: Colors.cyanAccent),
-            )
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Summary Row
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildInfoCard(
-                          "Today",
-                          formatTime(totalMinutes),
-                          Icons.today,
-                          Colors.blueAccent,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _buildInfoCard(
-                          "Weekly Avg",
-                          formatTime(weeklyAverage),
-                          Icons.calendar_view_week,
-                          Colors.purpleAccent,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
+      body: Stack(
+        children: [
+          // 2. Gradient Background
+           Container(
+            height: double.infinity,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: isDark 
+                  ? [const Color(0xFF1A1F35), const Color(0xFF0B0E17)] 
+                  : [const Color(0xFFF8FAFC), const Color(0xFFE2E8F0)],
+              ),
+            ),
+          ),
 
-                  // Top Distraction Card
-                  if (topApp != null)
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppColors.cardOverlay,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: Colors.redAccent.withOpacity(0.3),
-                        ),
-                      ),
-                      child: Row(
+          // 3. Content
+          loading
+            ? const Center(child: CircularProgressIndicator(color: Colors.cyanAccent))
+            : SafeArea(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Summary Row
+                      Row(
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: Colors.redAccent.withOpacity(0.2),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.warning_amber_rounded,
-                              color: Colors.redAccent,
+                          Expanded(
+                            child: _buildInfoCard(
+                              "Today",
+                              formatTime(totalMinutes),
+                              Icons.today,
+                              Colors.blueAccent,
+                              isDark,
                             ),
                           ),
                           const SizedBox(width: 16),
                           Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  "Top Distraction",
-                                  style: TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                                Text(
-                                  topApp!['appName'],
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
+                            child: _buildInfoCard(
+                              "Weekly Avg",
+                              formatTime(weeklyAverage),
+                              Icons.calendar_view_week,
+                              Colors.purpleAccent,
+                              isDark,
                             ),
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text(
-                                formatTime(topApp!['usageMinutes']),
-                                style: const TextStyle(
-                                  color: Colors.redAccent,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              // 🔹 TOP APP ICON
-                              SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: _buildAppIcon(topApp!),
-                              ),
-                            ],
                           ),
                         ],
                       ),
-                    ),
+                      const SizedBox(height: 24),
 
-                  const SizedBox(height: 24),
-                  const Text(
-                    "Detailed Breakdown",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // App List
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: appsUsed.length,
-                    itemBuilder: (context, index) {
-                      final app = appsUsed[index];
-                      final minutes = app['usageMinutes'] ?? 0;
-                      final appName = app['appName'] ?? "Unknown";
-
-                      double percent = totalMinutes > 0
-                          ? (minutes / totalMinutes)
-                          : 0.0;
-
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        child: Row(
-                          children: [
-                            // 🔹 LIST ITEM ICON
-                            SizedBox(
-                              width: 40,
-                              height: 40,
-                              child: _buildAppIcon(app),
-                            ),
-                            const SizedBox(width: 12),
-
-                            // Name & Bar
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        appName,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w500,
-                                        ),
+                      // Top Distraction Card
+                      if (topApp != null)
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: isDark ? Colors.white.withOpacity(0.05) : Colors.white70,
+                             borderRadius: BorderRadius.circular(24),
+                             border: Border.all(color: Colors.redAccent.withOpacity(0.3)),
+                             boxShadow: [
+                               BoxShadow(
+                                 color: Colors.redAccent.withOpacity(0.1),
+                                 blurRadius: 20,
+                                 offset: const Offset(0, 10),
+                               )
+                             ]
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.redAccent.withOpacity(0.2),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.warning_amber_rounded,
+                                  color: Colors.redAccent,
+                                  size: 28,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      "Top Distraction",
+                                      style: TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 1.1,
                                       ),
-                                      Text(
-                                        formatTime(minutes),
-                                        style: const TextStyle(
-                                          color: Colors.grey,
-                                          fontSize: 12,
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      topApp!['appName'],
+                                      style: TextStyle(
+                                        color: isDark ? Colors.white : Colors.black87,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    formatTime(topApp!['usageMinutes']),
+                                    style: const TextStyle(
+                                      color: Colors.redAccent,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  SizedBox(
+                                    width: 28,
+                                    height: 28,
+                                    child: _buildAppIcon(topApp!),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+
+                      const SizedBox(height: 32),
+                       Text(
+                        "DETAILED BREAKDOWN",
+                        style: TextStyle(
+                          color: isDark ? Colors.cyanAccent : Colors.teal,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // App List
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: appsUsed.length,
+                        itemBuilder: (context, index) {
+                          final app = appsUsed[index];
+                          final minutes = app['usageMinutes'] ?? 0;
+                          final appName = app['appName'] ?? "Unknown";
+
+                          double percent = totalMinutes > 0
+                              ? (minutes / totalMinutes)
+                              : 0.0;
+
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.all(16),
+                             decoration: BoxDecoration(
+                              color: isDark ? Colors.white.withOpacity(0.05) : Colors.white70,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: isDark ? Colors.white10 : Colors.black12),
+                            ),
+                            child: Row(
+                              children: [
+                                SizedBox(
+                                  width: 40,
+                                  height: 40,
+                                  child: _buildAppIcon(app),
+                                ),
+                                const SizedBox(width: 16),
+
+                                // Name & Bar
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            appName,
+                                            style: TextStyle(
+                                              color: isDark ? Colors.white : Colors.black87,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 15,
+                                            ),
+                                          ),
+                                          Text(
+                                            formatTime(minutes),
+                                            style: TextStyle(
+                                              color: isDark ? Colors.white60 : Colors.black54,
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w500
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 8),
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(4),
+                                        child: LinearProgressIndicator(
+                                          value: percent,
+                                          backgroundColor: isDark ? Colors.white10 : Colors.black12,
+                                          color: index == 0
+                                              ? Colors.redAccent
+                                              : Colors.blueAccent,
+                                          minHeight: 6,
                                         ),
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 6),
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(4),
-                                    child: LinearProgressIndicator(
-                                      value: percent,
-                                      backgroundColor: Colors.white10,
-                                      color: index == 0
-                                          ? Colors.redAccent
-                                          : Colors.blueAccent,
-                                      minHeight: 6,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      );
-                    },
+                          );
+                        },
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ),
+        ],
+      ),
     );
   }
 
@@ -311,7 +358,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       try {
         Uint8List bytes = base64Decode(app['iconBytes']);
         return ClipRRect(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(10),
           child: Image.memory(
             bytes,
             fit: BoxFit.cover,
@@ -333,7 +380,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white10,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(10),
       ),
       child: Center(
         child: Text(
@@ -352,33 +399,41 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     String value,
     IconData icon,
     Color color,
+    bool isDark,
   ) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.cardOverlay,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white10),
+        color: isDark ? Colors.white.withOpacity(0.05) : Colors.white70,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: isDark ? Colors.white10 : Colors.black12),
+        boxShadow: [
+           BoxShadow(
+             color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
+             blurRadius: 16,
+             offset: const Offset(0, 8),
+           )
+        ]
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(8),
+              color: color.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: color, size: 20),
+            child: Icon(icon, color: color, size: 24),
           ),
-          const SizedBox(height: 12),
-          Text(title, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+          const SizedBox(height: 16),
+          Text(title, style: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontSize: 13, fontWeight: FontWeight.w500)),
           const SizedBox(height: 4),
           Text(
             value,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 22,
+            style: TextStyle(
+              color: isDark ? Colors.white : Colors.black87,
+              fontSize: 24,
               fontWeight: FontWeight.bold,
             ),
           ),

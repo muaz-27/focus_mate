@@ -7,7 +7,9 @@ import 'package:android_intent_plus/android_intent.dart';
 import '../core/usage_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_theme.dart';
+import 'package:flutter/cupertino.dart';
 import 'dart:typed_data';
+import 'dart:ui';
 
 class AppLockScreen extends StatefulWidget {
   final String userId;
@@ -29,6 +31,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
   bool loading = true;
   bool _isCompanionControlled = false;
   String? _companionName;
+  int _selectedDuration = 60; // Default 1 hour
 
   @override
   void initState() {
@@ -145,59 +148,105 @@ class _AppLockScreenState extends State<AppLockScreen> {
       return;
     }
 
+    // Default to 1 hour if not set or zero
+    if (_selectedDuration == 0) _selectedDuration = 60;
+
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.cardOverlay,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      backgroundColor: Colors.transparent, // Transparent to show glass effect
       builder: (ctx) {
+        // Theme Detection inside modal builder
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+
         return Container(
-          padding: const EdgeInsets.all(20),
-          height: 280,
+          height: 350,
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+             boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.25),
+                blurRadius: 20,
+                offset: const Offset(0, -5),
+              ),
+            ],
+          ),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              // Handle Bar
+              Center(
+                child: Container(
+                  margin: const EdgeInsets.only(top: 12, bottom: 8),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.white24 : Colors.black12,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              
+              const SizedBox(height: 10),
+              Text(
                 "Select Lock Duration",
-                style: AppTheme.headerTitle,
+                 style: TextStyle(
+                  color: isDark ? Colors.white : Colors.black87,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 20),
 
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _timeOption(15, "15m"),
-                  _timeOption(30, "30m"),
-                  _timeOption(60, "1h"),
-                ],
+              // Timer Picker
+              Expanded(
+                child: CupertinoTheme(
+                  data: CupertinoThemeData(
+                    brightness: isDark ? Brightness.dark : Brightness.light,
+                    textTheme: CupertinoTextThemeData(
+                      pickerTextStyle: TextStyle(
+                        color: isDark ? Colors.white : Colors.black,
+                        fontSize: 24,
+                      ),
+                    ),
+                  ),
+                  child: CupertinoTimerPicker(
+                    mode: CupertinoTimerPickerMode.hm,
+                    initialTimerDuration: Duration(minutes: _selectedDuration),
+                    onTimerDurationChanged: (Duration newDuration) {
+                      setState(() {
+                         _selectedDuration = newDuration.inMinutes;
+                      });
+                    },
+                  ),
+                ),
               ),
 
-              const SizedBox(height: 20),
-
-              SizedBox(
-                width: double.infinity,
-                child: _timeOption(120, "2 Hours (Deep Work)"),
+              // confirm button
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: SizedBox(
+                   width: double.infinity,
+                   height: 56,
+                   child: ElevatedButton(
+                    onPressed: () {
+                      if (_selectedDuration == 0) return;
+                      Navigator.pop(context);
+                      _activateLock(_selectedDuration);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.cyanAccent,
+                      foregroundColor: Colors.black,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    child: const Text("Start Blocking", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                   ),
+                ),
               ),
             ],
           ),
         );
       },
-    );
-  }
-
-  Widget _timeOption(int minutes, String label) {
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.blueAccent.withOpacity(0.2),
-        foregroundColor: Colors.blueAccent,
-        side: const BorderSide(color: Colors.blueAccent),
-      ),
-      onPressed: () {
-        Navigator.pop(context);
-        _activateLock(minutes);
-      },
-      child: Text(label),
     );
   }
 
@@ -216,72 +265,62 @@ class _AppLockScreenState extends State<AppLockScreen> {
   }
 
   // Build companion controlled UI
-  Widget _buildCompanionControlledUI() {
+  Widget _buildCompanionControlledUI(bool isDark) {
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(30),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.group,
+              Icons.supervised_user_circle_outlined,
               size: 80,
-              color: Colors.blueAccent.withOpacity(0.7),
+              color: isDark ? Colors.blueAccent : Colors.blue,
             ),
-            const SizedBox(height: 20),
-            const Text(
-              "App Lock Controlled by Companion",
+            const SizedBox(height: 24),
+            Text(
+              "Companion Active",
               style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
+                color: isDark ? Colors.white : Colors.black87,
+                fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             Text(
               _companionName != null
-                  ? "Your companion '${_companionName!}' is managing your app locks"
-                  : "Your companion is managing your app locks",
+                  ? "'${_companionName!}' is managing your apps"
+                  : "Your companion is managing your apps",
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.grey, fontSize: 16),
+              style: TextStyle(color: isDark ? Colors.white70 : Colors.black54, fontSize: 16),
             ),
             const SizedBox(height: 30),
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: AppColors.cardOverlay,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.blueAccent.withOpacity(0.3)),
+                color: isDark ? Colors.white.withOpacity(0.05) : Colors.white70,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: isDark ? Colors.white10 : Colors.black12),
               ),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    "During companion session:",
+                   Text(
+                    "SESSION RULES",
                     style: TextStyle(
-                      color: Colors.white,
+                      color: isDark ? Colors.cyanAccent : Colors.blueAccent,
+                      fontSize: 12,
                       fontWeight: FontWeight.bold,
+                      letterSpacing: 1.2
                     ),
                   ),
-                  const SizedBox(height: 10),
-                  _buildFeatureItem("❌ You cannot lock/unlock apps"),
-                  _buildFeatureItem("👤 Companion selects which apps to lock"),
-                  _buildFeatureItem("⏰ Companion controls the session duration"),
-                  _buildFeatureItem("🔓 Companion can manually unlock apps"),
-                  _buildFeatureItem("🚨 You can request emergency unlock"),
+                  const SizedBox(height: 16),
+                  _buildFeatureItem("⛔ You cannot edit locks", isDark),
+                  _buildFeatureItem("👤 Companion controls app blocking", isDark),
+                  _buildFeatureItem("⏰ Companion sets the duration", isDark),
+                  _buildFeatureItem("🔓 Emergency unlock available", isDark),
                 ],
-              ),
-            ),
-            const SizedBox(height: 30),
-            ElevatedButton.icon(
-              onPressed: () {
-                Navigator.pop(context); // Go back to dashboard
-              },
-              icon: const Icon(Icons.arrow_back),
-              label: const Text("Back to Dashboard"),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueAccent,
-                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
               ),
             ),
           ],
@@ -290,17 +329,18 @@ class _AppLockScreenState extends State<AppLockScreen> {
     );
   }
 
-  Widget _buildFeatureItem(String text) {
+  Widget _buildFeatureItem(String text, bool isDark) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(width: 8),
+          Icon(Icons.check_circle_outline, size: 16, color: isDark ? Colors.white54 : Colors.black54),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(color: Colors.grey),
+              style: TextStyle(color: isDark ? Colors.white70 : Colors.black87, fontSize: 14),
             ),
           ),
         ],
@@ -310,167 +350,207 @@ class _AppLockScreenState extends State<AppLockScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // If companion controlled, show different UI
+    // 1. Theme Detection
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    // If companion controlled, show different UI (Refactored below)
     if (_isCompanionControlled) {
-      return Scaffold(
-        backgroundColor: AppColors.background,
-        appBar: AppBar(
-          title: const Text("App Lock - Companion Mode"),
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          iconTheme: const IconThemeData(color: Colors.white),
-          titleTextStyle: AppTheme.headerTitle,
-        ),
-        body: _buildCompanionControlledUI(),
-      );
+      return _buildCompanionControlledPage(isDark);
     }
 
     bool isLockActive =
         lockEndTime != null && DateTime.now().isBefore(lockEndTime!);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: const Text("Block Distractions"),
+        title: const Text("Block Distractions", style: TextStyle(fontWeight: FontWeight.bold)),
+        centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
-        titleTextStyle: AppTheme.headerTitle,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_accessibility),
+            tooltip: "Accessibility Settings",
+            onPressed: _openAccessibilitySettings,
+          )
+        ],
       ),
 
-      body: Column(
+      body: Stack(
         children: [
-          // Accessibility reminder
+          // Gradient Background
           Container(
+            height: double.infinity,
             width: double.infinity,
-            color: Colors.blueAccent.withOpacity(0.2),
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                const Icon(Icons.info_outline, color: Colors.blueAccent),
-                const SizedBox(width: 10),
-                const Expanded(
-                  child: Text(
-                    "Enable Accessibility for instant blocking.",
-                    style: TextStyle(color: Colors.white70, fontSize: 12),
-                  ),
-                ),
-                TextButton(
-                  onPressed: _openAccessibilitySettings,
-                  child: const Text("OPEN"),
-                ),
-              ],
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: isDark 
+                  ? [const Color(0xFF1A1F35), const Color(0xFF0B0E17)] 
+                  : [const Color(0xFFF8FAFC), const Color(0xFFE2E8F0)],
+              ),
             ),
           ),
 
-          // Lock timer display
-          if (isLockActive && lockEndTime != null)
-            LockTimerWidget(
-              endTime: lockEndTime!,
-              onTimerFinished: _terminateLock,
-            ),
-
-          // Apps list
-          Expanded(
-            child: loading
-                ? const Center(
-                    child: CircularProgressIndicator(color: Colors.cyanAccent),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: installedApps.length,
-                    itemBuilder: (context, index) {
-                      final app = installedApps[index];
-                      final isSelected = lockedPackages.contains(
-                        app.packageName,
-                      );
-
-                      // Check if app has icon
-                      Uint8List? iconData;
-                      if (app is ApplicationWithIcon) {
-                        iconData = app.icon;
-                      }
-
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 14),
-                        decoration: BoxDecoration(
-                          color: AppColors.cardOverlay,
-                          borderRadius: BorderRadius.circular(12),
-                          border: isSelected
-                              ? Border.all(
-                                  color: Colors.redAccent.withOpacity(0.6),
-                                  width: 1.4,
-                                )
-                              : null,
-                        ),
-
-                        child: ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: Colors.black45,
-                            radius: 22,
-                            child: iconData != null
-                                ? ClipOval(
-                                    child: Image.memory(
-                                      iconData,
-                                      width: 40,
-                                      height: 40,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  )
-                                : const Icon(Icons.apps, color: Colors.white70),
-                          ),
-
-                          title: Text(
-                            app.appName,
-                            style: TextStyle(
-                              color: isSelected
-                                  ? Colors.redAccent
-                                  : Colors.white,
-                              fontWeight: FontWeight.w500,
-                              fontSize: 15,
-                            ),
-                          ),
-
-                          trailing: Switch(
-                            value: isSelected,
-                            activeThumbColor: Colors.redAccent,
-                            inactiveThumbColor: Colors.grey,
-                            onChanged: (val) =>
-                                _toggleLock(app.packageName, val),
-                          ),
-                        ),
-                      );
-                    },
+          // Content
+          SafeArea(
+            child: Column(
+              children: [
+                // Lock timer display (Floating Glass Card)
+                if (isLockActive && lockEndTime != null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    child: LockTimerWidget(
+                      endTime: lockEndTime!,
+                      onTimerFinished: _terminateLock,
+                      isDark: isDark,
+                    ),
                   ),
+
+                // Apps list
+                Expanded(
+                  child: loading
+                      ? const Center(
+                          child: CircularProgressIndicator(color: Colors.cyanAccent),
+                        )
+                      : ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                          itemCount: installedApps.length,
+                          itemBuilder: (context, index) {
+                            final app = installedApps[index];
+                            final isSelected = lockedPackages.contains(app.packageName);
+
+                            // Check if app has icon
+                            Uint8List? iconData;
+                            if (app is ApplicationWithIcon) {
+                              iconData = app.icon;
+                            }
+
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 12),
+                              decoration: BoxDecoration(
+                                color: isDark ? Colors.white.withOpacity(0.05) : Colors.white70,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: isSelected 
+                                    ? Colors.redAccent.withOpacity(0.5) 
+                                    : (isDark ? Colors.white10 : Colors.black12)
+                                ),
+                              ),
+                              child: ListTile(
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                                leading: Container(
+                                  width: 44, height: 44,
+                                  decoration: BoxDecoration(
+                                    color: Colors.black12,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: iconData != null
+                                      ?  ClipRRect(
+                                          borderRadius: BorderRadius.circular(12),
+                                          child: Image.memory(iconData, fit: BoxFit.cover),
+                                        )
+                                      : Icon(Icons.apps, color: isDark ? Colors.white54 : Colors.black54),
+                                ),
+                                title: Text(
+                                  app.appName,
+                                  style: TextStyle(
+                                    color: isDark ? Colors.white : Colors.black87,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                                trailing: Transform.scale(
+                                  scale: 0.8,
+                                  child: Switch(
+                                    value: isSelected,
+                                    activeColor: Colors.redAccent,
+                                    activeTrackColor: Colors.redAccent.withOpacity(0.3),
+                                    inactiveThumbColor: isDark ? Colors.grey : Colors.white,
+                                    inactiveTrackColor: isDark ? Colors.white10 : Colors.black12,
+                                    onChanged: (val) => _toggleLock(app.packageName, val),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
 
       floatingActionButton: isLockActive
           ? FloatingActionButton.extended(
-              backgroundColor: Colors.red,
-              icon: const Icon(Icons.stop_circle_outlined),
-              label: const Text("STOP LOCK"),
+              backgroundColor: Colors.redAccent,
+              elevation: 4,
+              icon: const Icon(Icons.stop_circle_outlined, color: Colors.white),
+              label: const Text("STOP LOCK", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
               onPressed: _terminateLock,
             )
           : FloatingActionButton.extended(
-              backgroundColor: Colors.blueAccent,
-              icon: const Icon(Icons.timer),
-              label: const Text("Set Lock Timer"),
+              backgroundColor: Colors.cyanAccent,
+              elevation: 4,
+              icon: const Icon(Icons.timer, color: Colors.black),
+              label: const Text("Set Timer", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
               onPressed: _showDurationPicker,
             ),
     );
+  }
+
+  Widget _buildCompanionControlledPage(bool isDark) {
+     return Scaffold(
+        extendBodyBehindAppBar: true,
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          title: const Text("Companion Mode", style: TextStyle(fontWeight: FontWeight.bold)),
+          centerTitle: true,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
+        body: Stack(
+          children: [
+             Container(
+              height: double.infinity, width: double.infinity,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft, end: Alignment.bottomRight,
+                  colors: isDark 
+                    ? [const Color(0xFF1A1F35), const Color(0xFF0B0E17)] 
+                    : [const Color(0xFFF8FAFC), const Color(0xFFE2E8F0)],
+                ),
+              ),
+            ),
+            _buildCompanionControlledUI(isDark),
+          ],
+        ),
+     );
   }
 }
 
 class LockTimerWidget extends StatefulWidget {
   final DateTime endTime;
   final VoidCallback onTimerFinished;
+  final bool isDark;
 
   const LockTimerWidget({
     super.key,
     required this.endTime,
     required this.onTimerFinished,
+    this.isDark = true,
   });
 
   @override
@@ -515,23 +595,35 @@ class _LockTimerWidgetState extends State<LockTimerWidget> {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: Colors.green.withOpacity(0.2),
-      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: widget.isDark 
+            ? [Colors.blueAccent.withOpacity(0.2), Colors.purpleAccent.withOpacity(0.2)]
+            : [Colors.blue.withOpacity(0.1), Colors.purple.withOpacity(0.1)],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.blueAccent.withOpacity(0.3)),
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
       child: Column(
         children: [
           const Text(
-            "🔒 LOCK ACTIVE UNTIL:",
+            "LOCK ACTIVE",
             style: TextStyle(
-              color: Colors.greenAccent,
+              color: Colors.blueAccent,
+              fontSize: 12,
               fontWeight: FontWeight.bold,
+              letterSpacing: 1.2
             ),
           ),
+          const SizedBox(height: 4),
           Text(
             _timeLeft,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 24,
+            style: TextStyle(
+              color: widget.isDark ? Colors.white : Colors.black87,
+              fontSize: 32,
               fontWeight: FontWeight.bold,
+              fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
         ],
