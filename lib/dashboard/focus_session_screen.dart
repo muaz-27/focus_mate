@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_theme.dart';
+import '../core/widgets/custom_dialog.dart';
 
 class FocusSessionScreen extends StatefulWidget {
   final String userId;
@@ -80,22 +81,20 @@ class _FocusSessionScreenState extends State<FocusSessionScreen> {
   }
 
   Future<void> _giveUp() async {
-    bool? confirm = await showDialog(
+    bool? confirm = await showCustomDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text("Give Up?"),
-        content: const Text("Your session won't be counted."),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text("Cancel"),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text("I Quit", style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
+      title: "Give Up?",
+      content: const Text("Your session won't be counted."),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text("Cancel"),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(context, true),
+          child: const Text("I Quit", style: TextStyle(color: Colors.red)),
+        ),
+      ],
     );
 
     if (confirm == true) {

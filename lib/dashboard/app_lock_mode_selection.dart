@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'app_lock_screen.dart';
 import 'companion_request_page.dart';
+import '../theme/app_colors.dart';
 
 class AppLockModeSelection extends StatefulWidget {
   final String userId;
@@ -59,7 +60,7 @@ class _AppLockModeSelectionState extends State<AppLockModeSelection> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1E1E2C), // Dark theme background
+      backgroundColor: AppColors.background, // Dark theme background
       appBar: AppBar(
         title: const Text("Select App Lock Mode"),
         backgroundColor: Colors.transparent,

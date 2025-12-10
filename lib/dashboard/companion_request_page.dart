@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'waiting_for_companion_page.dart';
 import '../theme/app_colors.dart';
+import '../core/widgets/custom_dialog.dart';
 
 class CompanionRequestPage extends StatefulWidget {
   final String userId;
@@ -99,30 +100,63 @@ class _CompanionRequestPageState extends State<CompanionRequestPage> {
     setState(() => _isLoading = true);
     try {
       // 1. Check for existing pending or active sessions
+      // 1. Check for existing pending or active sessions
       final existingParams = await FirebaseFirestore.instance
           .collection('companion_sessions')
           .where('userId', isEqualTo: widget.userId)
           .where('status', whereIn: ['REQUESTED', 'ACTIVE'])
-          .limit(1)
           .get();
 
-      if (existingParams.docs.isNotEmpty) {
+      // Filter out stale requests (older than 30 mins)
+      DocumentSnapshot? blockingDoc;
+      final now = DateTime.now();
+
+      for (var doc in existingParams.docs) {
+        final data = doc.data();
+        if (data['status'] == 'ACTIVE') {
+          blockingDoc = doc;
+          break;
+        } else if (data['status'] == 'REQUESTED') {
+          final requestedAt = (data['requestedAt'] as Timestamp?)?.toDate();
+          if (requestedAt != null && now.difference(requestedAt).inMinutes < 30) {
+            blockingDoc = doc;
+            break;
+          }
+        }
+      }
+
+      if (blockingDoc != null) {
         if (!mounted) return;
-        await showDialog(
+        
+        // Show dialog with option to kill the zombie session
+        final shouldEnd = await showCustomDialog<bool>(
           context: context,
-          builder: (ctx) => AlertDialog(
-            title: const Text("Session Active"),
-            content: const Text(
-                "You already have a pending or active session. Please finish your current session before starting a new one."),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text("OK"),
-              ),
-            ],
-          ),
+          title: "Session Already Active",
+          content: Text(
+              "You have a session currently ${(blockingDoc.data() as Map<String, dynamic>)['status']}. Do you want to end it and start a new one?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+              child: const Text("End & Continue", style: TextStyle(color: Colors.white)),
+            ),
+          ],
         );
-        return;
+
+        if (shouldEnd == true) {
+           await blockingDoc.reference.update({
+             'status': 'ENDED',
+             'endedAt': FieldValue.serverTimestamp(),
+             'endedBy': 'override_new_request'
+           });
+           // Proceed to create new session below...
+        } else {
+           return; // User cancelled
+        }
       }
 
       final userDoc = await FirebaseFirestore.instance

@@ -194,6 +194,55 @@ class UsageService {
     }
   }
 
+  // NEW: Get the total usage minutes locally for immediate UI display
+  Future<int> getTodayUsageMinutes() async {
+    try {
+      if (!await hasPermission()) return 0;
+
+      DateTime end = DateTime.now();
+      DateTime start = DateTime(end.year, end.month, end.day);
+      
+      List<EventUsageInfo> events = await UsageStats.queryEvents(start, end);
+      Map<String, double> appUsageMap = {};
+      Map<String, int> currentOpenStartTime = {};
+
+      for (var event in events) {
+         int type = int.tryParse(event.eventType ?? "0") ?? 0;
+         int time = int.tryParse(event.timeStamp ?? "0") ?? 0;
+         String? pkg = event.packageName;
+         if (pkg == null) continue;
+
+         if (type == 1) { // MOVE_TO_FOREGROUND
+           currentOpenStartTime[pkg] = time;
+         } else if (type == 2) { // MOVE_TO_BACKGROUND
+           if (currentOpenStartTime.containsKey(pkg)) {
+             int startTime = currentOpenStartTime[pkg]!;
+             appUsageMap[pkg] = (appUsageMap[pkg] ?? 0) + (time - startTime);
+             currentOpenStartTime.remove(pkg);
+           }
+         }
+      }
+
+      for (var entry in currentOpenStartTime.entries) {
+        double duration = (end.millisecondsSinceEpoch - entry.value).toDouble();
+        appUsageMap[entry.key] = (appUsageMap[entry.key] ?? 0) + duration;
+      }
+
+      int totalMinutes = 0;
+      for (var entry in appUsageMap.entries) {
+        String pkg = entry.key;
+        int minutes = (entry.value / 1000 / 60).round();
+        if (minutes >= 1 && !_isIgnoredApp(pkg)) {
+           totalMinutes += minutes;
+        }
+      }
+      return totalMinutes;
+    } catch (e) {
+      print("Error calculating usage: $e");
+      return 0;
+    }
+  }
+
   // NEW: Sync the full list of installed apps (names + package names) to Firestore
   // This allows the companion to see apps even if they don't have them installed.
   Future<void> syncInstalledAppsToFirebase(String userId) async {

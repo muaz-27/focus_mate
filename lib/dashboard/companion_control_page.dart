@@ -5,6 +5,7 @@ import 'package:focus_mate/core/usage_service.dart';
 import 'package:focus_mate/theme/app_colors.dart';
 import 'dart:typed_data';
 import 'dart:convert';
+import 'package:focus_mate/core/widgets/custom_dialog.dart';
 
 class CompanionControlPage extends StatefulWidget {
   final String sessionId;
@@ -71,9 +72,20 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
 
       if (mounted) {
         setState(() {
-          // Filter out our own app
+          // Filter out our own app and pre-decode icons
           _installedApps = apps
               .where((app) => app['packageName'] != 'com.example.focus_mate')
+              .map((app) {
+                final newApp = Map<String, dynamic>.from(app);
+                if (newApp['iconBytes'] != null && newApp['iconBytes'] is String) {
+                  try {
+                    newApp['decodedIcon'] = base64Decode(newApp['iconBytes']);
+                  } catch (e) {
+                    print("Error decoding icon for ${newApp['packageName']}: $e");
+                  }
+                }
+                return newApp;
+              })
               .toList();
           
           // Sort
@@ -128,9 +140,6 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
         // Check for emergency requests
         // Ensure we only show it if the status isn't ENDED (handled above)
         if (data['emergencyRequested'] == true && mounted) {
-           // Basic check to see if we are already showing a dialog?
-           // For now, the existing logic is "show it". 
-           // But since we return early on ENDED, this won't fire if session is over.
           _showEmergencyRequestDialog(data);
         }
       }
@@ -143,52 +152,51 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
     final appName = isGlobalExit ? 'ALL APPS (Global Exit)' : _getAppName(emergencyApp);
     final reason = sessionData['emergencyReason'] ?? '';
     
-    showDialog(
+    showCustomDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.cardOverlay,
-        title: Text(
-          isGlobalExit ? "🚨 EMERGENCY EXIT REQUEST" : "🚨 Emergency Unlock Request",
-          style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Student: ${sessionData['userName']}",
-              style: const TextStyle(color: Colors.white),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              isGlobalExit ? "Requesting to END SESSION immediately." : "App: $appName",
-              style: TextStyle(
-                color: Colors.white, 
-                fontWeight: isGlobalExit ? FontWeight.bold : FontWeight.normal
-              ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              "Reason: $reason",
-              style: const TextStyle(color: Colors.grey),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => _respondToEmergency(false),
-            child: const Text("Deny", style: TextStyle(color: Colors.grey)),
+      title: isGlobalExit ? "🚨 EMERGENCY EXIT REQUEST" : "🚨 Emergency Unlock Request",
+      titleColor: Colors.redAccent,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Student: ${sessionData['userName']}",
+            style: const TextStyle(color: Colors.white),
           ),
-          ElevatedButton(
-            onPressed: () => _respondToEmergency(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: isGlobalExit ? Colors.red : Colors.blueAccent
-            ),
-            child: Text(isGlobalExit ? "End Session" : "Allow"),
+          const SizedBox(height: 10),
+          Text(
+            isGlobalExit
+                ? "Requesting to END SESSION immediately."
+                : "App: $appName",
+            style: TextStyle(
+                color: Colors.white,
+                fontWeight: isGlobalExit
+                    ? FontWeight.bold
+                    : FontWeight.normal),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            "Reason: $reason",
+            style: const TextStyle(color: Colors.grey),
           ),
         ],
       ),
+      actions: [
+        TextButton(
+          onPressed: () => _respondToEmergency(false),
+          child: const Text("Deny", style: TextStyle(color: Colors.grey)),
+        ),
+        ElevatedButton(
+          onPressed: () => _respondToEmergency(true),
+          style: ElevatedButton.styleFrom(
+              backgroundColor: isGlobalExit
+                  ? Colors.red
+                  : Colors.blueAccent),
+          child: Text(isGlobalExit ? "End Session" : "Allow"),
+        ),
+      ],
     );
   }
 
@@ -320,18 +328,10 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
   Future<void> _endSession({bool confirmed = false}) async {
     bool? confirm = confirmed;
     if (!confirmed) {
-      confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.cardOverlay,
-        title: const Text(
-          "End Session?",
-          style: TextStyle(color: Colors.white),
-        ),
-        content: const Text(
-          "This will unlock all apps for the student",
-          style: TextStyle(color: Colors.grey),
-        ),
+      confirm = await showCustomDialog<bool>(
+        context: context,
+        title: "End Session?",
+        content: const Text("This will unlock all apps for the student"),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -343,8 +343,7 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
             child: const Text("End Session"),
           ),
         ],
-      ),
-    );
+      );
     }
     
     if (confirm == true) {
@@ -414,20 +413,16 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
   }
 
   Widget _buildAppIcon(Map<String, dynamic> app) {
-    if (app['iconBytes'] != null) {
-      try {
-        Uint8List bytes = base64Decode(app['iconBytes']);
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: Image.memory(
-            bytes,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) => _fallbackIcon(app['appName'] ?? '?'),
-          ),
-        );
-      } catch (e) {
-        // Fallback
-      }
+    if (app['decodedIcon'] != null) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image.memory(
+          app['decodedIcon'] as Uint8List,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => _fallbackIcon(app['appName'] ?? '?'),
+          gaplessPlayback: true, // Prevents flickering when reloading
+        ),
+      );
     }
     return _fallbackIcon(app['appName'] ?? '?');
   }

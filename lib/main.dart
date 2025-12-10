@@ -8,6 +8,8 @@ import 'package:focus_mate/core/models/user_model.dart';
 import 'firebase_options.dart';
 import 'auth/auth_screen.dart';
 import 'core/dashboard_router.dart';
+import 'theme/light_theme.dart';
+import 'theme/dark_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,7 +25,9 @@ class FocusMateApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'FocusMate',
-      theme: ThemeData.dark(useMaterial3: true),
+      theme: lightTheme,
+      darkTheme: darkTheme,
+      themeMode: ThemeMode.system,
       home: const AuthGate(), // Persistent Login Logic
     );
   }

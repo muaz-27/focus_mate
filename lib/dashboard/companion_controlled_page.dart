@@ -5,6 +5,7 @@ import 'package:focus_mate/theme/app_colors.dart';
 import 'package:focus_mate/core/native_blocker.dart';
 // 👇 IMPORTANT: Ensure this import points to your dashboard file
 import 'package:focus_mate/dashboard/student_dashboard.dart'; 
+import 'package:focus_mate/core/widgets/custom_dialog.dart'; 
 
 class CompanionControlledPage extends StatefulWidget {
   final String sessionId;
@@ -124,36 +125,31 @@ class _CompanionControlledPageState extends State<CompanionControlledPage> {
       _emergencyApp = null;
     });
 
-    showDialog(
+    showCustomDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.cardOverlay,
-        title: Text(
-          allowed == true ? "✅ Approved" : "❌ Denied", 
-          style: TextStyle(color: allowed == true ? Colors.green : Colors.red),
-        ),
-        content: Text(
-          allowed == true 
+      title: allowed == true ? "✅ Approved" : "❌ Denied",
+      titleColor: allowed == true ? Colors.green : Colors.red,
+      content: Text(
+        allowed == true
             ? "Your companion approved the unlock."
             : "Your companion denied the unlock.",
-          style: const TextStyle(color: Colors.white),
-        ),
-        actions: [
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context); 
-              _firestore.collection('companion_sessions').doc(widget.sessionId).update({
-                'emergencyResponded': null,
-                'emergencyRequested': false,
-                'emergencyApp': null,
-              });
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent),
-            child: const Text("OK", style: TextStyle(color: Colors.white)),
-          ),
-        ],
+        style: const TextStyle(color: Colors.white),
       ),
+      actions: [
+        ElevatedButton(
+          onPressed: () {
+            Navigator.pop(context);
+            _firestore.collection('companion_sessions').doc(widget.sessionId).update({
+              'emergencyResponded': null,
+              'emergencyRequested': false,
+              'emergencyApp': null,
+            });
+          },
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent),
+          child: const Text("OK", style: TextStyle(color: Colors.white)),
+        ),
+      ],
     );
   }
 
@@ -186,100 +182,98 @@ class _CompanionControlledPageState extends State<CompanionControlledPage> {
       _emergencyApp = appName;
     });
 
-    await showDialog(
+    await showCustomDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.cardOverlay,
-        title: const Text("Emergency Unlock", style: TextStyle(color: Colors.orange)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              appName == "ALL_APPS" 
-                  ? "Requesting Full Session Exit" 
-                  : "App: ${appName.split('.').last}",
-              style: const TextStyle(color: Colors.white),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _reasonController,
-              maxLines: 2,
-              decoration: InputDecoration(
-                hintText: "Why do you need this?",
-                hintStyle: const TextStyle(color: Colors.grey),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: const BorderSide(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: const BorderSide(color: Colors.orange),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              style: const TextStyle(color: Colors.white),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              setState(() => _emergencyApp = null);
-              _reasonController.clear();
-            },
-            child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+      title: "Emergency Unlock",
+      titleColor: Colors.orange,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            appName == "ALL_APPS"
+                ? "Requesting Full Session Exit"
+                : "App: ${appName.split('.').last}",
+            style: const TextStyle(color: Colors.white),
           ),
-          ElevatedButton(
-            onPressed: () async {
-              if (_reasonController.text.isEmpty) return;
-
-              final reason = _reasonController.text;
-              _reasonController.clear();
-              Navigator.pop(context); 
-
-              setState(() => _emergencyRequestPending = true);
-
-              try {
-                await _firestore.collection('companion_sessions').doc(widget.sessionId).update({
-                  'emergencyRequested': true,
-                  'emergencyApp': appName,
-                  'emergencyReason': reason,
-                  'emergencyRequestedAt': FieldValue.serverTimestamp(),
-                });
-              } catch (e) {
-                if (mounted) setState(() => _emergencyRequestPending = false);
-              }
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-            child: const Text("Send", style: TextStyle(color: Colors.white)),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _reasonController,
+            maxLines: 2,
+            decoration: InputDecoration(
+              hintText: "Why do you need this?",
+              hintStyle: const TextStyle(color: Colors.grey),
+              enabledBorder: OutlineInputBorder(
+                borderSide: const BorderSide(color: Colors.grey),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderSide: const BorderSide(color: Colors.orange),
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            style: const TextStyle(color: Colors.white),
           ),
         ],
       ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.pop(context);
+            setState(() => _emergencyApp = null);
+            _reasonController.clear();
+          },
+          child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+        ),
+        ElevatedButton(
+          onPressed: () async {
+            if (_reasonController.text.isEmpty) return;
+
+            final reason = _reasonController.text;
+            _reasonController.clear();
+            Navigator.pop(context);
+
+            setState(() => _emergencyRequestPending = true);
+
+            try {
+              await _firestore
+                  .collection('companion_sessions')
+                  .doc(widget.sessionId)
+                  .update({
+                'emergencyRequested': true,
+                'emergencyApp': appName,
+                'emergencyReason': reason,
+                'emergencyRequestedAt': FieldValue.serverTimestamp(),
+              });
+            } catch (e) {
+              if (mounted) setState(() => _emergencyRequestPending = false);
+            }
+          },
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+          child: const Text("Send", style: TextStyle(color: Colors.white)),
+        ),
+      ],
     );
   }
 
   Future<void> _endSessionEarly() async {
-    final confirm = await showDialog<bool>(
+    final confirm = await showCustomDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.cardOverlay,
-        title: const Text("End Session?", style: TextStyle(color: Colors.white)),
-        content: const Text(
-          "Are you sure you want to terminate this session?",
-          style: TextStyle(color: Colors.grey),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text("Terminate", style: TextStyle(color: Colors.white)),
-          ),
-        ],
+      title: "End Session?",
+      content: const Text(
+        "Are you sure you want to terminate this session?",
+        style: TextStyle(color: Colors.grey),
       ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.pop(context, true),
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+          child: const Text("Terminate", style: TextStyle(color: Colors.white)),
+        ),
+      ],
     );
     
     if (confirm == true && mounted) {
