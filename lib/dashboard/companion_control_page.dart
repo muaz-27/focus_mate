@@ -431,13 +431,17 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
   Widget build(BuildContext context) {
     final studentName = _sessionData['userName'] ?? 'Student';
     final isActive = _sessionData['status'] == 'ACTIVE';
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subTextColor = isDark ? Colors.grey : Colors.black54;
     
     return Scaffold(
-      backgroundColor: AppColors.background,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text("Control - $studentName"),
-        backgroundColor: AppColors.cardOverlay,
-        iconTheme: const IconThemeData(color: Colors.white),
+        title: Text("Control - $studentName", style: TextStyle(color: textColor)),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: IconThemeData(color: textColor),
         actions: [
           if (isActive)
             IconButton(
@@ -447,10 +451,22 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
             ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Colors.cyanAccent))
-          : Column(
-              children: [
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDark 
+              ? [const Color(0xFF1A1F35), const Color(0xFF0B0E17)] 
+              : [const Color(0xFFF8FAFC), const Color(0xFFE2E8F0)],
+            stops: const [0.0, 1.0],
+          ),
+        ),
+        child: SafeArea(
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator(color: Colors.cyanAccent))
+              : Column(
+                  children: [
                 // Session Info Card
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -467,8 +483,8 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
                         children: [
                           Text(
                             studentName,
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: textColor,
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
@@ -495,7 +511,7 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
                         isActive 
                             ? "${_lockedApps.length} apps locked"
                             : "Select apps to lock",
-                        style: const TextStyle(color: Colors.grey),
+                        style: TextStyle(color: subTextColor),
                       ),
                     ],
                   ),
@@ -528,7 +544,7 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
                                 ? Colors.red.withOpacity(0.2)
                                 : isSelected
                                     ? Colors.blueAccent.withOpacity(0.2)
-                                    : AppColors.cardOverlay,
+                                    : (isDark ? AppColors.cardOverlay : Colors.white70),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: isLocked
@@ -562,7 +578,7 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
                                   style: TextStyle(
                                     color: isLocked 
                                         ? Colors.redAccent
-                                        : Colors.white,
+                                        : textColor,
                                     fontSize: 10, // Small text for grid
                                     fontWeight: FontWeight.w500,
                                   ),
@@ -628,6 +644,8 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
                 ),
               ],
             ),
-    );
+          ),
+        ),
+      );
   }
 }

@@ -96,13 +96,26 @@ class _AuthScreenState extends State<AuthScreen> {
       );
     }
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Padding(
-        padding: const EdgeInsets.all(18.0),
-        child: Center(
-          child: SizedBox(
-            width: 420,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDark 
+              ? [const Color(0xFF1A1F35), const Color(0xFF0B0E17)] 
+              : [const Color(0xFFF8FAFC), const Color(0xFFE2E8F0)],
+            stops: const [0.0, 1.0],
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(18.0),
+            child: Center(
+              child: SizedBox(
+                width: 420,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -159,10 +172,9 @@ class _AuthScreenState extends State<AuthScreen> {
                 const SizedBox(height: 20),
               ],
             ),
-          ),
         ),
       ),
-    );
+    )),));
   }
 
   Widget buildRoleCard(Map role) {

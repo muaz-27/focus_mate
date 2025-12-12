@@ -102,11 +102,23 @@ class _SignupScreenState extends State<SignupScreen> {
     }[widget.role]!;
 
     // We pick the first color from the gradient to use for our text fields
+    // We pick the first color from the gradient to use for our text fields
     final primaryColor = (config as List<Color>).first;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDark 
+              ? [const Color(0xFF1A1F35), const Color(0xFF0B0E17)] 
+              : [const Color(0xFFF8FAFC), const Color(0xFFE2E8F0)],
+            stops: const [0.0, 1.0],
+          ),
+        ),
+        child: SafeArea(
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(18),
@@ -219,7 +231,7 @@ class _SignupScreenState extends State<SignupScreen> {
           ),
         ),
       ),
-    );
+    ));
   }
 }
 

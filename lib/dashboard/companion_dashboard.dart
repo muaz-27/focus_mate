@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../core/auth_service.dart';
+import '../core/notification_service.dart';
 import 'analytics_screen.dart'; 
 import './companion_control_page.dart';
 
@@ -25,6 +26,12 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   List<Map<String, dynamic>> _pendingSessions = [];
   List<Map<String, dynamic>> _activeSessions = [];
+  
+  // Notification Tracking
+  final Set<String> _knownSessionRequests = {};
+  final Set<String> _knownEmergencyRequests = {};
+  bool _isFirstSessionLoad = true;
+  bool _isFirstActiveLoad = true;
 
   @override
   void initState() {
@@ -44,6 +51,27 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
         .snapshots()
         .listen((snapshot) {
       if (mounted) {
+        // Notification Logic
+        for (var change in snapshot.docChanges) {
+          if (change.type == DocumentChangeType.added) {
+            final data = change.doc.data() as Map<String, dynamic>;
+            final id = change.doc.id;
+            
+            if (!_isFirstSessionLoad && !_knownSessionRequests.contains(id)) {
+              NotificationService().showNotification(
+                id: id.hashCode,
+                title: 'New Session Request',
+                body: '${data['userName'] ?? 'Student'} requesting: ${data['studyGoal'] ?? 'Focus Session'}',
+              );
+              _knownSessionRequests.add(id);
+            } else {
+               _knownSessionRequests.add(id);
+            }
+          }
+        }
+        _isFirstSessionLoad = false;
+
+        // Keep only latest request per user
         // Keep only latest request per user
         final Map<String, Map<String, dynamic>> latestRequests = {};
         
@@ -104,11 +132,31 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
         setState(() {
           _activeSessions = snapshot.docs.map((doc) {
             final data = doc.data();
+            final id = doc.id;
+
+            // Notification for Emergency
+            if (data['emergencyRequested'] == true) {
+               if (!_isFirstActiveLoad && !_knownEmergencyRequests.contains(id)) {
+                 NotificationService().showNotification(
+                   id: (id + "_emergency").hashCode,
+                   title: '🚨 Emergency Unlock Request',
+                   body: '${data['userName'] ?? 'Student'} needs to unlock an app!',
+                 );
+                 _knownEmergencyRequests.add(id);
+               } else {
+                 _knownEmergencyRequests.add(id);
+               }
+            } else {
+               // If request cleared, remove from known (so we can notify again if triggered again)
+               _knownEmergencyRequests.remove(id);
+            }
+
             return {
               'id': doc.id,
               ...data,
             };
           }).toList();
+          _isFirstActiveLoad = false;
         });
       }
     });
@@ -151,15 +199,20 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subTextColor = isDark ? Colors.white70 : Colors.black54;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           "Companion Dashboard",
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        iconTheme: IconThemeData(color: textColor),
         actions: [
           IconButton(
             onPressed: () => AuthService().signOut(),
@@ -167,11 +220,23 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDark 
+              ? [const Color(0xFF1A1F35), const Color(0xFF0B0E17)] 
+              : [const Color(0xFFF8FAFC), const Color(0xFFE2E8F0)],
+            stops: const [0.0, 1.0],
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
             // Link Code Card
             Container(
               padding: const EdgeInsets.all(20),
@@ -186,9 +251,9 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     "Your Link Code",
-                    style: TextStyle(color: Colors.white70),
+                    style: TextStyle(color: isDark ? Colors.white70 : Colors.white.withOpacity(0.9)),
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -228,9 +293,9 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
                       ),
                     ],
                   ),
-                  const Text(
+                  Text(
                     "Share this code with a student to connect.",
-                    style: TextStyle(color: Colors.white38, fontSize: 12),
+                    style: TextStyle(color: isDark ? Colors.white38 : Colors.white70, fontSize: 12),
                   ),
                 ],
               ),
@@ -248,10 +313,10 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
               const SizedBox(height: 24),
             ],
 
-            const Text(
+            Text(
               "Connected Students",
               style: TextStyle(
-                color: Colors.white,
+                color: textColor,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -304,12 +369,12 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
                               snap.data!.data() as Map<String, dynamic>;
                           final studentName = student['name'] ?? "Unknown";
 
-                          return Container(
+                            return Container(
                             margin: const EdgeInsets.only(bottom: 12),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.05),
+                              color: isDark ? Colors.white.withOpacity(0.05) : Colors.white70,
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.white10),
+                              border: Border.all(color: isDark ? Colors.white10 : Colors.black12),
                             ),
                             child: ListTile(
                               leading: CircleAvatar(
@@ -324,7 +389,7 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
                               ),
                               title: Text(
                                 studentName,
-                                style: const TextStyle(color: Colors.white),
+                                style: TextStyle(color: textColor),
                               ),
                               subtitle: const Text(
                                 "Tap to view usage",
@@ -355,13 +420,17 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
                 },
               ),
             ),
-          ],
+            ],
+          ),
         ),
       ),
-    );
+    ));
   }
 
   Widget _buildSessionRequestsSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -369,10 +438,10 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
           children: [
             const Icon(Icons.notifications_active, color: Colors.orange, size: 24),
             const SizedBox(width: 8),
-            const Text(
+            Text(
               "Session Requests",
               style: TextStyle(
-                color: Colors.white,
+                color: textColor,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -398,6 +467,9 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
   }
 
   Widget _buildActiveSessionsSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -405,10 +477,10 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
           children: [
             const Icon(Icons.timer, color: Colors.green, size: 24),
             const SizedBox(width: 8),
-            const Text(
+            Text(
               "Active Sessions",
               style: TextStyle(
-                color: Colors.white,
+                color: textColor,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -434,6 +506,10 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
   }
 
   Widget _buildSessionRequestCard(Map<String, dynamic> session) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subTextColor = isDark ? Colors.grey : Colors.black54;
+
     final studentName = session['userName'] ?? 'Student';
     final duration = session['duration'] ?? 60;
     final studyGoal = session['studyGoal'];
@@ -468,14 +544,14 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
         ),
         title: Text(
           studentName,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               '$duration min session • $timeAgo',
-              style: const TextStyle(color: Colors.grey, fontSize: 12),
+              style: TextStyle(color: subTextColor, fontSize: 12),
             ),
             if (studyGoal != null && studyGoal.isNotEmpty)
               Text(
@@ -510,6 +586,10 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
   }
 
   Widget _buildActiveSessionCard(Map<String, dynamic> session) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subTextColor = isDark ? Colors.grey : Colors.black54;
+
     final studentName = session['userName'] ?? 'Student';
     final startedAt = session['startedAt']?.toDate();
     final duration = session['duration'] ?? 60;
@@ -545,11 +625,11 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
         ),
         title: Text(
           studentName,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
         ),
         subtitle: Text(
           '$timeLeft • ${session['lockedApps']?.length ?? 0} apps locked',
-          style: const TextStyle(color: Colors.grey, fontSize: 12),
+          style: TextStyle(color: subTextColor, fontSize: 12),
         ),
         trailing: ElevatedButton(
           onPressed: () {

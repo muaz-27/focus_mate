@@ -1,5 +1,5 @@
-import 'dart:convert'; // For base64Decode
-import 'dart:typed_data'; // For Uint8List
+import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -30,18 +30,21 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   @override
   void initState() {
     super.initState();
-    _loadData();
+    // Fetch data immediately on load
+    _refreshData();
   }
 
-  void _loadData() {
+  Future<void> _refreshData() async {
     final todayDocId = DateTime.now().toIso8601String().split('T')[0];
     final statsRef = FirebaseFirestore.instance
         .collection('users')
         .doc(widget.userId)
         .collection('daily_stats');
 
-    // 1. Listen to TODAY'S usage
-    statsRef.doc(todayDocId).snapshots().listen((snapshot) {
+    // 1. Fetch Today's Stats (Single Future, no stream)
+    try {
+      final snapshot = await statsRef.doc(todayDocId).get();
+      
       if (mounted) {
         if (snapshot.exists) {
           final data = snapshot.data()!;
@@ -54,25 +57,35 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 (a, b) =>
                     (b['usageMinutes'] ?? 0).compareTo(a['usageMinutes'] ?? 0),
               );
-              topApp = appsUsed.first;
+              try {
+                topApp = appsUsed.firstWhere(
+                  (app) => app['packageName'] != 'com.example.focus_mate' && app['appName'] != 'FocusMate',
+                );
+              } catch (e) {
+                topApp = null; // Only FocusMate was used, so no "distraction"
+              }
             } else {
               topApp = null;
             }
-            loading = false;
           });
         } else {
           setState(() {
-            totalMinutes = 0;
-            appsUsed = [];
-            topApp = null;
-            loading = false;
+             totalMinutes = 0;
+             appsUsed = [];
+             topApp = null;
           });
         }
       }
-    });
+    } catch (e) {
+      print("Error fetching analytics: $e");
+    }
 
     // 2. Fetch Weekly History
-    _calculateWeeklyAvg(statsRef);
+    await _calculateWeeklyAvg(statsRef);
+    
+    if (mounted) {
+      setState(() => loading = false);
+    }
   }
 
   Future<void> _calculateWeeklyAvg(CollectionReference statsRef) async {
@@ -120,6 +133,16 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           fontSize: 20,
           fontWeight: FontWeight.bold,
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+               setState(() => loading = true); // Optional: show full loader on manual tap
+               _refreshData();
+            },
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: Stack(
         children: [
@@ -142,9 +165,14 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           loading
             ? const Center(child: CircularProgressIndicator(color: Colors.cyanAccent))
             : SafeArea(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
+                child: RefreshIndicator(
+                  onRefresh: _refreshData,
+                  color: Colors.cyanAccent,
+                  backgroundColor: isDark ? const Color(0xFF1A1F35) : Colors.white,
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(), // Required for RefreshIndicator
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Summary Row
@@ -347,6 +375,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   ),
                 ),
               ),
+            ),
         ],
       ),
     );

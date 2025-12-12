@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:focus_mate/core/auth_service.dart';
 import 'package:focus_mate/core/models/user_model.dart';
+import 'package:focus_mate/core/notification_service.dart';
 
 // 🔹 IMPORTS
 import 'firebase_options.dart';
@@ -14,6 +15,7 @@ import 'theme/dark_theme.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await NotificationService().init();
   runApp(const FocusMateApp());
 }
 

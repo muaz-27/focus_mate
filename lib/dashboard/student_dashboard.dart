@@ -186,6 +186,7 @@ class _StudentDashboardState extends State<StudentDashboard>
   int? _localStudyTime; // Local state for immediate usage display
   bool _isLoading = false; 
   bool _isRefreshingUsage = false;
+  bool _hasPermission = false; // New state for tracking usage permission
   final TextEditingController _companionCodeController =
       TextEditingController();
   
@@ -196,6 +197,7 @@ class _StudentDashboardState extends State<StudentDashboard>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
 
     // Initialize companion state from passed user data
     if (widget.userData['linkedCompanion'] != null) {
@@ -324,7 +326,18 @@ class _StudentDashboardState extends State<StudentDashboard>
     _usageSyncTimer?.cancel();
     _activeSessionSubscription?.cancel();
     _companionCodeController.dispose();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      if (mounted) {
+         _refreshUsageStats();
+         _checkActiveSession(); // Re-verify session status on return
+      }
+    }
   }
 
   void _startRuleSync() {
@@ -404,7 +417,8 @@ class _StudentDashboardState extends State<StudentDashboard>
 
     if (confirm != true) return;
 
-    String? companionId = widget.userData['linkedCompanion'];
+    // Fix: Use local _companionId because widget.userData might be stale (if linked in this session)
+    String? companionId = _companionId ?? widget.userData['linkedCompanion'];
     if (companionId == null) return;
 
     setState(() => _isLoading = true);
@@ -427,6 +441,7 @@ class _StudentDashboardState extends State<StudentDashboard>
           companionActive = false;
           // Do NOT mutate widget.userData anymore
           _companionName = null;
+          _companionId = null;
         });
       }
     } catch (e) {
@@ -480,6 +495,7 @@ class _StudentDashboardState extends State<StudentDashboard>
         setState(() {
           companionActive = true;
           _companionName = companionDoc.data()['name'];
+          _companionId = companionDoc.id; // Correctly update local ID
         });
       }
     } catch (e) {
@@ -842,8 +858,15 @@ class _StudentDashboardState extends State<StudentDashboard>
     setState(() => _isRefreshingUsage = true);
 
     try {
-      // 1. Get local stats immediately
-      final minutes = await _usageService.getTodayUsageMinutes();
+      // 0. Check permission first
+      final hasPerm = await _usageService.hasPermission();
+      
+      if (mounted) {
+        setState(() => _hasPermission = hasPerm);
+      }
+
+      // 1. Get local stats immediately (only if permitted, otherwise 0)
+      final minutes = hasPerm ? await _usageService.getTodayUsageMinutes() : 0;
       if (mounted) {
         setState(() {
           _localStudyTime = minutes;
@@ -851,7 +874,9 @@ class _StudentDashboardState extends State<StudentDashboard>
       }
       
       // 2. Sync to cloud in background
-      _usageService.syncUsageToFirebase(widget.userData['id']);
+      if (hasPerm) {
+         _usageService.syncUsageToFirebase(widget.userData['id']);
+      }
 
     } catch (e) {
       print("Error refreshing usage: $e");
@@ -913,8 +938,8 @@ class _StudentDashboardState extends State<StudentDashboard>
                             MaterialPageRoute(
                               builder: (_) => CompanionRequestPage(
                                 userId: widget.userData['id'],
-                                companionId: _companionId!, // Use local updated state
-                                companionName: _companionName ?? "Companion",
+                                companionId: _companionId ?? widget.userData['linkedCompanion'], // Safe fallback
+                                companionName: _companionName ?? widget.userData['companionName'] ?? "Companion",
                               ),
                             ),
                           );
@@ -1089,29 +1114,48 @@ class _StudentDashboardState extends State<StudentDashboard>
                 ? [Colors.orange.shade50, Colors.orange.shade100]
                 : [Colors.green.shade50, Colors.green.shade100]);
 
-    return Container(
-      padding: const EdgeInsets.all(28),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: bgColors,
-        ),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () async {
+            if (await PermissionManager.checkUsageStats(context)) {
+              if (context.mounted) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => AnalyticsScreen(
+                      userId: widget.userData['id'],
+                      userName: widget.userData['name'] ?? "My",
+                    ),
+                  ),
+                );
+              }
+            }
+        },
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: accentColor.withOpacity(0.3), width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: accentColor.withOpacity(0.15),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+        child: Container(
+          padding: const EdgeInsets.all(28),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: bgColors,
+            ),
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(color: accentColor.withOpacity(0.3), width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: accentColor.withOpacity(0.15),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
+          child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
                 child: Column(
@@ -1160,7 +1204,7 @@ class _StudentDashboardState extends State<StudentDashboard>
                             text: _formatMinutes(displayTime), 
                             style: TextStyle(
                               color: isDark ? Colors.white : Colors.black, 
-                              fontSize: 36, 
+                              fontSize: 30, 
                               fontWeight: FontWeight.bold,
                               height: 1.0,
                             )
@@ -1177,42 +1221,64 @@ class _StudentDashboardState extends State<StudentDashboard>
                         ],
                       ),
                     ),
+
                     const SizedBox(height: 4),
                     Text(statusText, style: TextStyle(color: accentColor, fontWeight: FontWeight.bold, fontSize: 13)),
                   ],
                 ),
               ),
               const SizedBox(width: 16),
-              Container(
-                 width: 60,
-                 height: 60,
-                 child: Stack(
-                   children: [
-                     Center(
-                       child: SizedBox(
-                         width: 60, height: 60,
-                         child: CircularProgressIndicator(
-                           value: progress,
-                           backgroundColor: Colors.black12,
-                           color: accentColor,
-                           strokeWidth: 6,
+              // Progress Circle OR Enable Button
+              if (_hasPermission) ...[
+                 Container(
+                   width: 60,
+                   height: 60,
+                   child: Stack(
+                     children: [
+                       Center(
+                         child: SizedBox(
+                           width: 60, height: 60,
+                           child: CircularProgressIndicator(
+                             value: progress,
+                             backgroundColor: Colors.black12,
+                             color: accentColor,
+                             strokeWidth: 6,
+                           ),
                          ),
                        ),
-                     ),
-                     Center(
-                       child: Text(
-                         "${(progress * 100).toInt()}%",
-                         style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold, fontSize: 14),
+                       Center(
+                         child: Text(
+                           "${(progress * 100).toInt()}%",
+                           style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold, fontSize: 14),
+                         ),
                        ),
-                     ),
-                   ],
-                 ),
-              )
+                     ],
+                   ),
+                ),
+                 const SizedBox(width: 16),
+                 Icon(Icons.arrow_forward_ios, size: 14, color: isDark ? Colors.white30 : Colors.black26),
+              ] else ...[
+                 ElevatedButton(
+                   onPressed: () async {
+                      if (await PermissionManager.checkUsageStats(context)) {
+                        _refreshUsageStats();
+                      }
+                   },
+                   style: ElevatedButton.styleFrom(
+                     backgroundColor: accentColor.withOpacity(0.2),
+                     foregroundColor: accentColor,
+                     elevation: 0,
+                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                   ),
+                   child: const Text("Enable Usage", style: TextStyle(fontWeight: FontWeight.bold)),
+                 )
+              ]
             ],
           ),
         ],
       ),
-    );
+    )));
   }
 
   Widget _buildActionGrid(bool isDark) {
