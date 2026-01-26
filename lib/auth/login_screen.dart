@@ -5,13 +5,14 @@ import 'package:focus_mate/core/widgets/custom_text_field.dart';
 import '../core/auth_service.dart';
 import '../core/usage_service.dart';
 
-// These colors help us distinguish between different user roles
+/// Semantic colors associated with each user role.
 final Map<UserRole, Color> roleAccent = {
   UserRole.user: Colors.cyanAccent,
   UserRole.companion: Colors.purpleAccent,
   UserRole.parent: Colors.orangeAccent,
 };
 
+/// Screen dealing with existing user authentication.
 class LoginScreen extends StatefulWidget {
   final UserRole role;
   final VoidCallback onBack;
@@ -73,6 +74,9 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  /// Validates the form and attempts to sign in the user.
+  /// 
+  /// Checks for role mismatch to ensure students don't log in as guardians.
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -88,7 +92,6 @@ class _LoginScreenState extends State<LoginScreen> {
         throw Exception("Login failed. Please try again.");
       }
 
-      // We make sure the user is logging in with the correct role
       if (user.role != widget.role) {
         await _auth.signOut();
         throw Exception("Role mismatch. This account is registered as a ${user.role.name}.");
@@ -126,109 +129,110 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         child: SafeArea(
           child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 22),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TextButton.icon(
-                  onPressed: widget.onBack,
-                  icon: const Icon(Icons.arrow_back, color: Colors.white70),
-                  label: const Text("Back", style: TextStyle(color: Colors.white70)),
-                ),
-                const SizedBox(height: 10),
-
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(26),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[900]!.withOpacity(0.8),
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: accent.withOpacity(0.3), width: 1),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 22),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextButton.icon(
+                    onPressed: widget.onBack,
+                    icon: const Icon(Icons.arrow_back, color: Colors.white70),
+                    label: const Text("Back", style: TextStyle(color: Colors.white70)),
                   ),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      children: [
-                        CircleAvatar(
-                          radius: 36,
-                          backgroundColor: accent.withOpacity(0.15),
-                          child: Icon(Icons.lock, color: accent, size: 32),
-                        ),
-                        const SizedBox(height: 16),
+                  const SizedBox(height: 10),
 
-                        Text(
-                          "Login",
-                          style: TextStyle(
-                            color: accent,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(26),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[900]!.withOpacity(0.8),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: accent.withOpacity(0.3), width: 1),
+                    ),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          CircleAvatar(
+                            radius: 36,
+                            backgroundColor: accent.withOpacity(0.15),
+                            child: Icon(Icons.lock, color: accent, size: 32),
                           ),
-                        ),
-                        const SizedBox(height: 6),
-                        const Text(
-                          "Enter your details to continue",
-                          style: TextStyle(color: Colors.white70),
-                        ),
-                        const SizedBox(height: 26),
+                          const SizedBox(height: 16),
 
-                        CustomTextField(
-                          controller: _emailController,
-                          hint: "Email",
-                          icon: Icons.mail,
-                          accentColor: accent,
-                          validator: (value) =>
-                              (value == null || value.isEmpty) ? "Please enter your email" : null,
-                        ),
-                        const SizedBox(height: 18),
-
-                        CustomTextField(
-                          controller: _passwordController,
-                          hint: "Password",
-                          icon: Icons.lock,
-                          accentColor: accent,
-                          isPassword: true,
-                          validator: (value) =>
-                              (value == null || value.isEmpty) ? "Please enter your password" : null,
-                        ),
-
-                        const SizedBox(height: 26),
-
-                        CustomButton(
-                          onPressed: _isFormValid ? _handleLogin : null,
-                          text: "Sign In",
-                          isLoading: _isLoading,
-                          color: _isFormValid ? accent : Colors.grey,
-                        ),
-
-                        const SizedBox(height: 14),
-
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Text(
-                              "Don't have an account?",
-                              style: TextStyle(color: Colors.white60),
+                          Text(
+                            "Login",
+                            style: TextStyle(
+                              color: accent,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
                             ),
-                            TextButton(
-                              onPressed: widget.onSwitchToSignup,
-                              child: Text(
-                                "Sign Up",
-                                style: TextStyle(color: accent),
+                          ),
+                          const SizedBox(height: 6),
+                          const Text(
+                            "Enter your details to continue",
+                            style: TextStyle(color: Colors.white70),
+                          ),
+                          const SizedBox(height: 26),
+
+                          CustomTextField(
+                            controller: _emailController,
+                            hint: "Email",
+                            icon: Icons.mail,
+                            accentColor: accent,
+                            validator: (value) =>
+                                (value == null || value.isEmpty) ? "Please enter your email" : null,
+                          ),
+                          const SizedBox(height: 18),
+
+                          CustomTextField(
+                            controller: _passwordController,
+                            hint: "Password",
+                            icon: Icons.lock,
+                            accentColor: accent,
+                            isPassword: true,
+                            validator: (value) =>
+                                (value == null || value.isEmpty) ? "Please enter your password" : null,
+                          ),
+
+                          const SizedBox(height: 26),
+
+                          CustomButton(
+                            onPressed: _isFormValid ? _handleLogin : null,
+                            text: "Sign In",
+                            isLoading: _isLoading,
+                            color: _isFormValid ? accent : Colors.grey,
+                          ),
+
+                          const SizedBox(height: 14),
+
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text(
+                                "Don't have an account?",
+                                style: TextStyle(color: Colors.white60),
                               ),
-                            ),
-                          ],
-                        ),
-                      ],
+                              TextButton(
+                                onPressed: widget.onSwitchToSignup,
+                                child: Text(
+                                  "Sign Up",
+                                  style: TextStyle(color: accent),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
       ),
-    ));
+    );
   }
 }
 

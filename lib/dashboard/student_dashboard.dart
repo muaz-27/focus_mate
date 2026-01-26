@@ -1,10 +1,9 @@
-// student_dashboard.dart
-
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:focus_mate/main.dart'; 
 import '../core/auth_service.dart';
 import '../core/permission_manager.dart';
 import '../core/usage_service.dart';
@@ -18,22 +17,20 @@ import './study_workspace_screen.dart';
 import './companion_controlled_page.dart';
 import './waiting_for_companion_page.dart';
 import '../core/widgets/custom_dialog.dart';
+import '../core/native_blocker.dart';
 
-// ==========================================
-// 1. LOADER (Entry Point) - ADD THIS BACK
-// ==========================================
-import 'package:focus_mate/main.dart'; 
-
+/// Entry point for the student dashboard.
+/// 
+/// Handles initial authentication verification and profile data loading.
+/// Redirects to [AuthGate] if user is not authenticated or profile is missing.
 class StudentDashboardLoader extends StatelessWidget {
   const StudentDashboardLoader({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // We get the ID here just to start the stream, but we'll re-check auth inside
     final initialUser = FirebaseAuth.instance.currentUser;
 
     if (initialUser == null) {
-      // FORCE NAVIGATION TO AUTH GATE (Login)
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const AuthGate()),
@@ -61,11 +58,9 @@ class StudentDashboardLoader extends StatelessWidget {
           .doc(initialUser.uid)
           .snapshots(),
       builder: (context, snapshot) {
-        // 1. Critical Check: Is user still logged in?
-        // We check this DYNAMICALLY here to handle the logout race condition.
+        // Dynamic check to handle logout race conditions
         final currentUser = FirebaseAuth.instance.currentUser;
         if (currentUser == null) {
-           // FORCE NAVIGATION TO AUTH GATE (Login)
            WidgetsBinding.instance.addPostFrameCallback((_) {
              Navigator.of(context).pushAndRemoveUntil(
                MaterialPageRoute(builder: (_) => const AuthGate()),
@@ -85,9 +80,7 @@ class StudentDashboardLoader extends StatelessWidget {
         }
 
         if (snapshot.hasError) {
-          // If error implies permission issues, check auth again just in case
           if (FirebaseAuth.instance.currentUser == null) {
-             // FORCE NAVIGATION TO AUTH GATE (Login)
              WidgetsBinding.instance.addPostFrameCallback((_) {
                Navigator.of(context).pushAndRemoveUntil(
                  MaterialPageRoute(builder: (_) => const AuthGate()),
@@ -140,9 +133,10 @@ class StudentDashboardLoader extends StatelessWidget {
   }
 }
 
-// ==========================================
-// 2. MAIN DASHBOARD (YOUR ORIGINAL VERSION)
-// ==========================================
+/// Main dashboard widget for students.
+/// 
+/// Displays daily study statistics, goal progress, and allows access to 
+/// session features and settings.
 class StudentDashboard extends StatefulWidget {
   final Map<String, dynamic> userData;
   final int studyTime;
@@ -173,24 +167,31 @@ class _StudentDashboardState extends State<StudentDashboard>
     with WidgetsBindingObserver {
   final UsageService _usageService = UsageService();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  static const platform = MethodChannel('com.example.focus_mate/blocker');
+  // static const platform = MethodChannel('com.example.focus_mate/blocker'); // REMOVED: Using NativeBlocker class
 
   Timer? _ruleSyncTimer;
-  Timer? _usageSyncTimer; // Timer for usage stats
+  Timer? _usageSyncTimer;
   DateTime? _lockEndTime;
   List<String> _blockedList = [];
   bool companionActive = false;
-  String? _companionName; // Local state
-  String? _companionId;   // Local state for ID
-  int? _dailyGoal; // Local state for optimistic updates
-  int? _localStudyTime; // Local state for immediate usage display
+  
+  /// Local state for companion name to avoid UI flicker.
+  String? _companionName;
+  String? _companionId;
+  
+  /// Local state for optimistic daily goal updates.
+  int? _dailyGoal;
+  
+  /// Local state for immediate daily usage display.
+  int? _localStudyTime;
+  
   bool _isLoading = false; 
   bool _isRefreshingUsage = false;
-  bool _hasPermission = false; // New state for tracking usage permission
+  bool _hasPermission = false;
   final TextEditingController _companionCodeController =
       TextEditingController();
   
-  // New state variable for active session re-entry
+  /// Data for any currently active or requested companion session.
   Map<String, dynamic>? _activeSessionData;
   StreamSubscription? _activeSessionSubscription;
 
@@ -205,13 +206,22 @@ class _StudentDashboardState extends State<StudentDashboard>
       _companionName = widget.userData['companionName']; 
       _companionId = widget.userData['linkedCompanion'];
     }
-    _dailyGoal = widget.dailyGoal; // Init daily goal
-    _localStudyTime = widget.studyTime; // Init usage
-    _refreshUsageStats(); // Fetch fresh immediately on load
-
+    _dailyGoal = widget.dailyGoal;
+    _localStudyTime = widget.studyTime;
+    
+    // Initialize lock state immediately
+    _blockedList = List<String>.from(widget.userData['lockedApps'] ?? []);
+    _lockEndTime = widget.userData['lockEndTime'] != null
+        ? (widget.userData['lockEndTime'] as Timestamp).toDate()
+        : null;
+        
+    // Apply locks immediately (don't wait for timer)
+    _applyNativeLock();
+    
+    _refreshUsageStats();
     _startRuleSync();
     _getCompanionDetails();
-    _checkActiveSession(); // Check for existing active session
+    _checkActiveSession();
 
     // Sync usage data in background
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -219,7 +229,7 @@ class _StudentDashboardState extends State<StudentDashboard>
       _usageService.syncInstalledAppsToFirebase(widget.userData['id']);
     });
 
-    // POLLING: Sync usage stats every 1 minute to keep UI fresh
+    // Sync usage stats every 1 minute to keep UI fresh
     _usageSyncTimer = Timer.periodic(const Duration(minutes: 1), (_) {
       _refreshUsageStats();
     });
@@ -236,7 +246,6 @@ class _StudentDashboardState extends State<StudentDashboard>
           _companionName = null;
           _companionId = null;
         } else {
-             // If linked via props (which should be handling locally now), update ID 
              _companionId = widget.userData['linkedCompanion'];
         }
       });
@@ -251,26 +260,42 @@ class _StudentDashboardState extends State<StudentDashboard>
     }
 
     if (widget.studyTime != oldWidget.studyTime) {
-       // Only update if we aren't currently refreshing manually to avoiding jumping
+       // Only update if we aren't currently refreshing manually to avoid jumping
        if (!_isRefreshingUsage) {
           setState(() => _localStudyTime = widget.studyTime);
        }
     }
+
+    // NEW: Sync blocked apps immediately when parent data changes
+    final List<String> oldLocked = List<String>.from(oldWidget.userData['lockedApps'] ?? []);
+    final List<String> newLocked = List<String>.from(widget.userData['lockedApps'] ?? []);
+    final DateTime? oldEndTime = oldWidget.userData['lockEndTime'] != null 
+        ? (oldWidget.userData['lockEndTime'] as Timestamp).toDate() 
+        : null;
+    final DateTime? newEndTime = widget.userData['lockEndTime'] != null 
+        ? (widget.userData['lockEndTime'] as Timestamp).toDate() 
+        : null;
+
+    if (newLocked.toString() != oldLocked.toString() || newEndTime != oldEndTime) {
+       setState(() {
+         _blockedList = newLocked;
+         _lockEndTime = newEndTime;
+       });
+       _applyNativeLock();
+    }
   }
   
+  /// Listens for active or requested companion sessions from Firestore.
+  /// 
+  /// Updates [_activeSessionData] to show the session banner if needed.
   void _checkActiveSession() {
     _activeSessionSubscription = _firestore
         .collection('companion_sessions')
         .where('userId', isEqualTo: widget.userData['id'])
         .where('status', whereIn: ['ACTIVE', 'REQUESTED'])
-        //.orderBy('createdAt', descending: true) // optimization: implies index
         .snapshots()
         .listen((snapshot) {
       if (mounted) {
-        // Filter locally if needed or just take the first one
-        // Since we want the *latest* relevant one, and we can't easily orderBy with whereIn without index
-        // We can sort them in memory if strictly needed, but limit(1) might give arbitrary one.
-        
         if (snapshot.docs.isNotEmpty) {
            // Sort in memory (newest first)
            final docs = snapshot.docs;
@@ -335,25 +360,42 @@ class _StudentDashboardState extends State<StudentDashboard>
     if (state == AppLifecycleState.resumed) {
       if (mounted) {
          _refreshUsageStats();
-         _checkActiveSession(); // Re-verify session status on return
+         _checkActiveSession();
       }
     }
   }
 
+  /// Periodically syncs blocked apps to the native Android service.
   void _startRuleSync() {
     _ruleSyncTimer?.cancel();
     _ruleSyncTimer = Timer.periodic(const Duration(seconds: 5), (_) async {
       await _fetchLockRules();
-      try {
-        final appsToSend =
-            (_lockEndTime != null && DateTime.now().isBefore(_lockEndTime!))
-            ? _blockedList
-            : <String>[];
-        await platform.invokeMethod('setBlockedApps', {'apps': appsToSend});
-      } catch (e) {}
+      _applyNativeLock();
     });
   }
 
+  /// Calculates which apps to block and invokes native method.
+  Future<void> _applyNativeLock() async {
+    // Determine effective block list
+    bool shouldBlock = _blockedList.isNotEmpty && (_lockEndTime == null || DateTime.now().isBefore(_lockEndTime!));
+    final appsToSend = shouldBlock ? _blockedList : <String>[];
+    
+    try {
+      if (appsToSend.isEmpty) {
+        // HARD RESET: If unlocking, clear ALL channels to ensure no zombie locks remain
+        await NativeBlocker.setBlockedApps([]);
+        await NativeBlocker.setCompanionBlockedApps([]);
+      } else {
+        // Applying lock: Use main channel, clear secondary channel to avoid conflicts
+        await NativeBlocker.setBlockedApps(appsToSend);
+        await NativeBlocker.setCompanionBlockedApps([]);
+      }
+    } catch (e) {
+      debugPrint("Error syncing blocked apps: $e");
+    }
+  }
+
+  /// Fetches the current list of blocked apps and lock duration from Firestore.
   Future<void> _fetchLockRules() async {
     try {
       final doc = await _firestore
@@ -373,12 +415,13 @@ class _StudentDashboardState extends State<StudentDashboard>
         }
       }
     } catch (e) {
-      print("Error fetching lock rules: $e");
+      debugPrint("Error fetching lock rules: $e");
     }
   }
 
+  /// Fetches details of the linked companion if not already available.
   Future<void> _getCompanionDetails() async {
-    if (_companionName != null) return; // Use local state check
+    if (_companionName != null) return;
     String? companionId = widget.userData['linkedCompanion'];
     if (companionId != null) {
       try {
@@ -389,7 +432,7 @@ class _StudentDashboardState extends State<StudentDashboard>
         if (doc.exists) {
           if (mounted) {
             setState(() {
-              _companionName = doc['name']; // Update local state
+              _companionName = doc['name'];
               companionActive = true;
             });
           }
@@ -398,6 +441,7 @@ class _StudentDashboardState extends State<StudentDashboard>
     }
   }
 
+  /// Unlinks the current companion, removing their access to stats.
   Future<void> _unlinkCompanion() async {
     bool? confirm = await showCustomDialog<bool>(
       context: context,
@@ -417,7 +461,6 @@ class _StudentDashboardState extends State<StudentDashboard>
 
     if (confirm != true) return;
 
-    // Fix: Use local _companionId because widget.userData might be stale (if linked in this session)
     String? companionId = _companionId ?? widget.userData['linkedCompanion'];
     if (companionId == null) return;
 
@@ -439,7 +482,6 @@ class _StudentDashboardState extends State<StudentDashboard>
       if (mounted) {
         setState(() {
           companionActive = false;
-          // Do NOT mutate widget.userData anymore
           _companionName = null;
           _companionId = null;
         });
@@ -455,6 +497,7 @@ class _StudentDashboardState extends State<StudentDashboard>
     }
   }
 
+  /// Links a companion using the provided link code.
   Future<void> _linkCompanion() async {
     final code = _companionCodeController.text.trim();
     if (code.isEmpty) return;
@@ -495,7 +538,7 @@ class _StudentDashboardState extends State<StudentDashboard>
         setState(() {
           companionActive = true;
           _companionName = companionDoc.data()['name'];
-          _companionId = companionDoc.id; // Correctly update local ID
+          _companionId = companionDoc.id;
         });
       }
     } catch (e) {
@@ -551,7 +594,6 @@ class _StudentDashboardState extends State<StudentDashboard>
 
   @override
   Widget build(BuildContext context) {
-    // Progress calculation
     final currentUsage = _localStudyTime ?? widget.studyTime;
     final hasGoal = _dailyGoal != null;
     final progress = hasGoal ? (currentUsage / _dailyGoal!).clamp(0.0, 1.0) : 0.0;
@@ -559,7 +601,7 @@ class _StudentDashboardState extends State<StudentDashboard>
     
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : Colors.black87;
-    final subTextColor = isDark ? Colors.white70 : Colors.black54; // Lighter subtitle
+    final subTextColor = isDark ? Colors.white70 : Colors.black54;
 
     return Scaffold(
       extendBodyBehindAppBar: true, 
@@ -569,7 +611,7 @@ class _StudentDashboardState extends State<StudentDashboard>
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: isDark 
-              ? [const Color(0xFF1A1F35), const Color(0xFF0B0E17)] // Deep Navy / Space Gray
+              ? [const Color(0xFF1A1F35), const Color(0xFF0B0E17)] 
               : [const Color(0xFFF8FAFC), const Color(0xFFE2E8F0)],
             stops: const [0.0, 1.0],
           ),
@@ -581,7 +623,7 @@ class _StudentDashboardState extends State<StudentDashboard>
               Expanded(
                 child: SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12), // Increased padding
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -590,7 +632,7 @@ class _StudentDashboardState extends State<StudentDashboard>
                         const SizedBox(height: 24),
                       ],
                       _buildDailyFocusHero(progress, remaining, isDark),
-                      const SizedBox(height: 32), // More whitespace
+                      const SizedBox(height: 32), 
                       Text("QUICK ACTIONS", 
                         style: TextStyle(
                           color: subTextColor.withOpacity(0.5), 
@@ -614,7 +656,7 @@ class _StudentDashboardState extends State<StudentDashboard>
                       _buildManagementGrid(isDark),
                       const SizedBox(height: 32),
                       _buildCompanionCard(isDark), 
-                      const SizedBox(height: 48), // Bottom padding
+                      const SizedBox(height: 48),
                     ],
                   ),
                 ),
@@ -667,6 +709,7 @@ class _StudentDashboardState extends State<StudentDashboard>
     );
   }
 
+  /// Displays a banner when a companion session is active or requested.
   Widget _buildActiveSessionBanner() {
     final isActive = _activeSessionData!['status'] == 'ACTIVE';
     return GestureDetector(
@@ -686,8 +729,8 @@ class _StudentDashboardState extends State<StudentDashboard>
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: isActive 
-                ? [const Color(0xFFEF4444), const Color(0xFFDC2626)] // Red 500, Red 600
-                : [const Color(0xFFF59E0B), const Color(0xFFD97706)], // Amber 500, Amber 600
+                ? [const Color(0xFFEF4444), const Color(0xFFDC2626)]
+                : [const Color(0xFFF59E0B), const Color(0xFFD97706)],
           ),
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
@@ -740,16 +783,15 @@ class _StudentDashboardState extends State<StudentDashboard>
     return "${h}h ${m}m";
   }
 
+  /// Shows a modal sheet to allow the user to set or update their daily focus goal.
   Future<void> _editDailyGoal() async {
-    // 1. Ensure we can even track usage before setting a goal
     bool hasPermission = await PermissionManager.checkUsageStats(context);
     if (!hasPermission) return;
 
     if (!mounted) return;
 
-    // 2. Show Dialog
     int? currentGoal = _dailyGoal;
-    int selectedGoal = currentGoal ?? 60; // Default to 60m if unset
+    int selectedGoal = currentGoal ?? 60;
 
     await showModalBottomSheet(
       context: context,
@@ -784,8 +826,8 @@ class _StudentDashboardState extends State<StudentDashboard>
                    Slider(
                      value: selectedGoal.toDouble(),
                      min: 15,
-                     max: 480, // 8 hours max
-                     divisions: 31, // 15 min steps
+                     max: 480,
+                     divisions: 31,
                      activeColor: Colors.cyanAccent,
                      inactiveColor: Colors.white10,
                      onChanged: (val) {
@@ -827,7 +869,6 @@ class _StudentDashboardState extends State<StudentDashboard>
       }
     ).then((result) async {
        if (result != null) {
-          // Optimistic Update
           setState(() {
              _dailyGoal = (result == -1) ? null : result;
           });
@@ -843,7 +884,6 @@ class _StudentDashboardState extends State<StudentDashboard>
               });
             }
           } catch (e) {
-            // Revert on error
             if (mounted) {
                setState(() => _dailyGoal = widget.dailyGoal);
                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
@@ -853,19 +893,19 @@ class _StudentDashboardState extends State<StudentDashboard>
     });
   }
 
+  /// Refreshes local usage statistics and syncs with Firebase if permitted.
   Future<void> _refreshUsageStats() async {
     if (_isRefreshingUsage) return;
     setState(() => _isRefreshingUsage = true);
 
     try {
-      // 0. Check permission first
       final hasPerm = await _usageService.hasPermission();
       
       if (mounted) {
         setState(() => _hasPermission = hasPerm);
       }
 
-      // 1. Get local stats immediately (only if permitted, otherwise 0)
+      // Get local stats immediately (only if permitted, otherwise 0)
       final minutes = hasPerm ? await _usageService.getTodayUsageMinutes() : 0;
       if (mounted) {
         setState(() {
@@ -873,13 +913,13 @@ class _StudentDashboardState extends State<StudentDashboard>
         });
       }
       
-      // 2. Sync to cloud in background
+      // Sync to cloud
       if (hasPerm) {
          _usageService.syncUsageToFirebase(widget.userData['id']);
       }
 
     } catch (e) {
-      print("Error refreshing usage: $e");
+      debugPrint("Error refreshing usage: $e");
     } finally {
        if (mounted) setState(() => _isRefreshingUsage = false);
     }
@@ -938,7 +978,7 @@ class _StudentDashboardState extends State<StudentDashboard>
                             MaterialPageRoute(
                               builder: (_) => CompanionRequestPage(
                                 userId: widget.userData['id'],
-                                companionId: _companionId ?? widget.userData['linkedCompanion'], // Safe fallback
+                                companionId: _companionId ?? widget.userData['linkedCompanion'],
                                 companionName: _companionName ?? widget.userData['companionName'] ?? "Companion",
                               ),
                             ),
@@ -1027,55 +1067,59 @@ class _StudentDashboardState extends State<StudentDashboard>
 
   Widget _buildDailyFocusHero(double progress, int remaining, bool isDark) {
     final displayTime = _localStudyTime ?? widget.studyTime;
+
+
     if (_dailyGoal == null) {
-      // EMPTY STATE: No Goal Set
+      // Empty State (No Goal)
       return Container(
+        width: double.infinity,
         padding: const EdgeInsets.all(28),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: isDark 
-              ? [const Color(0xFF1E293B), const Color(0xFF0F172A)] 
-              : [Colors.white, Colors.grey.shade50],
-          ),
-          borderRadius: BorderRadius.circular(30),
-          border: Border.all(color: isDark ? Colors.white10 : Colors.black12),
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: BorderRadius.circular(32),
+          border: Border.all(color: isDark ? Colors.white10 : Colors.grey.shade200),
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, 10)),
+            BoxShadow(
+              color: isDark ? Colors.black26 : Colors.grey.withOpacity(0.05),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            )
           ],
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Column(
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Text("DAILY USAGE", style: TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.bold, letterSpacing: 1.2, fontSize: 12)),
-                    const SizedBox(width: 8),
-                    if (_isRefreshingUsage) 
-                      const SizedBox(width: 12, height: 12, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.cyanAccent))
-                    else
-                      InkWell(
-                        onTap: _refreshUsageStats,
-                        child: Icon(Icons.refresh, size: 14, color: Colors.cyanAccent.withOpacity(0.7)),
-                      )
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(_formatMinutes(displayTime), style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 36, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 4),
-                Text("No limit set", style: TextStyle(color: isDark ? Colors.white54 : Colors.grey)),
-              ],
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: (isDark ? Colors.blueAccent : Colors.blue).withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.track_changes, color: isDark ? Colors.blueAccent : Colors.blue, size: 32),
             ),
+            const SizedBox(height: 16),
+            Text(
+              "Set a Daily Goal",
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.black87,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              "Track your screen time and stay focused.",
+              textAlign: TextAlign.center,
+              style: TextStyle(color: isDark ? Colors.white54 : Colors.grey),
+            ),
+            const SizedBox(height: 24),
             ElevatedButton(
               onPressed: _editDailyGoal,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.cyanAccent.withOpacity(0.2),
-                foregroundColor: Colors.cyanAccent,
+                backgroundColor: isDark ? Colors.blueAccent : Colors.blue,
+                foregroundColor: Colors.white,
                 elevation: 0,
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               ),
               child: const Text("Set Goal"),
             )
@@ -1388,7 +1432,6 @@ class _StudentDashboardState extends State<StudentDashboard>
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        // Removed fixed height to prevent overflow
         constraints: const BoxConstraints(minHeight: 110), 
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
@@ -1421,7 +1464,7 @@ class _StudentDashboardState extends State<StudentDashboard>
               ),
               child: Icon(icon, color: color, size: 26),
             ),
-            const SizedBox(height: 16), // Add spacing instead of spaceBetween if needed
+            const SizedBox(height: 16), 
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1600,7 +1643,7 @@ class _StudentDashboardState extends State<StudentDashboard>
                         onPressed: _isLoading ? null : _linkCompanion,
                          style: ElevatedButton.styleFrom(
                            backgroundColor: Colors.cyanAccent,
-                           foregroundColor: Colors.black87, // Dark text on bright button
+                           foregroundColor: Colors.black87, 
                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                            elevation: 0,

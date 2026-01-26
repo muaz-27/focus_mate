@@ -30,10 +30,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   @override
   void initState() {
     super.initState();
-    // Fetch data immediately on load
     _refreshData();
   }
 
+  /// Refreshes daily statistics and calculates weekly average.
   Future<void> _refreshData() async {
     final todayDocId = DateTime.now().toIso8601String().split('T')[0];
     final statsRef = FirebaseFirestore.instance
@@ -41,7 +41,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         .doc(widget.userId)
         .collection('daily_stats');
 
-    // 1. Fetch Today's Stats (Single Future, no stream)
+    // Fetch Today's Stats
     try {
       final snapshot = await statsRef.doc(todayDocId).get();
       
@@ -62,7 +62,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   (app) => app['packageName'] != 'com.example.focus_mate' && app['appName'] != 'FocusMate',
                 );
               } catch (e) {
-                topApp = null; // Only FocusMate was used, so no "distraction"
+                topApp = null; 
               }
             } else {
               topApp = null;
@@ -77,10 +77,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         }
       }
     } catch (e) {
-      print("Error fetching analytics: $e");
+      debugPrint("Error fetching analytics: $e");
     }
 
-    // 2. Fetch Weekly History
+    // Fetch Weekly History
     await _calculateWeeklyAvg(statsRef);
     
     if (mounted) {
@@ -88,6 +88,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     }
   }
 
+  /// Calculates the average daily screen time over the last 7 days.
   Future<void> _calculateWeeklyAvg(CollectionReference statsRef) async {
     try {
       final query = await statsRef
@@ -104,7 +105,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           weeklyAverage = (sum / query.docs.length).round();
         });
       }
-    } catch (e) {}
+    } catch (e) {
+      debugPrint("Error calculating weekly average: $e");
+    }
   }
 
   String formatTime(int mins) {
@@ -116,12 +119,11 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // 1. Theme Detection
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       extendBodyBehindAppBar: true, 
-      backgroundColor: Colors.transparent, // Important for gradient
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text("${widget.userName}'s Insights"),
         centerTitle: true,
@@ -137,7 +139,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
-               setState(() => loading = true); // Optional: show full loader on manual tap
+               setState(() => loading = true); 
                _refreshData();
             },
           ),
@@ -146,8 +148,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       ),
       body: Stack(
         children: [
-          // 2. Gradient Background
-           Container(
+            Container(
             height: double.infinity,
             width: double.infinity,
             decoration: BoxDecoration(
@@ -161,7 +162,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             ),
           ),
 
-          // 3. Content
           loading
             ? const Center(child: CircularProgressIndicator(color: Colors.cyanAccent))
             : SafeArea(
@@ -170,12 +170,11 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   color: Colors.cyanAccent,
                   backgroundColor: isDark ? const Color(0xFF1A1F35) : Colors.white,
                   child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(), // Required for RefreshIndicator
+                    physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.all(24),
                     child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Summary Row
                       Row(
                         children: [
                           Expanded(
@@ -201,7 +200,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       ),
                       const SizedBox(height: 24),
 
-                      // Top Distraction Card
                       if (topApp != null)
                         Container(
                           padding: const EdgeInsets.all(20),
@@ -293,7 +291,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       ),
                       const SizedBox(height: 16),
 
-                      // App List
                       ListView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
@@ -311,9 +308,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                             margin: const EdgeInsets.only(bottom: 12),
                             padding: const EdgeInsets.all(16),
                              decoration: BoxDecoration(
-                              color: isDark ? Colors.white.withOpacity(0.05) : Colors.white70,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: isDark ? Colors.white10 : Colors.black12),
+                               color: isDark ? Colors.white.withOpacity(0.05) : Colors.white70,
+                               borderRadius: BorderRadius.circular(16),
+                               border: Border.all(color: isDark ? Colors.white10 : Colors.black12),
                             ),
                             child: Row(
                               children: [
@@ -324,7 +321,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                                 ),
                                 const SizedBox(width: 16),
 
-                                // Name & Bar
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -381,7 +377,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  // 🔹 HELPER: BUILD ICON FROM BASE64
+  /// Builds an app icon from Base64 string if available, otherwise shows fallback.
   Widget _buildAppIcon(Map<String, dynamic> app) {
     if (app['iconBytes'] != null && app['iconBytes'] is String) {
       try {

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
 
+/// Helper class for reusable theme styles and decorations.
 class AppTheme {
-  // Input decoration for Option C theme
+  /// Returns a standard input decoration with a hint and icon.
   static InputDecoration inputDecoration({
     required String hint,
     required IconData icon,
@@ -22,7 +23,7 @@ class AppTheme {
     );
   }
 
-  // Card container with soft gradient overlay
+  /// Returns a BoxDecoration for cards with a soft gradient overlay and glass effect.
   static BoxDecoration cardContainer(List<Color> gradientColors) {
     return BoxDecoration(
       gradient: LinearGradient(
@@ -36,16 +37,18 @@ class AppTheme {
     );
   }
 
-  // Header styles
+  /// Standard style for header titles.
   static const TextStyle headerTitle = TextStyle(
     color: AppColors.white,
     fontSize: 22,
     fontWeight: FontWeight.bold,
   );
 
+  /// Standard style for subtitles.
   static TextStyle subtitle = TextStyle(color: Colors.grey.shade300);
 
-  // Primary button style
+  /// Returns a ButtonStyle for primary buttons with a gradient background.
+  /// Note: Takes the first color of the gradient as the background color.
   static ButtonStyle primaryButton(List<Color> gradient) {
     return ElevatedButton.styleFrom(
       padding: const EdgeInsets.symmetric(vertical: 14),
@@ -55,7 +58,7 @@ class AppTheme {
     );
   }
 
-  // Gradient container for large buttons
+  /// Returns a BoxDecoration for large buttons requiring a full gradient background.
   static BoxDecoration gradientButton(List<Color> gradient) {
     return BoxDecoration(
       gradient: LinearGradient(colors: gradient),

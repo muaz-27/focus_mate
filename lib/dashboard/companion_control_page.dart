@@ -7,6 +7,7 @@ import 'dart:typed_data';
 import 'dart:convert';
 import 'package:focus_mate/core/widgets/custom_dialog.dart';
 
+/// Page for companions to restrict apps and manage active sessions for a student.
 class CompanionControlPage extends StatefulWidget {
   final String sessionId;
   final String companionId;
@@ -27,7 +28,6 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
   late StreamSubscription _sessionSubscription;
   Map<String, dynamic> _sessionData = {};
   
-  // CHANGED: Use Map instead of Application to support Firestore data
   List<Map<String, dynamic>> _installedApps = [];
   List<String> _selectedApps = [];
   List<String> _lockedApps = [];
@@ -49,9 +49,10 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
     super.dispose();
   }
 
+  /// Loads session data and the student's installed apps.
   Future<void> _loadData() async {
     try {
-      // 1. Get session data first
+      // Get session data
       final sessionDoc = await _firestore
           .collection('companion_sessions')
           .doc(widget.sessionId)
@@ -62,7 +63,7 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
       _sessionData = sessionDoc.data()!;
       final studentId = _sessionData['userId'];
 
-      // 2. Get student's installed apps from Firestore (uploaded by StudentDashboard)
+      // Get student's installed apps from Firestore
       final userDoc = await _firestore.collection('users').doc(studentId).get();
       
       List<Map<String, dynamic>> apps = [];
@@ -72,7 +73,7 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
 
       if (mounted) {
         setState(() {
-          // Filter out our own app and pre-decode icons
+          // Filter out our own app and decode icons
           _installedApps = apps
               .where((app) => app['packageName'] != 'com.example.focus_mate')
               .map((app) {
@@ -81,14 +82,14 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
                   try {
                     newApp['decodedIcon'] = base64Decode(newApp['iconBytes']);
                   } catch (e) {
-                    print("Error decoding icon for ${newApp['packageName']}: $e");
+                    debugPrint("Error decoding icon for ${newApp['packageName']}: $e");
                   }
                 }
                 return newApp;
               })
               .toList();
           
-          // Sort
+          // Sort alphabetically
           _installedApps.sort((a, b) => 
               (a['appName'] as String).toLowerCase().compareTo((b['appName'] as String).toLowerCase())
           );
@@ -102,11 +103,12 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
         _timer = Timer.periodic(const Duration(seconds: 1), (_) => _updateTimeLeft());
       }
     } catch (e) {
-      print("Error loading data: $e");
+      debugPrint("Error loading data: $e");
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
+  /// Listens for session updates, including emergency requests or session prompts.
   void _listenToSession() {
     _sessionSubscription = _firestore
         .collection('companion_sessions')
@@ -116,13 +118,12 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
       if (snapshot.exists) {
         final data = snapshot.data()!;
         
-        // 1. Check if session ended
+        // Check if session ended
         if (data['status'] == 'ENDED') {
           if (mounted) {
              ScaffoldMessenger.of(context).showSnackBar(
                const SnackBar(content: Text("Session ended")),
              );
-             // Return to dashboard
              Navigator.of(context).popUntil((route) => route.isFirst);
           }
           return; 
@@ -132,13 +133,11 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
           setState(() {
             _sessionData = data;
             _lockedApps = List<String>.from(data['lockedApps'] ?? []);
-            // Update selected apps to match locked apps
             _selectedApps = List.from(_lockedApps);
           });
         }
         
         // Check for emergency requests
-        // Ensure we only show it if the status isn't ENDED (handled above)
         if (data['emergencyRequested'] == true && mounted) {
           _showEmergencyRequestDialog(data);
         }
@@ -201,17 +200,15 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
   }
 
   Future<void> _respondToEmergency(bool allow) async {
-    Navigator.pop(context); // Close dialog first
+    Navigator.pop(context); 
     
     if (allow) {
       final app = _sessionData['emergencyApp'];
       if (app == 'ALL_APPS') {
-         // Handle Global Exit -> End Session
          await _endSession(confirmed: true);
          return;
       }
       
-      // Unlock specific app
       await _unlockSpecificApp(app);
     } 
 
@@ -225,6 +222,7 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
         });
   }
 
+  /// Unlocks a specific app manually during an active session (e.g. emergency).
   Future<void> _unlockSpecificApp(String packageName) async {
     await _firestore
         .collection('companion_sessions')
@@ -233,7 +231,6 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
           'manuallyUnlockedApps': FieldValue.arrayUnion([packageName]),
         });
     
-    // Also update student's locked apps
     final userId = _sessionData['userId'];
     final userDoc = await _firestore.collection('users').doc(userId).get();
     final currentLocked = List<String>.from(userDoc['lockedApps'] ?? []);
@@ -277,6 +274,7 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
     });
   }
 
+  /// Applies the selected locks to the student's device.
   Future<void> _applyLocks() async {
     if (_selectedApps.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -325,6 +323,7 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
     }
   }
 
+  /// Ends the current active session and unlocks all apps.
   Future<void> _endSession({bool confirmed = false}) async {
     bool? confirm = confirmed;
     if (!confirmed) {
@@ -369,7 +368,6 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
 
   String _getAppName(String packageName) {
     if (_installedApps.isNotEmpty) {
-       // Try to find it in our list first
        try {
          final app = _installedApps.firstWhere((a) => a['packageName'] == packageName);
          return app['appName'];
@@ -420,7 +418,7 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
           app['decodedIcon'] as Uint8List,
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) => _fallbackIcon(app['appName'] ?? '?'),
-          gaplessPlayback: true, // Prevents flickering when reloading
+          gaplessPlayback: true, 
         ),
       );
     }
@@ -467,7 +465,6 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
               ? const Center(child: CircularProgressIndicator(color: Colors.cyanAccent))
               : Column(
                   children: [
-                // Session Info Card
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -517,7 +514,6 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
                   ),
                 ),
                 
-                // Apps Selection Grid
                 Expanded(
                   child: GridView.builder(
                     padding: const EdgeInsets.all(16),
@@ -558,7 +554,6 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              // App Icon
                               Container(
                                 width: 40,
                                 height: 40,
@@ -569,7 +564,6 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
                                 child: _buildAppIcon(app),
                               ),
                               
-                              // App Name
                               Padding(
                                 padding: const EdgeInsets.all(4),
                                 child: Text(
@@ -579,7 +573,7 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
                                     color: isLocked 
                                         ? Colors.redAccent
                                         : textColor,
-                                    fontSize: 10, // Small text for grid
+                                    fontSize: 10,
                                     fontWeight: FontWeight.w500,
                                   ),
                                   maxLines: 2,
@@ -587,7 +581,6 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
                                 ),
                               ),
                               
-                              // Status Indicator
                               if (isLocked)
                                 const Icon(Icons.lock, color: Colors.red, size: 12)
                               else if (isSelected)
@@ -600,7 +593,6 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
                   ),
                 ),
                 
-                // Control Buttons
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: isActive

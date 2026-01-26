@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
 
+/// Defines the global light theme configuration for the application.
 ThemeData lightTheme = ThemeData(
   brightness: Brightness.light,
   useMaterial3: true,
@@ -27,5 +28,4 @@ ThemeData lightTheme = ThemeData(
     elevation: 2,
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
   ),
-  // Define other theme properties as needed
 );

@@ -4,6 +4,10 @@ import 'login_screen.dart';
 import 'signup_screen.dart';
 import '../theme/app_colors.dart';
 
+/// Main authentication entry point.
+/// 
+/// Displays role selection cards (Student, Companion, Parent) and manages 
+/// navigation between Login and Signup modes based on user interaction.
 class AuthScreen extends StatefulWidget {
   final Function(UserRole role, dynamic userData) onAuthComplete;
 
@@ -15,9 +19,10 @@ class AuthScreen extends StatefulWidget {
 
 class _AuthScreenState extends State<AuthScreen> {
   UserRole? selectedRole;
-  String authMode = 'select';
+  String authMode = 'select'; // 'select', 'login', or 'signup'
 
-  List<Map<String, dynamic>> roles = [
+  /// Configuration for the three available user roles.
+  final List<Map<String, dynamic>> roles = [
     {
       'type': UserRole.user,
       'title': 'Student',
@@ -25,12 +30,7 @@ class _AuthScreenState extends State<AuthScreen> {
       'color': AppColors.roleGradients['user'],
       'bg': AppColors.roleBackgrounds['user'],
       'icon': Icons.person,
-      'features': [
-        'Smart app locking',
-        'Study-Pass system',
-        'Personal analytics',
-        'Study workspace',
-      ],
+      'features': ['Smart app locking', 'Study-Pass system', 'Personal analytics', 'Study workspace'],
     },
     {
       'type': UserRole.companion,
@@ -39,12 +39,7 @@ class _AuthScreenState extends State<AuthScreen> {
       'color': AppColors.roleGradients['companion'],
       'bg': AppColors.roleBackgrounds['companion'],
       'icon': Icons.group,
-      'features': [
-        'Remote monitoring',
-        'App control access',
-        'Progress tracking',
-        'Real-time updates',
-      ],
+      'features': ['Remote monitoring', 'App control access', 'Progress tracking', 'Real-time updates'],
     },
     {
       'type': UserRole.parent,
@@ -53,15 +48,11 @@ class _AuthScreenState extends State<AuthScreen> {
       'color': AppColors.roleGradients['parent'],
       'bg': AppColors.roleBackgrounds['parent'],
       'icon': Icons.shield,
-      'features': [
-        'Full parental controls',
-        'Usage restrictions',
-        'Safety monitoring',
-        'Complete oversight',
-      ],
+      'features': ['Full parental controls', 'Usage restrictions', 'Safety monitoring', 'Complete oversight'],
     },
   ];
 
+  /// Sets the selected role and transitions to the login screen.
   void handleRoleSelect(UserRole role) {
     setState(() {
       selectedRole = role;
@@ -69,6 +60,7 @@ class _AuthScreenState extends State<AuthScreen> {
     });
   }
 
+  /// Returns to the role selection screen.
   void backToSelect() {
     setState(() {
       selectedRole = null;
@@ -78,6 +70,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Render specific auth screens if a role is selected
     if (authMode == 'login' && selectedRole != null) {
       return LoginScreen(
         role: selectedRole!,
@@ -104,7 +97,7 @@ class _AuthScreenState extends State<AuthScreen> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: isDark 
+             colors: isDark 
               ? [const Color(0xFF1A1F35), const Color(0xFF0B0E17)] 
               : [const Color(0xFFF8FAFC), const Color(0xFFE2E8F0)],
             stops: const [0.0, 1.0],
@@ -116,67 +109,71 @@ class _AuthScreenState extends State<AuthScreen> {
             child: Center(
               child: SizedBox(
                 width: 420,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ShaderMask(
-                  shaderCallback: (bounds) => const LinearGradient(
-                    colors: [Colors.cyan, Colors.blue, Colors.purple],
-                  ).createShader(bounds),
-                  child: const Text(
-                    "FocusMate",
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.white,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  "Choose your account type",
-                  style: TextStyle(color: Colors.grey.shade400),
-                ),
-                const SizedBox(height: 40),
-
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: roles.length,
-                    itemBuilder: (context, i) {
-                      final role = roles[i];
-
-                      return GestureDetector(
-                        onTap: () => handleRoleSelect(role['type']),
-                        child: Container(
-                          margin: const EdgeInsets.only(bottom: 18),
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
-                            gradient: LinearGradient(
-                              colors: (role['bg'] as List<Color>),
-                            ),
-                            border: Border.all(color: AppColors.cardBorder),
-                          ),
-                          child: buildRoleCard(role),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ShaderMask(
+                      shaderCallback: (bounds) => const LinearGradient(
+                        colors: [Colors.cyan, Colors.blue, Colors.purple],
+                      ).createShader(bounds),
+                      child: const Text(
+                        "FocusMate",
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.white,
                         ),
-                      );
-                    },
-                  ),
-                ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      "Choose your account type",
+                      style: TextStyle(color: Colors.grey.shade400),
+                    ),
+                    const SizedBox(height: 40),
 
-                const SizedBox(height: 10),
-                Text(
-                  "Secure authentication • All data is encrypted",
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: roles.length,
+                        itemBuilder: (context, i) {
+                          final role = roles[i];
+
+                          return GestureDetector(
+                            onTap: () => handleRoleSelect(role['type']),
+                            child: Container(
+                              margin: const EdgeInsets.only(bottom: 18),
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(16),
+                                gradient: LinearGradient(
+                                  colors: (role['bg'] as List<Color>),
+                                ),
+                                border: Border.all(color: AppColors.cardBorder),
+                              ),
+                              child: buildRoleCard(role),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+                    Text(
+                      "Secure authentication • All data is encrypted",
+                      style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
                 ),
-                const SizedBox(height: 20),
-              ],
+              ),
             ),
+          ),
         ),
       ),
-    )),));
+    );
   }
 
+  /// Builds a visual card for a user role with icon, title, description, and feature list.
   Widget buildRoleCard(Map role) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

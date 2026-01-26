@@ -3,10 +3,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../core/auth_service.dart';
-import '../core/notification_service.dart';
 import 'analytics_screen.dart'; 
 import './companion_control_page.dart';
 
+/// Dashboard for companions (parents/partners) to manage linked students and sessions.
 class CompanionDashboard extends StatefulWidget {
   final Map<String, dynamic> userData;
   final Function onLogout;
@@ -26,12 +26,6 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   List<Map<String, dynamic>> _pendingSessions = [];
   List<Map<String, dynamic>> _activeSessions = [];
-  
-  // Notification Tracking
-  final Set<String> _knownSessionRequests = {};
-  final Set<String> _knownEmergencyRequests = {};
-  bool _isFirstSessionLoad = true;
-  bool _isFirstActiveLoad = true;
 
   @override
   void initState() {
@@ -41,53 +35,29 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
     _listenForActiveSessions();
   }
 
-  // UPDATED: Listen for session requests - only keep latest per user
+  /// Listens for incoming session requests, deduplicating to show only the latest per user.
   void _listenForSessionRequests() {
     _firestore
         .collection('companion_sessions')
         .where('companionId', isEqualTo: widget.userData['id'])
         .where('status', isEqualTo: 'REQUESTED')
-        // Removing orderBy to avoid index issues
         .snapshots()
         .listen((snapshot) {
       if (mounted) {
-        // Notification Logic
-        for (var change in snapshot.docChanges) {
-          if (change.type == DocumentChangeType.added) {
-            final data = change.doc.data() as Map<String, dynamic>;
-            final id = change.doc.id;
-            
-            if (!_isFirstSessionLoad && !_knownSessionRequests.contains(id)) {
-              NotificationService().showNotification(
-                id: id.hashCode,
-                title: 'New Session Request',
-                body: '${data['userName'] ?? 'Student'} requesting: ${data['studyGoal'] ?? 'Focus Session'}',
-              );
-              _knownSessionRequests.add(id);
-            } else {
-               _knownSessionRequests.add(id);
-            }
-          }
-        }
-        _isFirstSessionLoad = false;
-
-        // Keep only latest request per user
-        // Keep only latest request per user
+        // Deduplicate requests: keep latest per user
         final Map<String, Map<String, dynamic>> latestRequests = {};
         
         for (final doc in snapshot.docs) {
           final data = doc.data();
           final userId = data['userId'];
           
-          // Only keep if we don't have a newer request for this user
-          // Simple client-side dedupe since we can't trust order without index
           if (!latestRequests.containsKey(userId)) {
              latestRequests[userId] = {
               'id': doc.id,
               ...data,
             };
           } else {
-             // If we found a duplicate, check which is newer
+             // Keep the newer one if duplicate exists
              final existing = latestRequests[userId]!;
              final Timestamp? newTime = data['requestedAt'];
              final Timestamp? oldTime = existing['requestedAt'];
@@ -103,13 +73,13 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
         
         final requests = latestRequests.values.toList();
         
-        // Sort client-side
+        // Sort by time descending
         requests.sort((a, b) {
            Timestamp? tA = a['requestedAt'];
            Timestamp? tB = b['requestedAt'];
            if (tA == null) return 1;
            if (tB == null) return -1;
-           return tB.compareTo(tA); // Descending
+           return tB.compareTo(tA);
         });
         
         setState(() {
@@ -117,10 +87,11 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
         });
       }
     }, onError: (e) {
-      print("Error listening for requests: $e");
+      debugPrint("Error listening for requests: $e");
     });
   }
 
+  /// Listens for currently active sessions managed by this companion.
   void _listenForActiveSessions() {
     _firestore
         .collection('companion_sessions')
@@ -132,36 +103,17 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
         setState(() {
           _activeSessions = snapshot.docs.map((doc) {
             final data = doc.data();
-            final id = doc.id;
-
-            // Notification for Emergency
-            if (data['emergencyRequested'] == true) {
-               if (!_isFirstActiveLoad && !_knownEmergencyRequests.contains(id)) {
-                 NotificationService().showNotification(
-                   id: (id + "_emergency").hashCode,
-                   title: '🚨 Emergency Unlock Request',
-                   body: '${data['userName'] ?? 'Student'} needs to unlock an app!',
-                 );
-                 _knownEmergencyRequests.add(id);
-               } else {
-                 _knownEmergencyRequests.add(id);
-               }
-            } else {
-               // If request cleared, remove from known (so we can notify again if triggered again)
-               _knownEmergencyRequests.remove(id);
-            }
-
             return {
               'id': doc.id,
               ...data,
             };
           }).toList();
-          _isFirstActiveLoad = false;
         });
       }
     });
   }
 
+  /// Loads the companion's unique link code from Firestore.
   Future<void> _loadLinkCode() async {
     if (widget.userData['linkCode'] != null) {
       setState(() {
@@ -179,6 +131,7 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
     });
   }
 
+  /// Generates a random 6-character alphanumeric code.
   String _generateCode() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     return List.generate(
@@ -187,6 +140,7 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
     ).join();
   }
 
+  /// Generates a new link code and updates it in Firestore.
   Future<void> _refreshCode() async {
     final code = _generateCode();
     await _firestore.collection('users').doc(widget.userData['id']).update({
@@ -201,7 +155,6 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : Colors.black87;
-    final subTextColor = isDark ? Colors.white70 : Colors.black54;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -237,7 +190,6 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-            // Link Code Card
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -427,6 +379,7 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
     ));
   }
 
+  /// Builds the section displaying pending session requests.
   Widget _buildSessionRequestsSection() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : Colors.black87;
@@ -466,6 +419,7 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
     );
   }
 
+  /// Builds the section displaying currently active sessions.
   Widget _buildActiveSessionsSection() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : Colors.black87;
@@ -653,6 +607,7 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
     );
   }
 
+  /// Handles accepting or rejecting a session request.
   Future<void> _respondToRequest(String sessionId, bool accept) async {
     if (accept) {
       Navigator.push(
@@ -673,9 +628,11 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
             'updatedAt': FieldValue.serverTimestamp(),
           });
       
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Session request rejected')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Session request rejected')),
+        );
+      }
     }
   }
 }

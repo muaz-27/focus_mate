@@ -6,6 +6,9 @@ import '../core/auth_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_theme.dart';
 
+/// Screen for creating a new user account.
+/// 
+/// Adapts the UI theme based on the selected [UserRole].
 class SignupScreen extends StatefulWidget {
   final UserRole role;
   final VoidCallback onBack;
@@ -67,6 +70,7 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 
+  /// Validates inputs and creates a new user account in Firebase.
   Future<void> _handleSignup() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -102,7 +106,6 @@ class _SignupScreenState extends State<SignupScreen> {
     }[widget.role]!;
 
     // We pick the first color from the gradient to use for our text fields
-    // We pick the first color from the gradient to use for our text fields
     final primaryColor = (config as List<Color>).first;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -119,119 +122,120 @@ class _SignupScreenState extends State<SignupScreen> {
           ),
         ),
         child: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(18),
-            child: Column(
-              children: [
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton.icon(
-                    onPressed: widget.onBack,
-                    icon: const Icon(Icons.arrow_back, color: AppColors.white70),
-                    label: const Text('Back', style: TextStyle(color: AppColors.white70)),
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: AppTheme.cardContainer(config),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      children: [
-                        const CircleAvatar(
-                          radius: 32,
-                          backgroundColor: AppColors.white24,
-                          child: Icon(Icons.person_add, color: AppColors.white, size: 32),
-                        ),
-                        const SizedBox(height: 12),
-                        const Text("Create Account", style: AppTheme.headerTitle),
-                        const SizedBox(height: 4),
-                        Text('Create your account', style: AppTheme.subtitle),
-                        const SizedBox(height: 20),
-
-                        CustomTextField(
-                          controller: _nameController,
-                          hint: "Full Name",
-                          icon: Icons.person,
-                          accentColor: primaryColor,
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) return 'Name is required';
-                            if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(value)) return 'Name must contain only letters';
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 16),
-
-                        CustomTextField(
-                          controller: _emailController,
-                          hint: "you@example.com",
-                          icon: Icons.mail,
-                          accentColor: primaryColor,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) return 'Email is required';
-                            final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-                            if (!emailRegex.hasMatch(value)) return 'Enter a valid email address';
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 16),
-
-                        CustomTextField(
-                          controller: _passwordController,
-                          hint: "Password",
-                          icon: Icons.lock,
-                          accentColor: primaryColor,
-                          isPassword: true,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) return 'Password is required';
-                            if (value.length < 8) return 'Password must be at least 8 characters';
-                            if (!value.contains(RegExp(r'[A-Za-z]'))) return 'Must contain at least one letter';
-                            if (!value.contains(RegExp(r'[0-9]'))) return 'Must contain at least one number';
-                            return null;
-                          },
-                        ),
-
-                        const SizedBox(height: 20),
-
-                        CustomButton(
-                          onPressed: _isFormValid ? _handleSignup : null,
-                          text: "Sign Up",
-                          isLoading: _isLoading,
-                          color: _isFormValid ? primaryColor : Colors.grey,
-                          textColor: Colors.white,
-                        ),
-
-                        const SizedBox(height: 14),
-
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Text(
-                              'Already have an account?',
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                            TextButton(
-                              onPressed: widget.onSwitchToLogin,
-                              child: const Text(
-                                'Sign in',
-                                style: TextStyle(color: Colors.cyanAccent),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(18),
+              child: Column(
+                children: [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      onPressed: widget.onBack,
+                      icon: const Icon(Icons.arrow_back, color: AppColors.white70),
+                      label: const Text('Back', style: TextStyle(color: AppColors.white70)),
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 20),
+
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: AppTheme.cardContainer(config),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          const CircleAvatar(
+                            radius: 32,
+                            backgroundColor: AppColors.white24,
+                            child: Icon(Icons.person_add, color: AppColors.white, size: 32),
+                          ),
+                          const SizedBox(height: 12),
+                          const Text("Create Account", style: AppTheme.headerTitle),
+                          const SizedBox(height: 4),
+                          Text('Create your account', style: AppTheme.subtitle),
+                          const SizedBox(height: 20),
+
+                          CustomTextField(
+                            controller: _nameController,
+                            hint: "Full Name",
+                            icon: Icons.person,
+                            accentColor: primaryColor,
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) return 'Name is required';
+                              if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(value)) return 'Name must contain only letters';
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 16),
+
+                          CustomTextField(
+                            controller: _emailController,
+                            hint: "you@example.com",
+                            icon: Icons.mail,
+                            accentColor: primaryColor,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) return 'Email is required';
+                              final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                              if (!emailRegex.hasMatch(value)) return 'Enter a valid email address';
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 16),
+
+                          CustomTextField(
+                            controller: _passwordController,
+                            hint: "Password",
+                            icon: Icons.lock,
+                            accentColor: primaryColor,
+                            isPassword: true,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) return 'Password is required';
+                              if (value.length < 8) return 'Password must be at least 8 characters';
+                              if (!value.contains(RegExp(r'[A-Za-z]'))) return 'Must contain at least one letter';
+                              if (!value.contains(RegExp(r'[0-9]'))) return 'Must contain at least one number';
+                              return null;
+                            },
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          CustomButton(
+                            onPressed: _isFormValid ? _handleSignup : null,
+                            text: "Sign Up",
+                            isLoading: _isLoading,
+                            color: _isFormValid ? primaryColor : Colors.grey,
+                            textColor: Colors.white,
+                          ),
+
+                          const SizedBox(height: 14),
+
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text(
+                                'Already have an account?',
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                              TextButton(
+                                onPressed: widget.onSwitchToLogin,
+                                child: const Text(
+                                  'Sign in',
+                                  style: TextStyle(color: Colors.cyanAccent),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       ),
-    ));
+    );
   }
 }
 
