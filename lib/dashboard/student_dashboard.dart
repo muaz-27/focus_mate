@@ -178,6 +178,7 @@ class _StudentDashboardState extends State<StudentDashboard>
   /// Local state for companion name to avoid UI flicker.
   String? _companionName;
   String? _companionId;
+  String? _companionRole; // NEW: Track role to enforce restrictions
   
   /// Local state for optimistic daily goal updates.
   int? _dailyGoal;
@@ -205,6 +206,7 @@ class _StudentDashboardState extends State<StudentDashboard>
       companionActive = true;
       _companionName = widget.userData['companionName']; 
       _companionId = widget.userData['linkedCompanion'];
+      _companionRole = widget.userData['linkedCompanionRole']; // NEW
     }
     _dailyGoal = widget.dailyGoal;
     _localStudyTime = widget.studyTime;
@@ -245,8 +247,10 @@ class _StudentDashboardState extends State<StudentDashboard>
         if (!companionActive) {
           _companionName = null;
           _companionId = null;
+          _companionRole = null;
         } else {
              _companionId = widget.userData['linkedCompanion'];
+             _companionRole = widget.userData['linkedCompanionRole'];
         }
       });
       _getCompanionDetails();
@@ -433,6 +437,8 @@ class _StudentDashboardState extends State<StudentDashboard>
           if (mounted) {
             setState(() {
               _companionName = doc['name'];
+              // If role is missing, assume companion for backward compatibility, unless explicitly parent
+              _companionRole = doc.data().toString().contains('role') ? doc['role'] : 'companion'; 
               companionActive = true;
             });
           }
@@ -525,11 +531,15 @@ class _StudentDashboardState extends State<StudentDashboard>
       final batch = _firestore.batch();
       
       final userRef = _firestore.collection('users').doc(widget.userData['id']);
-      batch.update(userRef, {'linkedCompanion': companionDoc.id});
+      // NEW: Store role for quick access
+      batch.update(userRef, {
+        'linkedCompanion': companionDoc.id,
+        'linkedCompanionRole': companionDoc.data()['role'] ?? 'companion',
+      });
       
       final companionRef = _firestore.collection('users').doc(companionDoc.id);
       batch.update(companionRef, {
-        'linkedStudents': FieldValue.arrayUnion([widget.userData['id']]),
+        'linkedUsers': FieldValue.arrayUnion([widget.userData['id']]),
       });
 
       await batch.commit();
@@ -539,6 +549,7 @@ class _StudentDashboardState extends State<StudentDashboard>
           companionActive = true;
           _companionName = companionDoc.data()['name'];
           _companionId = companionDoc.id;
+          _companionRole = companionDoc.data()['role'] ?? 'companion';
         });
       }
     } catch (e) {
@@ -1326,6 +1337,30 @@ class _StudentDashboardState extends State<StudentDashboard>
   }
 
   Widget _buildActionGrid(bool isDark) {
+    // If Parent Mode, hide "Start Session"
+    if (_companionRole == 'parent') {
+      return Row(
+        children: [
+           Expanded(
+            child: _buildGlassTile(
+              isDark: isDark,
+              title: "Workspace",
+              icon: Icons.book,
+              color: Colors.purpleAccent,
+              onTap: () {
+                 Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => StudyWorkspaceScreen(userId: widget.userData['id']),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      );
+    }
+
     return Row(
       children: [
         Expanded(
@@ -1368,6 +1403,38 @@ class _StudentDashboardState extends State<StudentDashboard>
   Widget _buildManagementGrid(bool isDark) {
     final bool isSessionLocked = _activeSessionData != null;
     
+    // If Parent Mode, hide "App Lock" (Only Analytics)
+    if (_companionRole == 'parent') {
+       return Row(
+        children: [
+          Expanded(
+            child: _buildGlassTile(
+              isDark: isDark,
+              title: "Analytics",
+              icon: Icons.bar_chart,
+              color: Colors.green,
+              subtitle: "Stats",
+              onTap: () async {
+                if (await PermissionManager.checkUsageStats(context)) {
+                  if (context.mounted) {
+                    Navigator.push(
+                      context, 
+                      MaterialPageRoute(
+                        builder: (_) => AnalyticsScreen(
+                          userId: widget.userData['id'],
+                          userName: "My Stats",
+                        ) 
+                      )
+                    );
+                  }
+                }
+              },
+            ),
+          ),
+        ],
+      );
+    }
+
     return Row(
       children: [
         Expanded(
@@ -1586,25 +1653,49 @@ class _StudentDashboardState extends State<StudentDashboard>
                  ),
                ),
                const SizedBox(height: 24),
-               SizedBox(
-                 width: double.infinity,
-                 child: OutlinedButton.icon(
-                    onPressed: (_isLoading || _activeSessionData != null) ? null : _unlinkCompanion,
-                    icon: _isLoading 
-                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : Icon(Icons.link_off, size: 18, color: (_activeSessionData != null) ? Colors.grey : Colors.redAccent), 
-                    label: Text(
-                       _activeSessionData != null ? "Session Active" : (_isLoading ? "Processing..." : "Unlink Companion"),
-                       style: TextStyle(color: (_activeSessionData != null) ? Colors.grey : Colors.redAccent, fontWeight: FontWeight.bold),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: (_activeSessionData != null) ? Colors.white10 : Colors.redAccent.withOpacity(0.3)),
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      // backgroundColor: Colors.redAccent.withOpacity(0.05),
-                    ),
+               // 5. Unlink Button (Hidden for Parent-linked students)
+               if (_companionRole != 'parent')
+                 SizedBox(
+                   width: double.infinity,
+                   child: OutlinedButton.icon(
+                      onPressed: (_isLoading || _activeSessionData != null) ? null : _unlinkCompanion,
+                      icon: _isLoading 
+                          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                          : Icon(Icons.link_off, size: 18, color: (_activeSessionData != null) ? Colors.grey : Colors.redAccent), 
+                      label: Text(
+                         _activeSessionData != null ? "Session Active" : (_isLoading ? "Processing..." : "Unlink Companion"),
+                         style: TextStyle(color: (_activeSessionData != null) ? Colors.grey : Colors.redAccent, fontWeight: FontWeight.bold),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: (_activeSessionData != null) ? Colors.white10 : Colors.redAccent.withOpacity(0.3)),
+                        padding: const EdgeInsets.symmetric(vertical: 18),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                   ),
+                 )
+               else
+                 // Parent Mode Info
+                 Container(
+                   width: double.infinity,
+                   padding: const EdgeInsets.all(16),
+                   decoration: BoxDecoration(
+                     color: Colors.orange.withOpacity(0.1),
+                     borderRadius: BorderRadius.circular(16),
+                     border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                   ),
+                   child: Row(
+                     children: [
+                       const Icon(Icons.security, color: Colors.orange, size: 20),
+                       const SizedBox(width: 12),
+                       Expanded(
+                         child: Text(
+                           "Parental Control Active. Unlinking is restricted.",
+                           style: TextStyle(color: isDark ? Colors.orangeAccent : Colors.orange.shade800, fontSize: 13, fontWeight: FontWeight.w500),
+                         ),
+                       ),
+                     ],
+                   ),
                  ),
-               ),
             ] else ...[
               Text("Link a companion to unlock powerful accountability features.", 
                 style: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontSize: 13, height: 1.5)

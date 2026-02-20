@@ -23,6 +23,7 @@ class AnalyticsScreen extends StatefulWidget {
 class _AnalyticsScreenState extends State<AnalyticsScreen> {
   int totalMinutes = 0;
   int weeklyAverage = 0;
+  Map<String, String> _iconLookup = {};
   Map<String, dynamic>? topApp;
   List<Map<String, dynamic>> appsUsed = [];
   bool loading = true;
@@ -31,6 +32,50 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   void initState() {
     super.initState();
     _refreshData();
+  }
+
+  /// Fetches icons for the specific apps being displayed from the app_icons subcollection.
+  Future<void> _fetchIconsForApps(List<Map<String, dynamic>> apps) async {
+    if (apps.isEmpty) return;
+    
+    // Identify packages that need icons and aren't already in lookup
+    final packagesNeeded = apps
+        .map((a) => a['packageName'] as String)
+        .where((pkg) => !_iconLookup.containsKey(pkg))
+        .toSet()
+        .toList();
+
+    if (packagesNeeded.isEmpty) return;
+
+    try {
+      final iconCollection = FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.userId)
+          .collection('app_icons');
+
+      // Firestore 'whereIn' is limited to 10 or 30. safely 10.
+      int batchSize = 10;
+      for (var i = 0; i < packagesNeeded.length; i += batchSize) {
+        final end = (i + batchSize < packagesNeeded.length) ? i + batchSize : packagesNeeded.length;
+        final chunk = packagesNeeded.sublist(i, end);
+
+        final snapshot = await iconCollection
+            .where(FieldPath.documentId, whereIn: chunk)
+            .get();
+
+        if (mounted) {
+           setState(() {
+             for (var doc in snapshot.docs) {
+               if (doc.data().containsKey('icon')) {
+                 _iconLookup[doc.id] = doc.data()['icon'];
+               }
+             }
+           });
+        }
+      }
+    } catch (e) {
+      debugPrint("Error fetching icons: $e");
+    }
   }
 
   /// Refreshes daily statistics and calculates weekly average.
@@ -68,6 +113,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               topApp = null;
             }
           });
+          
+          // Fetch icons for these apps
+          _fetchIconsForApps(appsUsed);
+
         } else {
           setState(() {
              totalMinutes = 0;
@@ -116,6 +165,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     int m = mins % 60;
     return "${h}h ${m}m";
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -166,7 +217,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             ? const Center(child: CircularProgressIndicator(color: Colors.cyanAccent))
             : SafeArea(
                 child: RefreshIndicator(
-                  onRefresh: _refreshData,
+                  onRefresh: () async {
+                    await _refreshData();
+                  },
                   color: Colors.cyanAccent,
                   backgroundColor: isDark ? const Color(0xFF1A1F35) : Colors.white,
                   child: SingleChildScrollView(
@@ -219,7 +272,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                             children: [
                               Container(
                                 padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
+                                 decoration: BoxDecoration(
                                   color: Colors.redAccent.withOpacity(0.2),
                                   shape: BoxShape.circle,
                                 ),
@@ -379,9 +432,20 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   /// Builds an app icon from Base64 string if available, otherwise shows fallback.
   Widget _buildAppIcon(Map<String, dynamic> app) {
+    String? iconBase64;
+    
+    // 1. Check if the app object itself has the icon (Old Data)
     if (app['iconBytes'] != null && app['iconBytes'] is String) {
+      iconBase64 = app['iconBytes'];
+    } 
+    // 2. Check the lookup table (New Efficient Data)
+    else if (_iconLookup.containsKey(app['packageName'])) {
+      iconBase64 = _iconLookup[app['packageName']];
+    }
+
+    if (iconBase64 != null) {
       try {
-        Uint8List bytes = base64Decode(app['iconBytes']);
+        Uint8List bytes = base64Decode(iconBase64);
         return ClipRRect(
           borderRadius: BorderRadius.circular(10),
           child: Image.memory(

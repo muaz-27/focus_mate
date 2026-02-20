@@ -3,6 +3,7 @@ import 'package:usage_stats/usage_stats.dart';
 import 'package:device_apps/device_apps.dart';
 import 'dart:convert';
 import 'package:flutter/foundation.dart'; // For debugPrint
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 
 class UsageService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -157,6 +158,14 @@ class UsageService {
 
       final todayDocId = DateTime.now().toIso8601String().split('T')[0];
 
+      // OPTIMIZATION: Do not save icons in daily stats to save bandwidth/storage.
+      // Icons are now looked up from the master list in users/{id}/data/installed_apps
+      final appsForDailyStats = processedApps.map((app) {
+        final newMap = Map<String, dynamic>.from(app);
+        newMap.remove('iconBytes');
+        return newMap;
+      }).toList();
+
       await _firestore
           .collection('users')
           .doc(userId)
@@ -165,7 +174,7 @@ class UsageService {
           .set({
         'lastUpdated': FieldValue.serverTimestamp(),
         'totalScreenTime': totalMinutes,
-        'apps': processedApps,
+        'apps': appsForDailyStats, // usage stats without icons
       });
 
     } catch (e) {
@@ -224,31 +233,102 @@ class UsageService {
 
   /// Syncs installed application metadata (name, package, icon) to Firestore.
   /// 
-  /// Used to allow the companion app to view and manage apps even if they are not installed on the companion device.
+  /// MOVED: Writes to `users/{userId}/data/installed_apps` to reduce load on the main user document.
+  /// Syncs installed application metadata (name, package, icon) to Firestore.
+  /// 
+  /// NEW: Uses SHARDING to split the list into multiple documents in `users/{userId}/data_v2`.
+  /// This prevents hitting the Firestore 1MB document limit.
   Future<void> syncInstalledAppsToFirebase(String userId) async {
     try {
       List<Application> apps = await getInstalledAppsList();
+      debugPrint("F_MATE: Starting App Sync for ${apps.length} apps...");
+
+      // 1. Prepare Metadata List (No Icons)
+      List<Map<String, String>> metadataList = [];
       
-      List<Map<String, String>> appList = apps.map((app) {
-        String? iconBase64;
-        if (app is ApplicationWithIcon) {
-          iconBase64 = base64Encode(app.icon);
-        }
-        
-        return {
+      // 2. Prepare Icons for separate upload
+      Map<String, String> iconMap = {};
+
+      for (var app in apps) {
+        metadataList.add({
           'packageName': app.packageName,
           'appName': app.appName,
-          if (iconBase64 != null) 'iconBytes': iconBase64,
-        };
-      }).toList();
+        });
 
-      appList.sort((a, b) => a['appName']!.toLowerCase().compareTo(b['appName']!.toLowerCase()));
+        if (app is ApplicationWithIcon) {
+          try {
+            var compressed = await FlutterImageCompress.compressWithList(
+              app.icon,
+              minHeight: 48,
+              minWidth: 48,
+              quality: 50, 
+              format: CompressFormat.png, 
+            );
+            if (compressed.isNotEmpty) {
+               iconMap[app.packageName] = base64Encode(compressed);
+            }
+          } catch (e) {
+            // Ignore compression errors
+          }
+        }
+      }
 
-      await _firestore.collection('users').doc(userId).update({
-        'installedApps': appList,
-        'installedAppsLastUpdated': FieldValue.serverTimestamp(),
-      });
+      metadataList.sort((a, b) => a['appName']!.toLowerCase().compareTo(b['appName']!.toLowerCase()));
+
+      // 3. Upload Metadata Shards (data_v2)
+      int chunkSize = 200; // Can be larger now since no icons (200 * ~100B = 20KB)
+      List<List<Map<String, String>>> chunks = [];
+      for (var i = 0; i < metadataList.length; i += chunkSize) {
+        chunks.add(metadataList.sublist(i, i + chunkSize > metadataList.length ? metadataList.length : i + chunkSize)); 
+      }
+
+      final batch = _firestore.batch();
+      final collectionRef = _firestore.collection('users').doc(userId).collection('data_v2');
+
+      for (var i = 0; i < chunks.length; i++) {
+        final docRef = collectionRef.doc('shard_$i');
+        batch.set(docRef, {
+          'installedApps': chunks[i],
+          'lastUpdated': FieldValue.serverTimestamp(),
+          'shardIndex': i,
+          'totalShards': chunks.length,
+        });
+      }
       
+      // Cleanup extra shards
+      for (var i = chunks.length; i < 20; i++) {
+        batch.delete(collectionRef.doc('shard_$i'));
+      }
+
+      await batch.commit();
+      debugPrint("F_MATE: Synced ${chunks.length} metadata shards.");
+
+
+      // 4. Upload Icons to `app_icons` collection
+      // We process only icons that aren't already there? 
+      // For now, simpler to just overwrite or set.
+      // Batch limit is 500.
+      
+      final iconCollection = _firestore.collection('users').doc(userId).collection('app_icons');
+      
+      List<String> packages = iconMap.keys.toList();
+      int iconBatchSize = 400; // Safety margin under 500
+      
+      for (var i = 0; i < packages.length; i += iconBatchSize) {
+        final end = (i + iconBatchSize < packages.length) ? i + iconBatchSize : packages.length;
+        final sublist = packages.sublist(i, end);
+        
+        final iconBatch = _firestore.batch();
+        for (var pkg in sublist) {
+          iconBatch.set(iconCollection.doc(pkg), {
+            'icon': iconMap[pkg],
+            'lastUpdated': FieldValue.serverTimestamp(),
+          });
+        }
+        await iconBatch.commit();
+        debugPrint("F_MATE: Uploaded batch of ${sublist.length} icons.");
+      }
+
     } catch (e) {
       debugPrint("Error syncing installed apps: $e");
     }

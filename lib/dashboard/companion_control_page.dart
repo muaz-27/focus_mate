@@ -64,11 +64,44 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
       final studentId = _sessionData['userId'];
 
       // Get student's installed apps from Firestore
-      final userDoc = await _firestore.collection('users').doc(studentId).get();
-      
+      // UPDATED: Now fetches from the 'data_v2' sharded subcollection
+      final appsCollection = _firestore
+          .collection('users')
+          .doc(studentId)
+          .collection('data_v2');
+
+      final shardsSnapshot = await appsCollection.get();
       List<Map<String, dynamic>> apps = [];
-      if (userDoc.exists && userDoc.data()!.containsKey('installedApps')) {
-        apps = List<Map<String, dynamic>>.from(userDoc.data()!['installedApps']);
+
+      if (shardsSnapshot.docs.isNotEmpty) {
+        // 1. New Sharded Data
+        for (var doc in shardsSnapshot.docs) {
+          if (doc.data().containsKey('installedApps')) {
+            final shardApps = List<Map<String, dynamic>>.from(doc.data()['installedApps']);
+            apps.addAll(shardApps);
+          }
+        }
+      } else {
+        // 2. Fallback: Check 'data/installed_apps' (Previous version)
+        DocumentSnapshot legacyDoc = await _firestore
+            .collection('users')
+            .doc(studentId)
+            .collection('data')
+            .doc('installed_apps')
+            .get();
+            
+        if (legacyDoc.exists && legacyDoc.data() != null) {
+           final data = legacyDoc.data() as Map<String, dynamic>;
+           if (data.containsKey('installedApps')) {
+             apps = List<Map<String, dynamic>>.from(data['installedApps']);
+           }
+        } else {
+          // 3. Fallback: Check old location in user document (Oldest version)
+          final userDoc = await _firestore.collection('users').doc(studentId).get();
+          if (userDoc.exists && userDoc.data()!.containsKey('installedApps')) {
+             apps = List<Map<String, dynamic>>.from(userDoc.data()!['installedApps']);
+          }
+        }
       }
 
       if (mounted) {
