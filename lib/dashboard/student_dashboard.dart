@@ -1,10 +1,16 @@
 import 'dart:async';
+import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:focus_mate/main.dart'; 
+import 'package:focus_mate/main.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import '../core/auth_service.dart';
+import '../core/models/user_model.dart';
+import '../core/screen_capture_service.dart';
 import '../core/permission_manager.dart';
 import '../core/usage_service.dart';
 import '../theme/app_colors.dart';
@@ -58,6 +64,7 @@ class StudentDashboardLoader extends StatelessWidget {
           .doc(initialUser.uid)
           .snapshots(),
       builder: (context, snapshot) {
+        print("F_MATE: StudentDashboardLoader builder triggered! connectionState=${snapshot.connectionState}, hasData=${snapshot.hasData}");
         // Dynamic check to handle logout race conditions
         final currentUser = FirebaseAuth.instance.currentUser;
         if (currentUser == null) {
@@ -111,6 +118,8 @@ class StudentDashboardLoader extends StatelessWidget {
 
         final data = snapshot.data!.data() as Map<String, dynamic>;
         data['id'] = currentUser.uid;
+        
+        print("F_MATE: StreamBuilder received data update. snapshotRequest=${data['snapshotRequest']}");
 
         final int studyTime = data['todayStudyMinutes'] ?? 0;
         final int? dailyGoal = data['dailyGoal'];
@@ -195,6 +204,7 @@ class _StudentDashboardState extends State<StudentDashboard>
   /// Data for any currently active or requested companion session.
   Map<String, dynamic>? _activeSessionData;
   StreamSubscription? _activeSessionSubscription;
+  StreamSubscription<DocumentSnapshot>? _userDocSubscription;
 
   @override
   void initState() {
@@ -225,10 +235,34 @@ class _StudentDashboardState extends State<StudentDashboard>
     _getCompanionDetails();
     _checkActiveSession();
 
+    // Direct listener to handle snapshotRequest in real-time
+    // Skip the first event so stale snapshotRequest from a previous session doesn't race with permission flow
+    bool _snapshotListenerReady = false;
+    _userDocSubscription = FirebaseFirestore.instance.collection('users').doc(widget.userData['id']).snapshots().listen((docSnap) {
+      if (!mounted) return;
+      if (!_snapshotListenerReady) {
+        _snapshotListenerReady = true;
+        return; // Skip the first event — it reflects old state, not a new parent request
+      }
+      if (docSnap.exists) {
+        final data = docSnap.data() as Map<String, dynamic>;
+        print("F_MATE: Direct Listener saw snapshotRequest=${data['snapshotRequest']}");
+        if (data['snapshotRequest'] == true) {
+           _handleSnapshotRequest();
+        }
+      }
+    });
+
     // Sync usage data in background
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _usageService.syncUsageToFirebase(widget.userData['id']);
       _usageService.syncInstalledAppsToFirebase(widget.userData['id']);
+      if (companionActive) {
+        print("F_MATE: companionActive=true, calling _initScreenCapture");
+        _initScreenCapture();
+      } else {
+        print("F_MATE: companionActive=false, skipping screen capture init. linkedCompanion=${widget.userData['linkedCompanion']}");
+      }
     });
 
     // Sync usage stats every 1 minute to keep UI fresh
@@ -254,6 +288,10 @@ class _StudentDashboardState extends State<StudentDashboard>
         }
       });
       _getCompanionDetails();
+      
+      if (companionActive && oldWidget.userData['linkedCompanion'] == null) {
+        ScreenCaptureService.requestPermission();
+      }
     }
     
     // Sync daily goal if it changed from upstream
@@ -286,6 +324,63 @@ class _StudentDashboardState extends State<StudentDashboard>
          _lockEndTime = newEndTime;
        });
        _applyNativeLock();
+    }
+
+    // Check for snapshotRequest
+    final bool oldSnapshotRequest = oldWidget.userData['snapshotRequest'] == true;
+    final bool newSnapshotRequest = widget.userData['snapshotRequest'] == true;
+    
+    print("F_MATE: didUpdateWidget -> oldSnapshotReq: $oldSnapshotRequest, newSnapshotReq: $newSnapshotRequest");
+    
+    if (!oldSnapshotRequest && newSnapshotRequest) {
+      _handleSnapshotRequest();
+    }
+  }
+  
+  /// Clears any stale snapshotRequest from a previous session, then requests
+  /// screen capture permission. Called once at startup when companion is active.
+  Future<void> _initScreenCapture() async {
+    final String childId = widget.userData['id'];
+    // Clear any leftover request from a previous session so the listener doesn't
+    // fire immediately and race with the permission dialog.
+    try {
+      await FirebaseFirestore.instance.collection('users').doc(childId).update({
+        'snapshotRequest': false,
+      });
+    } catch (_) {}
+    // Now request permission — the dialog appears in the foreground
+    await ScreenCaptureService.requestPermission();
+  }
+
+  Future<void> _handleSnapshotRequest() async {
+    print("F_MATE: _handleSnapshotRequest triggered!");
+    final String childId = widget.userData['id'];
+
+    Uint8List? bytes;
+    // Retry loop: waits up to ~12 seconds for the user to accept the permission dialog
+    for (int attempt = 0; attempt < 8; attempt++) {
+      bytes = await ScreenCaptureService.captureScreen();
+      if (bytes != null) break;
+      print("F_MATE: capture attempt $attempt failed (service not ready), retrying...");
+      await Future.delayed(const Duration(milliseconds: 1500));
+    }
+
+    try {
+      if (bytes != null) {
+        final String base64Image = base64Encode(bytes);
+        await _firestore.collection('users').doc(childId).collection('snapshots').add({
+          'timestamp': FieldValue.serverTimestamp(),
+          'imageBase64': base64Image,
+          'capturedBy': 'parent',
+        });
+        print("F_MATE: snapshot saved successfully.");
+      } else {
+        print("F_MATE: all capture attempts failed — service not available.");
+      }
+    } catch (e) {
+      debugPrint("F_MATE: Save failed: $e");
+    } finally {
+      await _firestore.collection('users').doc(childId).update({'snapshotRequest': false});
     }
   }
   
@@ -354,6 +449,7 @@ class _StudentDashboardState extends State<StudentDashboard>
     _ruleSyncTimer?.cancel();
     _usageSyncTimer?.cancel();
     _activeSessionSubscription?.cancel();
+    _userDocSubscription?.cancel();
     _companionCodeController.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();

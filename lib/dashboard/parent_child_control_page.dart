@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import 'analytics_screen.dart';
-import 'remote_app_lock_screen.dart'; // Will create this next
+import 'remote_app_lock_screen.dart';
+import 'snapshots_screen.dart';
 
 class ParentChildControlPage extends StatelessWidget {
   final String studentId;
@@ -90,12 +91,18 @@ class ParentChildControlPage extends StatelessWidget {
                 _buildControlTile(
                   context,
                   title: "Snapshots",
-                  subtitle: "Monitor activity (Coming Soon)",
+                  subtitle: "View recently captured screens",
                   icon: Icons.camera_alt,
                   color: Colors.cyanAccent,
                   onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Snapshots feature coming soon!")),
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => SnapshotsScreen(
+                          studentId: studentId,
+                          studentName: studentName,
+                        ),
+                      ),
                     );
                   },
                 ),
