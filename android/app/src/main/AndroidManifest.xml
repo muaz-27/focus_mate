@@ -23,6 +23,7 @@
     
     <!-- For Battery Persistence -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
         android:label="focus_mate"

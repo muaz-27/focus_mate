@@ -23,4 +23,12 @@ class ScreenCaptureService {
       return null;
     }
   }
+
+  static Future<void> stopService() async {
+    try {
+      await platform.invokeMethod('stopScreenCaptureService');
+    } on PlatformException catch (e) {
+      print("Failed to stop service: '${e.message}'.");
+    }
+  }
 }

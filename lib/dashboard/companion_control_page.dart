@@ -104,6 +104,16 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
         }
       }
 
+      // Get icons from app_icons collection
+      final iconCollection = _firestore.collection('users').doc(studentId).collection('app_icons');
+      final iconsSnapshot = await iconCollection.get();
+      Map<String, String> iconMap = {};
+      for (var doc in iconsSnapshot.docs) {
+         if (doc.data().containsKey('icon')) {
+             iconMap[doc.id] = doc.data()['icon'];
+         }
+      }
+
       if (mounted) {
         setState(() {
           // Filter out our own app and decode icons
@@ -111,11 +121,14 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
               .where((app) => app['packageName'] != 'com.example.focus_mate')
               .map((app) {
                 final newApp = Map<String, dynamic>.from(app);
-                if (newApp['iconBytes'] != null && newApp['iconBytes'] is String) {
+                final pkg = newApp['packageName'];
+                final iconBase64 = iconMap[pkg] ?? newApp['iconBytes'];
+                
+                if (iconBase64 != null && iconBase64 is String) {
                   try {
-                    newApp['decodedIcon'] = base64Decode(newApp['iconBytes']);
+                    newApp['decodedIcon'] = base64Decode(iconBase64);
                   } catch (e) {
-                    debugPrint("Error decoding icon for ${newApp['packageName']}: $e");
+                    debugPrint("Error decoding icon for $pkg: $e");
                   }
                 }
                 return newApp;

@@ -22,6 +22,7 @@ import './session_setup_screen.dart';
 import './study_workspace_screen.dart';
 import './companion_controlled_page.dart';
 import './waiting_for_companion_page.dart';
+import './parental_locks_screen.dart';
 import '../core/widgets/custom_dialog.dart';
 import '../core/native_blocker.dart';
 
@@ -235,6 +236,13 @@ class _StudentDashboardState extends State<StudentDashboard>
     _getCompanionDetails();
     _checkActiveSession();
 
+    // Automatically prompt the user to enable Accessibility Service if deactivated
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+         PermissionManager.checkAccessibility(context);
+      }
+    });
+
     // Direct listener to handle snapshotRequest in real-time
     // Skip the first event so stale snapshotRequest from a previous session doesn't race with permission flow
     bool _snapshotListenerReady = false;
@@ -291,6 +299,9 @@ class _StudentDashboardState extends State<StudentDashboard>
       
       if (companionActive && oldWidget.userData['linkedCompanion'] == null) {
         ScreenCaptureService.requestPermission();
+      } else if (!companionActive && oldWidget.userData['linkedCompanion'] != null) {
+        // Parent unlinked child — stop the background capture service
+        ScreenCaptureService.stopService();
       }
     }
     
@@ -1499,87 +1510,133 @@ class _StudentDashboardState extends State<StudentDashboard>
   Widget _buildManagementGrid(bool isDark) {
     final bool isSessionLocked = _activeSessionData != null;
     
-    // If Parent Mode, hide "App Lock" (Only Analytics)
-    if (_companionRole == 'parent') {
-       return Row(
-        children: [
-          Expanded(
-            child: _buildGlassTile(
-              isDark: isDark,
-              title: "Analytics",
-              icon: Icons.bar_chart,
-              color: Colors.green,
-              subtitle: "Stats",
-              onTap: () async {
-                if (await PermissionManager.checkUsageStats(context)) {
-                  if (context.mounted) {
-                    Navigator.push(
-                      context, 
-                      MaterialPageRoute(
-                        builder: (_) => AnalyticsScreen(
-                          userId: widget.userData['id'],
-                          userName: "My Stats",
-                        ) 
-                      )
-                    );
-                  }
-                }
-              },
+    // Parental Locks Tile (always available to students with a companion)
+    final Widget parentalLocksTile = _companionId != null ? _buildGlassTile(
+      isDark: isDark,
+      title: "Parental Locks",
+      icon: Icons.admin_panel_settings,
+      color: Colors.indigoAccent,
+      subtitle: "View & Request",
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ParentalLocksScreen(
+              studentId: widget.userData['id'],
+              studentName: widget.userData['name'] ?? "Student",
+              companionId: _companionId!,
             ),
           ),
-        ],
-      );
+        );
+      },
+    ) : const SizedBox.shrink();
+
+    // If Parent Mode, hide "App Lock" (Only Analytics and Parental Locks)
+    if (_companionRole == 'parent') {
+       return Column(
+         children: [
+           Row(
+             children: [
+               Expanded(
+                 child: _buildGlassTile(
+                   isDark: isDark,
+                   title: "Analytics",
+                   icon: Icons.bar_chart,
+                   color: Colors.green,
+                   subtitle: "Stats",
+                   onTap: () async {
+                     if (await PermissionManager.checkUsageStats(context)) {
+                       if (context.mounted) {
+                         Navigator.push(
+                           context, 
+                           MaterialPageRoute(
+                             builder: (_) => AnalyticsScreen(
+                               userId: widget.userData['id'],
+                               userName: "My Stats",
+                             ) 
+                           )
+                         );
+                       }
+                     }
+                   },
+                 ),
+               ),
+               if (_companionId != null) ...[
+                 const SizedBox(width: 16),
+                 Expanded(child: parentalLocksTile),
+               ] else ...[
+                 const SizedBox(width: 16),
+                 const Expanded(child: SizedBox.shrink()),
+               ]
+             ],
+           ),
+         ],
+       );
     }
 
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: _buildGlassTile(
-            isDark: isDark,
-            title: "App Lock",
-            icon: isSessionLocked ? Icons.lock : Icons.phonelink_lock,
-            color: isSessionLocked ? Colors.grey : Colors.orangeAccent,
-            subtitle: isSessionLocked ? "Locked" : widget.appsUnlocked ? "Unlocked" : "Active",
-            onTap: () async {
-              if (isSessionLocked) {
-                 ScaffoldMessenger.of(context).showSnackBar(
-                   const SnackBar(content: Text("App Lock is managed by active session."))
-                 );
-                 return;
-              }
-              if (await PermissionManager.checkAccessibility(context)) {
-                if (context.mounted) {
-                   _showAppLockModeDialog();
-                }
-              }
-            },
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: _buildGlassTile(
+                isDark: isDark,
+                title: "App Lock",
+                icon: isSessionLocked ? Icons.lock : Icons.phonelink_lock,
+                color: isSessionLocked ? Colors.grey : Colors.orangeAccent,
+                subtitle: isSessionLocked ? "Locked" : widget.appsUnlocked ? "Unlocked" : "Active",
+                onTap: () async {
+                  if (isSessionLocked) {
+                     ScaffoldMessenger.of(context).showSnackBar(
+                       const SnackBar(content: Text("App Lock is managed by active session."))
+                     );
+                     return;
+                  }
+                  if (await PermissionManager.checkAccessibility(context)) {
+                    if (context.mounted) {
+                       _showAppLockModeDialog();
+                    }
+                  }
+                },
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildGlassTile(
+                isDark: isDark,
+                title: "Analytics",
+                icon: Icons.bar_chart,
+                color: Colors.green,
+                subtitle: "Stats",
+                onTap: () async {
+                  if (await PermissionManager.checkUsageStats(context)) {
+                    if (context.mounted) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => AnalyticsScreen(
+                            userId: widget.userData['id'],
+                            userName: widget.userData['name'] ?? "My",
+                          ),
+                        ),
+                      );
+                    }
+                  }
+                },
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildGlassTile(
-            isDark: isDark,
-            title: "Analytics",
-            icon: Icons.bar_chart,
-            color: Colors.green,
-            subtitle: "Stats",
-            onTap: () async {
-              if (await PermissionManager.checkUsageStats(context)) {
-                if (context.mounted) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => AnalyticsScreen(
-                        userId: widget.userData['id'],
-                        userName: widget.userData['name'] ?? "My",
-                      ),
-                    ),
-                  );
-                }
-              }
-            },
+        if (_companionId != null) ...[
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(child: parentalLocksTile),
+              const SizedBox(width: 16),
+              const Expanded(child: SizedBox.shrink()), // Empty tile placeholder
+            ],
           ),
-        ),
+        ],
       ],
     );
   }

@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart'; // For debugPrint
 import 'models/user_model.dart';
+import 'screen_capture_service.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -87,6 +88,7 @@ class AuthService {
 
   /// Signs out the current user.
   Future<void> signOut() async {
+    await ScreenCaptureService.stopService();
     await _auth.signOut();
   }
 

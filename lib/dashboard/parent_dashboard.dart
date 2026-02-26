@@ -27,6 +27,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   List<Map<String, dynamic>> _pendingSessions = [];
   List<Map<String, dynamic>> _activeSessions = [];
+  List<Map<String, dynamic>> _unlockRequests = [];
   
   // Parent Theme Colors
   final List<Color> _gradientColors = [const Color(0xFF3D1E00), const Color(0xFF3A0505)]; // Dark Red/Brown
@@ -38,6 +39,29 @@ class _ParentDashboardState extends State<ParentDashboard> {
     _loadLinkCode();
     _listenForSessionRequests();
     _listenForActiveSessions();
+    _listenForUnlockRequests();
+  }
+
+  /// Listens for incoming app unlock requests from children.
+  void _listenForUnlockRequests() {
+    _firestore
+        .collection('unlock_requests')
+        .where('parentId', isEqualTo: widget.userData['id'])
+        .where('status', isEqualTo: 'pending')
+        .snapshots()
+        .listen((snapshot) {
+      if (mounted) {
+        final reqs = snapshot.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList();
+        reqs.sort((a, b) {
+           Timestamp? tA = a['requestedAt'];
+           Timestamp? tB = b['requestedAt'];
+           if (tA == null) return 1;
+           if (tB == null) return -1;
+           return tB.compareTo(tA);
+        });
+        setState(() => _unlockRequests = reqs);
+      }
+    });
   }
 
   /// Listens for incoming session requests.
@@ -232,6 +256,12 @@ class _ParentDashboardState extends State<ParentDashboard> {
                    const SizedBox(height: 24),
                 ],
 
+                if (_unlockRequests.isNotEmpty) ...[
+                   _buildSectionHeader("App Unlock Requests", Icons.lock_open, Colors.blueAccent),
+                   ..._unlockRequests.map((req) => _buildUnlockRequestCard(req)),
+                   const SizedBox(height: 24),
+                ],
+
                 // Connected Children List
                 _buildSectionHeader("Monitored Children", Icons.child_care, _primaryColor),
                 Expanded(
@@ -284,7 +314,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
                                     child: Text(studentName[0].toUpperCase(), style: TextStyle(color: _primaryColor)),
                                   ),
                                   title: Text(studentName, style: TextStyle(color: textColor, fontWeight: FontWeight.bold)),
-                                  subtitle: const Text("View Analytics & History", style: TextStyle(fontSize: 12)),
+                                  subtitle: const Text("Monitor and control", style: TextStyle(fontSize: 12)),
                                   trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
                                   onTap: () {
                                     Navigator.push(
@@ -387,6 +417,87 @@ class _ParentDashboardState extends State<ParentDashboard> {
       );
     } else {
       await _firestore.collection('companion_sessions').doc(sessionId).update({'status': 'REJECTED'});
+    }
+  }
+
+  Widget _buildUnlockRequestCard(Map<String, dynamic> req) {
+    final textColor = Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87;
+    return Card(
+      color: Colors.blueAccent.withOpacity(0.1),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.blueAccent.withOpacity(0.3))),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.lock_open, color: Colors.blueAccent, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    "${req['studentName']} requested to unlock ${req['appName']}",
+                    style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              "\"${req['reason']}\"",
+              style: TextStyle(color: Colors.grey.withOpacity(0.8), fontStyle: FontStyle.italic),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: () => _handleUnlockRequest(req, false),
+                  child: const Text("Refuse", style: TextStyle(color: Colors.redAccent)),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: () => _handleUnlockRequest(req, true),
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent, foregroundColor: Colors.white),
+                  child: const Text("Approve"),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _handleUnlockRequest(Map<String, dynamic> req, bool approve) async {
+    try {
+      // 1. Update request status
+      await _firestore.collection('unlock_requests').doc(req['id']).update({
+        'status': approve ? 'approved' : 'rejected',
+        'respondedAt': FieldValue.serverTimestamp(),
+      });
+
+      if (approve) {
+        // 2. Remove app from child's lockedApps array
+        await _firestore.collection('users').doc(req['studentId']).update({
+          'lockedApps': FieldValue.arrayRemove([req['packageName']]),
+        });
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(approve ? "Unlock request approved." : "Unlock request refused."),
+            backgroundColor: approve ? Colors.green : Colors.orange,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+           SnackBar(content: Text("Failed to process request: $e"), backgroundColor: Colors.red)
+        );
+      }
     }
   }
 }

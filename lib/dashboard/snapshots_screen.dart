@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -21,6 +22,30 @@ class SnapshotsScreen extends StatefulWidget {
 class _SnapshotsScreenState extends State<SnapshotsScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   bool _isRequesting = false;
+  StreamSubscription<DocumentSnapshot>? _userSub;
+
+  @override
+  void initState() {
+    super.initState();
+    // Listen to snapshotRequest field to know when capture completes
+    _userSub = _firestore.collection('users').doc(widget.studentId).snapshots().listen((snap) {
+      if (snap.exists && snap.data() != null) {
+        final data = snap.data() as Map<String, dynamic>;
+        final bool isCapturingRemote = data['snapshotRequest'] == true;
+        if (mounted) {
+          setState(() {
+            _isRequesting = isCapturingRemote;
+          });
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _userSub?.cancel();
+    super.dispose();
+  }
 
   Future<void> _requestCapture() async {
     if (_isRequesting) return;
@@ -51,8 +76,20 @@ class _SnapshotsScreenState extends State<SnapshotsScreen> {
           SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
-    } finally {
       if (mounted) setState(() => _isRequesting = false);
+    }
+  }
+
+  Future<void> _cancelCapture() async {
+    try {
+      await _firestore.collection('users').doc(widget.studentId).update({
+        'snapshotRequest': false,
+      });
+      if (mounted) {
+        setState(() => _isRequesting = false);
+      }
+    } catch (e) {
+      debugPrint("Cancel failed: $e");
     }
   }
 
@@ -109,28 +146,51 @@ class _SnapshotsScreenState extends State<SnapshotsScreen> {
         shadowColor: Colors.transparent,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             const Text('Snapshots', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             Text(widget.studentName, style: TextStyle(fontSize: 13, color: subtextColor)),
           ],
         ),
         actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 12, top: 8, bottom: 8),
-            child: ElevatedButton.icon(
-              onPressed: _isRequesting ? null : _requestCapture,
-              icon: _isRequesting
-                  ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                  : const Icon(Icons.camera_alt, size: 18),
-              label: const Text('Capture', style: TextStyle(fontWeight: FontWeight.bold)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.indigo.shade600,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          if (_isRequesting) ...[
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              child: TextButton(
+                onPressed: _cancelCapture,
+                child: const Text('Cancel', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
               ),
             ),
-          )
+            Container(
+              margin: const EdgeInsets.only(right: 12),
+              child: ElevatedButton.icon(
+                onPressed: null,
+                icon: const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
+                label: const Text('Capturing...', style: TextStyle(fontWeight: FontWeight.bold)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.indigo.shade400,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                ),
+              ),
+            ),
+          ] else ...[
+            Container(
+              margin: const EdgeInsets.only(right: 12),
+              child: ElevatedButton.icon(
+                onPressed: _requestCapture,
+                icon: const Icon(Icons.camera_alt, size: 18),
+                label: const Text('Capture', style: TextStyle(fontWeight: FontWeight.bold)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.indigo.shade600,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                ),
+              ),
+            )
+          ]
         ],
       ),
       body: StreamBuilder<QuerySnapshot>(
@@ -212,10 +272,13 @@ class _SnapshotsScreenState extends State<SnapshotsScreen> {
                     // Image
                     GestureDetector(
                       onTap: () => _showFullscreen(context, imageBytes, dateStr),
-                      child: imageBytes != null
-                          ? Image.memory(imageBytes, fit: BoxFit.cover, height: 220,
-                              errorBuilder: (_, __, ___) => _buildBrokenImage(isDark))
-                          : _buildBrokenImage(isDark),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxHeight: 220),
+                        child: imageBytes != null
+                            ? Image.memory(imageBytes, fit: BoxFit.cover, width: double.infinity,
+                                errorBuilder: (_, __, ___) => _buildBrokenImage(isDark))
+                            : _buildBrokenImage(isDark),
+                      ),
                     ),
                     // Footer row
                     Padding(
@@ -273,9 +336,11 @@ class _SnapshotsScreenState extends State<SnapshotsScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: Image.memory(bytes, fit: BoxFit.contain),
+            Flexible(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.memory(bytes, fit: BoxFit.contain),
+              ),
             ),
             const SizedBox(height: 10),
             Text(dateStr, style: const TextStyle(color: Colors.white70, fontSize: 13)),

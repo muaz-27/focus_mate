@@ -18,6 +18,7 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.os.IBinder
 import android.os.Looper
+import android.os.PowerManager
 import android.util.DisplayMetrics
 import android.view.WindowManager
 import androidx.core.app.NotificationCompat
@@ -35,6 +36,7 @@ class SnapshotService : Service() {
     private var screenHeight  = 0
     private var screenDensity = 0
     private var isCaptureInProgress = false
+    private var wakeLock: PowerManager.WakeLock? = null
 
     companion object {
         const val NOTIFICATION_ID          = 2001
@@ -56,7 +58,13 @@ class SnapshotService : Service() {
         backgroundHandler = Handler(handlerThread!!.looper)
         createNotificationChannel()
         startForeground(NOTIFICATION_ID, createNotification())
-        android.util.Log.d("FocusMate", "SnapshotService: onCreate isRunning=true")
+
+        // Acquire a partial wake lock to prevent Samsung from dozing the service
+        val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+        wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "FocusMate::SnapshotWakeLock")
+        wakeLock?.acquire()
+
+        android.util.Log.d("FocusMate", "SnapshotService: onCreate isRunning=true, wakeLock acquired")
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -247,6 +255,8 @@ class SnapshotService : Service() {
         isRunning = false
         handlerThread?.quitSafely()
         try { mediaProjection?.stop() } catch (_: Exception) {}
+        try { wakeLock?.release() } catch (_: Exception) {}
+        wakeLock = null
         stopForeground(true)
         super.onDestroy()
     }

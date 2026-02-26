@@ -400,28 +400,46 @@ class _AppLockScreenState extends State<AppLockScreen> {
           ),
 
           // Content
-          SafeArea(
-            child: Column(
-              children: [
-                // Lock timer display (Floating Glass Card)
-                if (isLockActive && lockEndTime != null)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                    child: LockTimerWidget(
-                      endTime: lockEndTime!,
-                      onTimerFinished: _terminateLock,
-                      isDark: isDark,
-                    ),
-                  ),
+          Column(
+            children: [
+              // Safe Area for the top part
+              SafeArea(
+                bottom: false,
+                child: Column(
+                  children: [
+                    // Lock timer display (Floating Glass Card)
+                    if (isLockActive && lockEndTime != null)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        child: LockTimerWidget(
+                          endTime: lockEndTime!,
+                          onTimerFinished: _terminateLock,
+                          isDark: isDark,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
 
-                // Apps list
-                Expanded(
-                  child: loading
-                      ? const Center(
-                          child: CircularProgressIndicator(color: Colors.cyanAccent),
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              // Apps list
+              Expanded(
+                child: loading
+                    ? const Center(
+                        child: CircularProgressIndicator(color: Colors.cyanAccent),
+                      )
+                    : GridView.builder(
+                        padding: EdgeInsets.only(
+                          left: 20, 
+                          right: 20, 
+                          top: 10, 
+                          bottom: MediaQuery.of(context).padding.bottom + 80 // avoid FAB overlap
+                        ),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3, // larger icons
+                          childAspectRatio: 0.8,
+                          crossAxisSpacing: 15,
+                          mainAxisSpacing: 15,
+                        ),
                           itemCount: installedApps.length,
                           itemBuilder: (context, index) {
                             final app = installedApps[index];
@@ -431,52 +449,69 @@ class _AppLockScreenState extends State<AppLockScreen> {
                             Uint8List? iconData;
                             if (app is ApplicationWithIcon) {
                               iconData = app.icon;
+                            } else {
+                              debugPrint("App ${app.packageName} is not ApplicationWithIcon, it is ${app.runtimeType}");
                             }
 
-                            return Container(
-                              margin: const EdgeInsets.only(bottom: 12),
-                              decoration: BoxDecoration(
-                                color: isDark ? Colors.white.withOpacity(0.05) : Colors.white70,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                  color: isSelected 
-                                    ? Colors.redAccent.withOpacity(0.5) 
-                                    : (isDark ? Colors.white10 : Colors.black12)
-                                ),
-                              ),
-                              child: ListTile(
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                                leading: Container(
-                                  width: 44, height: 44,
-                                  decoration: BoxDecoration(
-                                    color: Colors.black12,
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: iconData != null
-                                      ?  ClipRRect(
-                                          borderRadius: BorderRadius.circular(12),
-                                          child: Image.memory(iconData, fit: BoxFit.cover),
-                                        )
-                                      : Icon(Icons.apps, color: isDark ? Colors.white54 : Colors.black54),
-                                ),
-                                title: Text(
-                                  app.appName,
-                                  style: TextStyle(
-                                    color: isDark ? Colors.white : Colors.black87,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 15,
+                            return GestureDetector(
+                              onTap: () => _toggleLock(app.packageName, !isSelected),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? Colors.redAccent.withOpacity(0.2)
+                                      : (isDark ? Colors.white.withOpacity(0.05) : Colors.white70),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? Colors.redAccent
+                                        : Colors.transparent,
+                                    width: 2,
                                   ),
                                 ),
-                                trailing: Transform.scale(
-                                  scale: 0.8,
-                                  child: Switch(
-                                    value: isSelected,
-                                    activeColor: Colors.redAccent,
-                                    activeTrackColor: Colors.redAccent.withOpacity(0.3),
-                                    inactiveThumbColor: isDark ? Colors.grey : Colors.white,
-                                    inactiveTrackColor: isDark ? Colors.white10 : Colors.black12,
-                                    onChanged: (val) => _toggleLock(app.packageName, val),
-                                  ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Container(
+                                      width: 48,
+                                      height: 48,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(12),
+                                        color: Colors.black.withOpacity(0.3),
+                                      ),
+                                      child: iconData != null && iconData.isNotEmpty
+                                          ? _buildIconImage(iconData)
+                                          : FutureBuilder<Application?>(
+                                              future: DeviceApps.getApp(app.packageName, true),
+                                              builder: (context, snapshot) {
+                                                if (snapshot.connectionState == ConnectionState.done && snapshot.data is ApplicationWithIcon) {
+                                                  final lazyIcon = (snapshot.data as ApplicationWithIcon).icon;
+                                                  if (lazyIcon.isNotEmpty) {
+                                                    return _buildIconImage(lazyIcon);
+                                                  }
+                                                }
+                                                return Icon(Icons.apps, color: isDark ? Colors.white54 : Colors.black54, size: 28);
+                                              },
+                                            ),
+                                    ),
+                                    
+                                    Padding(
+                                      padding: const EdgeInsets.all(4),
+                                      child: Text(
+                                        app.appName,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: isDark ? Colors.white : Colors.black87,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    
+                                    if (isSelected)
+                                      const Icon(Icons.lock, color: Colors.redAccent, size: 12),
+                                  ],
                                 ),
                               ),
                             );
@@ -485,7 +520,6 @@ class _AppLockScreenState extends State<AppLockScreen> {
                 ),
               ],
             ),
-          ),
         ],
       ),
 
@@ -538,6 +572,23 @@ class _AppLockScreenState extends State<AppLockScreen> {
           ],
         ),
      );
+  }
+
+  Widget _buildIconImage(Uint8List iconData) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: SizedBox(
+        width: double.infinity,
+        height: double.infinity,
+        child: Image.memory(
+          iconData,
+          fit: BoxFit.cover,
+          gaplessPlayback: true,
+          errorBuilder: (context, error, stackTrace) =>
+              Icon(Icons.apps, color: Colors.white54, size: 28),
+        ),
+      ),
+    );
   }
 }
 

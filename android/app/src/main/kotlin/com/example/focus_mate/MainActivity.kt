@@ -65,6 +65,13 @@ class MainActivity: FlutterActivity() {
                     captureResult = null
                 }
             }
+            else if (call.method == "stopScreenCaptureService") {
+                if (SnapshotService.isRunning) {
+                    val intent = Intent(this, SnapshotService::class.java)
+                    stopService(intent)
+                }
+                result.success(true)
+            }
             else {
                 result.notImplemented()
             }

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../theme/app_colors.dart';
 import 'analytics_screen.dart';
 import 'remote_app_lock_screen.dart';
 import 'snapshots_screen.dart';
 
-class ParentChildControlPage extends StatelessWidget {
+class ParentChildControlPage extends StatefulWidget {
   final String studentId;
   final String studentName;
 
@@ -15,6 +16,51 @@ class ParentChildControlPage extends StatelessWidget {
   });
 
   @override
+  State<ParentChildControlPage> createState() => _ParentChildControlPageState();
+}
+
+class _ParentChildControlPageState extends State<ParentChildControlPage> {
+  Future<void> _unlinkChild() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Unlink Child?'),
+        content: const Text('This will remove your monitoring access. The child can re-link later.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Unlink', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    final firestore = FirebaseFirestore.instance;
+    final parentId = (await firestore.collection('users').doc(widget.studentId).get()).data()?['linkedCompanion'];
+    
+    final batch = firestore.batch();
+    // Remove companion from child
+    batch.update(firestore.collection('users').doc(widget.studentId), {
+      'linkedCompanion': null,
+      'linkedCompanionRole': null,
+    });
+    // Remove child from parent's list
+    if (parentId != null) {
+      batch.update(firestore.collection('users').doc(parentId), {
+        'linkedStudents': FieldValue.arrayRemove([widget.studentId]),
+        'linkedUsers': FieldValue.arrayRemove([widget.studentId]),
+      });
+    }
+    await batch.commit();
+
+    if (mounted) Navigator.pop(context);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : Colors.black87;
@@ -22,13 +68,20 @@ class ParentChildControlPage extends StatelessWidget {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text(studentName, style: TextStyle(color: textColor, fontWeight: FontWeight.bold)),
+        title: Text(widget.studentName, style: TextStyle(color: textColor, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios_new, color: textColor),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.link_off, color: Colors.redAccent),
+            tooltip: 'Unlink Child',
+            onPressed: _unlinkChild,
+          ),
+        ],
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -61,8 +114,8 @@ class ParentChildControlPage extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder: (_) => AnalyticsScreen(
-                          userId: studentId,
-                          userName: studentName,
+                          userId: widget.studentId,
+                          userName: widget.studentName,
                         ),
                       ),
                     );
@@ -80,8 +133,8 @@ class ParentChildControlPage extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder: (_) => RemoteAppLockScreen(
-                          studentId: studentId,
-                          studentName: studentName,
+                          studentId: widget.studentId,
+                          studentName: widget.studentName,
                         ),
                       ),
                     );
@@ -99,8 +152,8 @@ class ParentChildControlPage extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder: (_) => SnapshotsScreen(
-                          studentId: studentId,
-                          studentName: studentName,
+                          studentId: widget.studentId,
+                          studentName: widget.studentName,
                         ),
                       ),
                     );
@@ -141,7 +194,7 @@ class ParentChildControlPage extends StatelessWidget {
             radius: 32,
             backgroundColor: Colors.orangeAccent.withOpacity(0.2),
             child: Text(
-              studentName.isNotEmpty ? studentName[0].toUpperCase() : "?",
+              widget.studentName.isNotEmpty ? widget.studentName[0].toUpperCase() : "?",
               style: const TextStyle(fontSize: 28, color: Colors.orangeAccent, fontWeight: FontWeight.bold),
             ),
           ),
@@ -151,7 +204,7 @@ class ParentChildControlPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  studentName,
+                  widget.studentName,
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,

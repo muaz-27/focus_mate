@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui';
+import 'dart:convert';
+import 'dart:typed_data';
 import '../theme/app_colors.dart';
 
 class RemoteAppLockScreen extends StatefulWidget {
@@ -57,12 +59,38 @@ class _RemoteAppLockScreenState extends State<RemoteAppLockScreen> {
       // Sort alphabetic
       allApps.sort((a, b) => (a['appName'] as String).toLowerCase().compareTo((b['appName'] as String).toLowerCase()));
 
-      // 2. Fetch Lock State
+      // 2. Fetch App Icons
+      final iconCollection = _firestore.collection('users').doc(widget.studentId).collection('app_icons');
+      final iconsSnapshot = await iconCollection.get();
+      Map<String, String> iconMap = {};
+      for (var doc in iconsSnapshot.docs) {
+         if (doc.data().containsKey('icon')) {
+             iconMap[doc.id] = doc.data()['icon'];
+         }
+      }
+
+      // 3. Fetch Lock State
       final doc = await _firestore.collection('users').doc(widget.studentId).get();
       
       if (mounted) {
         setState(() {
-          installedApps = allApps;
+          installedApps = allApps
+              .where((app) => app['packageName'] != 'com.example.focus_mate')
+              .map((app) {
+                final newApp = Map<String, dynamic>.from(app);
+                final pkg = newApp['packageName'];
+                final iconBase64 = iconMap[pkg] ?? newApp['iconBytes'];
+                
+                if (iconBase64 != null && iconBase64 is String) {
+                  try {
+                    newApp['decodedIcon'] = base64Decode(iconBase64);
+                  } catch (e) {
+                    debugPrint("Error decoding icon for $pkg");
+                  }
+                }
+                return newApp;
+              }).toList();
+              
           if (doc.exists) {
              final data = doc.data()!;
              lockedPackages = List<String>.from(data['lockedApps'] ?? []);
@@ -166,6 +194,40 @@ class _RemoteAppLockScreenState extends State<RemoteAppLockScreen> {
     );
   }
 
+  Widget _fallbackIcon(String appName) {
+    String letter = (appName.isNotEmpty) ? appName[0].toUpperCase() : "?";
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white10,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Center(
+        child: Text(
+          letter,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAppIcon(Map<String, dynamic> app) {
+    if (app['decodedIcon'] != null) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image.memory(
+          app['decodedIcon'] as Uint8List,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => _fallbackIcon(app['appName'] ?? '?'),
+          gaplessPlayback: true, 
+        ),
+      );
+    }
+    return _fallbackIcon(app['appName'] ?? '?');
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -220,8 +282,14 @@ class _RemoteAppLockScreenState extends State<RemoteAppLockScreen> {
                 Expanded(
                   child: loading 
                      ? const Center(child: CircularProgressIndicator(color: Colors.orangeAccent))
-                     : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                     : GridView.builder(
+                        padding: const EdgeInsets.all(20),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 4,
+                          childAspectRatio: 0.8,
+                          crossAxisSpacing: 10,
+                          mainAxisSpacing: 10,
+                        ),
                         itemCount: installedApps.length,
                         itemBuilder: (context, index) {
                           final app = installedApps[index];
@@ -229,37 +297,54 @@ class _RemoteAppLockScreenState extends State<RemoteAppLockScreen> {
                           final name = app['appName'];
                           final isSelected = lockedPackages.contains(pkg);
                           
-                          // Parent sees just names/icons (icons might be tricky if not cached, but we are using sync)
-                          // For now, we don't have icons in the text data, we only have names/pkgs.
-                          // Wait, we DO have icons compressed? No, the sharded data only has metadata if we look at `UsageService`.
-                          // Actually, `UsageService` writes `chunks` which are `Map<String, String>`.
-                          // keys: appName, packageName, category, (maybe icon? No, icons are image bytes, not Strings).
-                          // UsageService logic:
-                          // data = {'appName': app.appName, 'packageName': app.packageName, 'category': app.category.toString()};
-                          // So NO ICONS in Firestore data.
-                          // We will use a generic icon.
-                          
-                          return Container(
-                             margin: const EdgeInsets.only(bottom: 12),
-                             decoration: BoxDecoration(
-                               color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
-                               borderRadius: BorderRadius.circular(12),
-                               border: Border.all(
-                                 color: isSelected ? Colors.orangeAccent : (isDark ? Colors.white10 : Colors.black12)
-                               ),
-                             ),
-                             child: SwitchListTile(
-                               activeColor: Colors.orangeAccent,
-                               title: Text(name, style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold)),
-                               subtitle: Text(pkg, style: TextStyle(color: isDark ? Colors.white38 : Colors.grey, fontSize: 10)),
-                               value: isSelected,
-                               onChanged: (val) => _toggleLock(pkg, val),
-                               secondary: Container(
-                                 padding: const EdgeInsets.all(8),
-                                 decoration: BoxDecoration(color: Colors.orange.withOpacity(0.1), shape: BoxShape.circle),
-                                 child: Icon(Icons.apps, color: Colors.orangeAccent, size: 20),
-                               ),
-                             ),
+                          return GestureDetector(
+                            onTap: () => _toggleLock(pkg, !isSelected),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? Colors.orangeAccent.withOpacity(0.2)
+                                    : (isDark ? Colors.white.withOpacity(0.05) : Colors.white70),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? Colors.orangeAccent
+                                      : Colors.transparent,
+                                  width: 2,
+                                ),
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(8),
+                                      color: Colors.black.withOpacity(0.3),
+                                    ),
+                                    child: _buildAppIcon(app),
+                                  ),
+                                  
+                                  Padding(
+                                    padding: const EdgeInsets.all(4),
+                                    child: Text(
+                                      name,
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        color: isDark ? Colors.white : Colors.black87,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  
+                                  if (isSelected)
+                                    const Icon(Icons.check_circle, color: Colors.orangeAccent, size: 12),
+                                ],
+                              ),
+                            ),
                           );
                         },
                      ),
