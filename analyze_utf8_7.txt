@@ -1,0 +1,10 @@
+﻿Analyzing study_workspace_screen.dart...                        
+
+   info - The import of 'dart:typed_data' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/services.dart' - lib\dashboard\study_workspace_screen.dart:2:8 - unnecessary_import
+   info - The import of 'package:flutter/cupertino.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\dashboard\study_workspace_screen.dart:4:8 - unnecessary_import
+warning - Unused import: '../core/usage_service.dart' - lib\dashboard\study_workspace_screen.dart:10:8 - unused_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\dashboard\study_workspace_screen.dart:144:60 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\dashboard\study_workspace_screen.dart:145:66 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\dashboard\study_workspace_screen.dart:160:63 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\dashboard\study_workspace_screen.dart:410:43 - deprecated_member_use
+

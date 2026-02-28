@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:focus_mate/core/auth_service.dart';
 import 'package:focus_mate/core/models/user_model.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 // 🔹 IMPORTS
 import 'firebase_options.dart';
@@ -14,11 +15,12 @@ import 'theme/dark_theme.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
+    await dotenv.load(fileName: ".env");
     if (Firebase.apps.isEmpty) {
       await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
     }
   } catch (e, stacktrace) {
-    debugPrint("Firebase initialization failed: $e\n$stacktrace");
+    debugPrint("Initialization failed: $e\n$stacktrace");
   }
   runApp(const FocusMateApp());
 }

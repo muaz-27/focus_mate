@@ -1,0 +1,17 @@
+﻿Analyzing study_workspace_screen.dart...                        
+
+   info - The imported package 'firebase_storage' isn't a dependency of the importing package - lib\dashboard\study_workspace_screen.dart:8:8 - depend_on_referenced_packages
+  error - Target of URI doesn't exist: 'package:firebase_storage/firebase_storage.dart' - lib\dashboard\study_workspace_screen.dart:8:8 - uri_does_not_exist
+warning - The value of the field '_usageService' isn't used - lib\dashboard\study_workspace_screen.dart:26:22 - unused_field
+   info - The private field _selectedDuration could be 'final' - lib\dashboard\study_workspace_screen.dart:33:7 - prefer_final_fields
+warning - The value of the field '_selectedDuration' isn't used - lib\dashboard\study_workspace_screen.dart:33:7 - unused_field
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\dashboard\study_workspace_screen.dart:145:60 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\dashboard\study_workspace_screen.dart:146:66 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\dashboard\study_workspace_screen.dart:161:63 - deprecated_member_use
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\dashboard\study_workspace_screen.dart:271:32 - use_build_context_synchronously
+  error - Undefined name 'FirebaseStorage' - lib\dashboard\study_workspace_screen.dart:278:30 - undefined_identifier
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\dashboard\study_workspace_screen.dart:294:35 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\dashboard\study_workspace_screen.dart:295:35 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\dashboard\study_workspace_screen.dart:301:35 - use_build_context_synchronously
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\dashboard\study_workspace_screen.dart:387:43 - deprecated_member_use
+

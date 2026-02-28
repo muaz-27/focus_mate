@@ -63,17 +63,20 @@ class FocusAccessibilityService : AccessibilityService() {
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-        if (event == null || event.packageName == null) return
+        if (event == null) return
 
-        val packageName = event.packageName.toString()
+        // We only care about window state changes to catch app launches
+        if (event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED && 
+            event.eventType != AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
+            return
+        }
 
-        // --- CRITICAL FIX: ENABLE APP NAVIGATION ---
-        // This ensures the service NEVER blocks FocusMate, allowing the user
-        // to navigate inside the app even if "Companion Mode" is active.
+        val packageName = event.packageName?.toString() ?: return
+
+        // Wait to capture the package name 
         if (packageName == applicationContext.packageName) {
             return 
         }
-        // -------------------------------------------
 
         // Combine both lists dynamically
         val allBlockedApps = userBlockedApps + companionBlockedApps
