@@ -11,7 +11,7 @@ import '../theme/app_theme.dart';
 import 'pdf_viewer_screen.dart';
 import 'quiz_screen.dart';
 import 'quiz_review_screen.dart';
-
+import 'quiz_history_screen.dart';
 class StudyWorkspaceScreen extends StatefulWidget {
   final String userId;
 
@@ -341,6 +341,75 @@ class _StudyWorkspaceScreenState extends State<StudyWorkspaceScreen> {
     }
   }
 
+  Future<void> _openCurrentQuiz() async {
+    try {
+      final querySnapshot = await _firestore
+          .collection('users')
+          .doc(widget.userId)
+          .collection('saved_quizzes')
+          .where('status', isEqualTo: 'active')
+          .orderBy('timestamp', descending: true)
+          .limit(1)
+          .get();
+
+      if (querySnapshot.docs.isEmpty) {
+         if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+               const SnackBar(content: Text("No active quiz right now! Start a session to lock apps."))
+            );
+         }
+         return;
+      }
+
+      final doc = querySnapshot.docs.first;
+      final data = doc.data();
+      _startQuiz(doc.id, data);
+    } catch (e) {
+       // Handle missing compound index by filtering on the client side
+       final errorString = e.toString().toLowerCase();
+       if (errorString.contains('failed-precondition') || errorString.contains('requires an index')) {
+          try {
+             final fallbackSnapshot = await _firestore
+                 .collection('users')
+                 .doc(widget.userId)
+                 .collection('saved_quizzes')
+                 .orderBy('timestamp', descending: true)
+                 .get();
+                 
+             final activeDocs = fallbackSnapshot.docs.where((doc) {
+                final data = doc.data();
+                return data['status'] == 'active';
+             }).toList();
+             
+             if (activeDocs.isNotEmpty) {
+                final doc = activeDocs.first;
+                _startQuiz(doc.id, doc.data());
+             } else {
+                if (mounted) {
+                   ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("No active quiz right now! Start a session to lock apps."))
+                   );
+                }
+             }
+             return;
+          } catch (fallbackErr) {
+             if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                   SnackBar(content: Text("Error getting current quiz: $fallbackErr"))
+                );
+             }
+             return;
+          }
+       }
+       
+       if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+             SnackBar(content: Text("Error getting current quiz: $e"))
+          );
+       }
+    }
+  }
+
   void _startQuiz(String docId, Map<String, dynamic> data) {
       final questions = data['questions'] as List<dynamic>? ?? [];
       if (questions.isEmpty) {
@@ -459,14 +528,31 @@ class _StudyWorkspaceScreenState extends State<StudyWorkspaceScreen> {
               ],
             ),
             const SizedBox(height: 32),
-            const Text("Active Study Sessions", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+            _buildActiveSessionIndicator(),
+            const SizedBox(height: 16),
+            const Text("Quiz Management", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
-            _buildQuizStream(statusFilter: 'active'),
-            
-            const SizedBox(height: 32),
-            const Text("Quiz History", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-            _buildQuizStream(statusFilter: 'completed'),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildToolCard(
+                    "Current Quiz",
+                    Icons.play_circle_fill,
+                    Colors.cyanAccent,
+                    _openCurrentQuiz,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildToolCard(
+                    "Quiz History",
+                    Icons.history,
+                    Colors.greenAccent,
+                    () => Navigator.push(context, MaterialPageRoute(builder: (_) => QuizHistoryScreen(userId: widget.userId))),
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: 24),
           ],
         ),
@@ -499,7 +585,7 @@ class _StudyWorkspaceScreenState extends State<StudyWorkspaceScreen> {
     );
   }
 
-  Widget _buildQuizStream({required String statusFilter}) {
+  Widget _buildActiveSessionIndicator() {
     return StreamBuilder<QuerySnapshot>(
       stream: _firestore
           .collection('users')
@@ -508,159 +594,148 @@ class _StudyWorkspaceScreenState extends State<StudyWorkspaceScreen> {
           .orderBy('timestamp', descending: true)
           .snapshots(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
+        if (!snapshot.hasData && !snapshot.hasError) {
+          return const SizedBox.shrink(); // Loading state handled subtly
         }
 
-        // We filter clientside since equality + orderBy might require a compound index
-        final docs = snapshot.data!.docs.where((doc) {
-           final data = doc.data() as Map<String, dynamic>;
-           final status = data['status'] ?? 'active'; 
-           return status == statusFilter;
-        }).toList();
+        List<DocumentSnapshot> docs = [];
+        
+        if (snapshot.hasData) {
+           docs = snapshot.data!.docs.where((doc) {
+               final data = doc.data() as Map<String, dynamic>;
+               return data['status'] == 'active';
+           }).toList();
+        } else if (snapshot.hasError && snapshot.error.toString().toLowerCase().contains('failed-precondition')) {
+           // If index is missing, we can't reliably build a live stream for active only
+           // But since Current Quiz button handles fallback manually, we'll just show
+           // a generic header if we can't build the stream. 
+           return const Text("Active Sessions", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold));
+        }
 
         if (docs.isEmpty) {
-          return Container(
-             padding: const EdgeInsets.all(24),
-             decoration: BoxDecoration(
-                color: AppColors.cardOverlay,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white10),
-             ),
-             child: Center(
-                child: Text(
-                   statusFilter == 'active' ? "🎉 No pending sessions! You're all caught up." : "No completed quizzes yet.",
-                   style: const TextStyle(color: Colors.white54),
-                )
-             )
-          );
+           return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                 const Text("Status", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                 const SizedBox(height: 12),
+                 Container(
+                   padding: const EdgeInsets.all(16),
+                   decoration: BoxDecoration(
+                     color: Colors.greenAccent.withOpacity(0.1),
+                     borderRadius: BorderRadius.circular(16),
+                     border: Border.all(color: Colors.greenAccent.withOpacity(0.3)),
+                   ),
+                   child: const Row(
+                     children: [
+                       Icon(Icons.check_circle_outline, color: Colors.greenAccent),
+                       SizedBox(width: 12),
+                       Expanded(child: Text("No active study session. Apps are unlocked.", style: TextStyle(color: Colors.greenAccent))),
+                     ],
+                   ),
+                 ),
+              ]
+           );
         }
 
-        return ListView.separated(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: docs.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 12),
-          itemBuilder: (context, index) {
-            final doc = docs[index];
-            final data = doc.data() as Map<String, dynamic>;
-            final questionsList = data['questions'] as List<dynamic>? ?? [];
-            final isActive = statusFilter == 'active';
-            
-            final String sourceName = data['sourceName'] ?? 'Unknown Source';
-            final int score = data['lastScore'] ?? 0;
-            final int total = questionsList.length;
-
-            if (isActive) {
-              return Container(
-                margin: const EdgeInsets.only(bottom: 4),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF00B4DB), Color(0xFF0083B0)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                     BoxShadow(color: Colors.cyanAccent.withOpacity(0.2), blurRadius: 10, offset: const Offset(0, 4)),
-                  ]
+        final data = docs.first.data() as Map<String, dynamic>;
+        final String sourceName = data['sourceName'] ?? 'Unknown Material';
+        
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text("Active Session", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF00B4DB), Color(0xFF0083B0)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(16),
-                    onTap: () => _startQuiz(doc.id, data),
-                    child: Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: const BoxDecoration(color: Colors.white24, shape: BoxShape.circle),
-                            child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 32),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text("ACTIVE SESSION", style: TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
-                                const SizedBox(height: 4),
-                                Text(sourceName, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
-                                const SizedBox(height: 4),
-                                Text("$total Questions • Tap to unlock apps", style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500)),
-                              ],
-                            ),
-                          ),
-                          const Icon(Icons.chevron_right, color: Colors.white, size: 28),
-                        ],
-                      ),
-                    ),
-                  ),
-                )
-              );
-            }
-
-            // History Card
-            return GestureDetector(
-              onTap: () {
-                 final mappedQuestions = questionsList.map((e) => Map<String, dynamic>.from(e as Map)).toList();
-                 Navigator.push(context, MaterialPageRoute(builder: (_) => QuizReviewScreen(
-                     questions: mappedQuestions,
-                     sourceName: sourceName,
-                     score: score,
-                 )));
-              },
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.cardOverlay,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.white10),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: const BoxDecoration(
-                        color: Colors.white10,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.check_circle, color: Colors.greenAccent, size: 28),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            sourceName,
-                            style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                            maxLines: 1, overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            "Completed • Score: $score/$total",
-                            style: TextStyle(
-                              color: Colors.greenAccent.withOpacity(0.7),
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete_outline, color: Colors.white54),
-                      onPressed: () => _deleteQuiz(doc.id),
-                    ),
-                  ],
-                ),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                   BoxShadow(color: Colors.cyanAccent.withOpacity(0.2), blurRadius: 10, offset: const Offset(0, 4)),
+                ]
               ),
-            );
-          },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.lock_clock, color: Colors.white, size: 28),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text("STUDYING", style: TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+                            Text(sourceName, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                          ]
+                        ),
+                      )
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  const Text("Currently Locked Apps:", style: TextStyle(color: Colors.white70, fontSize: 12)),
+                  const SizedBox(height: 8),
+                  lockedPackages.isEmpty 
+                    ? const Text("No specific apps selected.", style: TextStyle(color: Colors.white54, fontStyle: FontStyle.italic))
+                    : Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: lockedPackages.map((pkg) {
+                          // Try to find icon from installed apps list
+                          final matches = installedApps.where((a) => a.packageName == pkg);
+                          final app = matches.isNotEmpty ? matches.first : null;
+                          
+                          Uint8List? iconData;
+                          String appNameStr = pkg;
+                          if (app != null) {
+                             appNameStr = app.appName;
+                             if (app is ApplicationWithIcon) {
+                                iconData = app.icon;
+                             }
+                          }
+                          
+                          return Tooltip(
+                            message: appNameStr,
+                            child: Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(8),
+                                color: Colors.black26,
+                              ),
+                              child: iconData != null && iconData.isNotEmpty
+                                  ? ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Image.memory(iconData, fit: BoxFit.cover, gaplessPlayback: true),
+                                    )
+                                  : const Icon(Icons.apps, color: Colors.white54, size: 20),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: _openCurrentQuiz,
+                      icon: const Icon(Icons.play_arrow, color: Colors.black),
+                      label: const Text("Take Quiz to Unlock", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.cyanAccent,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                  )
+                ],
+              ),
+            ),
+          ],
         );
-      },
+      }
     );
   }
 }

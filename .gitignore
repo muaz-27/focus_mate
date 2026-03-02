@@ -46,3 +46,4 @@ app.*.map.json
 
 # Mine
 settings.json
+.env
