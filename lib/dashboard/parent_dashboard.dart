@@ -148,10 +148,12 @@ class _ParentDashboardState extends State<ParentDashboard> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text("Parent Dashboard", style: TextStyle(color: textColor, fontWeight: FontWeight.bold)),
+        title: Text(
+          "Parent Dashboard",
+          style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 22),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: IconThemeData(color: textColor),
         actions: [
           IconButton(
             onPressed: () => AuthService().signOut(),
@@ -159,247 +161,486 @@ class _ParentDashboardState extends State<ParentDashboard> {
           ),
         ],
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark 
-              ? [const Color(0xFF1A1F35), const Color(0xFF0B0E17)] 
-              : [const Color(0xFFF8FAFC), const Color(0xFFE2E8F0)],
+      body: Stack(
+        children: [
+          // Background Gradient (Parent Theme: Deep Pinks/Reds)
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: isDark 
+                  ? [const Color(0xFF1E1B4B), const Color(0xFF450A0A)] 
+                  : [const Color(0xFFFFF1F2), const Color(0xFFFEE2E2)],
+              ),
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Link Code Card (Parent Themed)
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFD946EF), Color(0xFFE11D48)], // Pink/Red gradient for Parents
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.redAccent.withOpacity(0.3),
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
+          
+          SafeArea(
+            child: CustomScrollView(
+              slivers: [
+                // Link Code Section
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: _buildHeaderCard(isDark),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Parent Link Code",
-                        style: TextStyle(color: Colors.white.withOpacity(0.9), fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                ),
+
+                // Activity Summary
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: _buildActivitySummaryBar(),
+                  ),
+                ),
+
+                // Session Requests
+                if (_pendingSessions.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            linkCode ?? "Generating...",
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 2,
-                            ),
-                          ),
-                          Row(
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.refresh, color: Colors.white),
-                                onPressed: _refreshCode,
-                              ),
-                              if (linkCode != null)
-                                IconButton(
-                                  icon: const Icon(Icons.copy, color: Colors.white),
-                                  onPressed: () {
-                                    Clipboard.setData(ClipboardData(text: linkCode!));
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text("Code copied!")),
-                                    );
-                                  },
-                                ),
-                            ],
-                          ),
+                          _buildSectionTitle("Session Requests", Icons.notifications_active, Colors.orange, isDark),
+                          const SizedBox(height: 12),
+                          ..._pendingSessions.map((s) => _buildSessionRequestCard(s)),
                         ],
                       ),
-                      const Text(
-                        "Enter this code on your child's device to link.",
-                        style: TextStyle(color: Colors.white70, fontSize: 12),
+                    ),
+                  ),
+
+                // Active Sessions
+                if (_activeSessions.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildSectionTitle("Active Sessions", Icons.play_circle_fill, Colors.green, isDark),
+                          const SizedBox(height: 12),
+                          ..._activeSessions.map((s) => _buildActiveSessionCard(s)),
+                        ],
                       ),
-                    ],
+                    ),
+                  ),
+
+                // App Unlock Requests
+                if (_unlockRequests.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildSectionTitle("App Unlock Requests", Icons.lock_open, Colors.blueAccent, isDark),
+                          const SizedBox(height: 12),
+                          ..._unlockRequests.map((req) => _buildUnlockRequestCard(req)),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                // Connected Children Header
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+                    child: Row(
+                      children: [
+                        Text(
+                          "Monitored Children",
+                          style: TextStyle(
+                            color: textColor,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const Spacer(),
+                        Icon(Icons.family_restroom, size: 18, color: Colors.pinkAccent.withOpacity(0.5)),
+                      ],
+                    ),
                   ),
                 ),
-
-                const SizedBox(height: 24),
-
-                // Requests & Sessions
-                if (_pendingSessions.isNotEmpty) ...[
-                  _buildSectionHeader("Requests", Icons.notifications_active, Colors.orange),
-                  ..._pendingSessions.map((s) => _buildSessionRequestCard(s)),
-                  const SizedBox(height: 24),
-                ],
-
-                if (_activeSessions.isNotEmpty) ...[
-                   _buildSectionHeader("Active Sessions", Icons.timer, Colors.green),
-                   ..._activeSessions.map((s) => _buildActiveSessionCard(s)),
-                   const SizedBox(height: 24),
-                ],
-
-                if (_unlockRequests.isNotEmpty) ...[
-                   _buildSectionHeader("App Unlock Requests", Icons.lock_open, Colors.blueAccent),
-                   ..._unlockRequests.map((req) => _buildUnlockRequestCard(req)),
-                   const SizedBox(height: 24),
-                ],
 
                 // Connected Children List
-                _buildSectionHeader("Monitored Children", Icons.child_care, _primaryColor),
-                Expanded(
-                  child: StreamBuilder<DocumentSnapshot>(
-                    stream: _firestore.collection('users').doc(widget.userData['id']).snapshots(),
-                    builder: (context, snapshot) {
-                      if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-                      
-                      final data = snapshot.data!.data() as Map<String, dynamic>;
-                      // Merge both fields to handle potential mismatch from previous version
-                      final linked = <String>{
-                        ...List<String>.from(data['linkedUsers'] ?? []),
-                        ...List<String>.from(data['linkedStudents'] ?? []),
-                      }.toList();
+                StreamBuilder<DocumentSnapshot>(
+                  stream: _firestore
+                      .collection('users')
+                      .doc(widget.userData['id'])
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const SliverToBoxAdapter(child: Center(child: CircularProgressIndicator()));
+                    }
 
-                      if (linked.isEmpty) {
-                        return Center(
-                           child: Column(
-                             mainAxisAlignment: MainAxisAlignment.center,
-                             children: [
-                               Icon(Icons.family_restroom, size: 48, color: Colors.grey[400]),
-                               const SizedBox(height: 10),
-                               Text("No children linked yet.", style: TextStyle(color: Colors.grey[600])),
-                             ],
-                           ),
-                        );
-                      }
+                    if (!snapshot.hasData || !snapshot.data!.exists) {
+                      return const SliverToBoxAdapter(child: Center(child: Text("No connection data found.")));
+                    }
 
-                      return ListView.builder(
-                        itemCount: linked.length,
-                        itemBuilder: (context, index) {
+                    final data = snapshot.data!.data() as Map<String, dynamic>;
+                    final linkedSet = <String>{
+                      ...List<String>.from(data['linkedStudents'] ?? []),
+                      ...List<String>.from(data['linkedUsers'] ?? []),
+                    };
+                    final linked = linkedSet.toList();
+
+                    if (linked.isEmpty) {
+                      return SliverToBoxAdapter(
+                        child: Container(
+                          padding: const EdgeInsets.all(40),
+                          child: Column(
+                            children: [
+                              Icon(Icons.child_care_rounded, size: 64, color: Colors.grey.withOpacity(0.3)),
+                              const SizedBox(height: 16),
+                              Text(
+                                "No children linked yet.\nUse your parent code to connect!",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(color: Colors.grey[500], fontSize: 16),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+
+                    return SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
                           final studentId = linked[index];
-                          return FutureBuilder<DocumentSnapshot>(
-                            future: _firestore.collection('users').doc(studentId).get(),
-                            builder: (context, snap) {
-                              if (!snap.hasData) return const SizedBox();
-                              final student = snap.data!.data() as Map<String, dynamic>;
-                              final studentName = student['name'] ?? "Unknown";
-
-                              return Container(
-                                margin: const EdgeInsets.only(bottom: 12),
-                                decoration: BoxDecoration(
-                                  color: isDark ? Colors.white.withOpacity(0.05) : Colors.white70,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: isDark ? Colors.white10 : Colors.black12),
-                                ),
-                                child: ListTile(
-                                  leading: CircleAvatar(
-                                    backgroundColor: _primaryColor.withOpacity(0.2),
-                                    child: Text(studentName[0].toUpperCase(), style: TextStyle(color: _primaryColor)),
-                                  ),
-                                  title: Text(studentName, style: TextStyle(color: textColor, fontWeight: FontWeight.bold)),
-                                  subtitle: const Text("Monitor and control", style: TextStyle(fontSize: 12)),
-                                  trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => ParentChildControlPage(
-                                          studentId: studentId,
-                                          studentName: studentName,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              );
-                            },
+                          return Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                            child: _buildStudentTile(studentId, isDark),
                           );
                         },
-                      );
-                    },
-                  ),
+                        childCount: linked.length,
+                      ),
+                    );
+                  },
                 ),
+                
+                const SliverToBoxAdapter(child: SizedBox(height: 40)),
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSectionHeader(String title, IconData icon, Color color) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Icon(icon, color: color, size: 24),
-          const SizedBox(width: 8),
-          Text(title, style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 18, fontWeight: FontWeight.bold)),
         ],
       ),
     );
   }
 
-  Widget _buildSessionRequestCard(Map<String, dynamic> session) {
-    final textColor = Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87;
-    return Card(
-      color: Colors.orange.withOpacity(0.1),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.orange.withOpacity(0.3))),
-      child: ListTile(
-        title: Text(session['userName'] ?? 'Child', style: TextStyle(color: textColor, fontWeight: FontWeight.bold)),
-        subtitle: Text("Requesting ${session['duration']} min session"),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
+  Widget _buildHeaderCard(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFEC4899), Color(0xFFEF4444)], // Parent Red/Pink
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFEC4899).withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          )
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            "Parent Link Code",
+            style: TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                linkCode ?? "...",
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 36,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 4,
+                ),
+              ),
+              Row(
+                children: [
+                  _glassIconButton(Icons.refresh, _refreshCode),
+                  const SizedBox(width: 8),
+                  _glassIconButton(Icons.copy, () {
+                    if (linkCode != null) {
+                      Clipboard.setData(ClipboardData(text: linkCode!));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Code copied!")),
+                      );
+                    }
+                  }),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            "Link your child's device by entering this code in their Focus Mate app.",
+            style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _glassIconButton(IconData icon, VoidCallback onPressed) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: IconButton(
+        icon: Icon(icon, color: Colors.white, size: 20),
+        onPressed: onPressed,
+      ),
+    );
+  }
+
+  Widget _buildActivitySummaryBar() {
+    return Row(
+      children: [
+        _summaryItem("Children", (linkCode != null) ? "Syncing..." : "0", Icons.people, Colors.pink),
+        const SizedBox(width: 12),
+        _summaryItem("Pending", _pendingSessions.length.toString(), Icons.pending_actions, Colors.orange),
+        const SizedBox(width: 12),
+        _summaryItem("Unlocks", _unlockRequests.length.toString(), Icons.lock_open, Colors.blue),
+      ],
+    );
+  }
+
+  Widget _summaryItem(String label, String value, IconData icon, Color color) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+        decoration: BoxDecoration(
+          color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05)),
+        ),
+        child: Column(
           children: [
-            IconButton(icon: const Icon(Icons.close, color: Colors.red), onPressed: () => _respondToRequest(session['id'], false)),
-            IconButton(icon: const Icon(Icons.check, color: Colors.green), onPressed: () => _respondToRequest(session['id'], true)),
+            Icon(icon, color: color, size: 24),
+            const SizedBox(height: 8),
+            Text(value, style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(label, style: TextStyle(color: Colors.grey[500], fontSize: 11)),
           ],
         ),
       ),
     );
   }
 
+  Widget _buildSectionTitle(String title, IconData icon, Color color, bool isDark) {
+    return Row(
+      children: [
+        Icon(icon, color: color, size: 22),
+        const SizedBox(width: 8),
+        Text(title, style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 18, fontWeight: FontWeight.bold)),
+      ],
+    );
+  }
+
+  Widget _buildStudentTile(String studentId, bool isDark) {
+    return FutureBuilder<DocumentSnapshot>(
+      future: _firestore.collection('users').doc(studentId).get(),
+      builder: (context, snap) {
+        if (!snap.hasData) {
+          return Container(height: 80, decoration: BoxDecoration(color: isDark ? Colors.white.withOpacity(0.05) : Colors.white70, borderRadius: BorderRadius.circular(16)));
+        }
+
+        final student = snap.data!.data() as Map<String, dynamic>;
+        final studentName = student['name'] ?? "Unknown";
+
+        return Container(
+          decoration: BoxDecoration(
+            color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05)),
+          ),
+          child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            leading: CircleAvatar(
+              radius: 24,
+              backgroundColor: Colors.pinkAccent.withOpacity(0.1),
+              child: Text(studentName[0].toUpperCase(), style: const TextStyle(color: Colors.pinkAccent, fontWeight: FontWeight.bold, fontSize: 20)),
+            ),
+            title: Text(studentName, style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold, fontSize: 16)),
+            subtitle: const Text("Parental Control & Monitoring", style: TextStyle(color: Colors.grey, fontSize: 12)),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ParentChildControlPage(
+                    studentId: studentId,
+                    studentName: studentName,
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSessionRequestCard(Map<String, dynamic> session) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final studentName = session['userName'] ?? 'Child';
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.orange.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.orange.withOpacity(0.2)),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundColor: Colors.orange.withOpacity(0.1),
+            child: Text(studentName[0].toUpperCase(), style: const TextStyle(color: Colors.orange)),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(studentName, style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold)),
+                Text('${session['duration'] ?? 60}m study request', style: TextStyle(color: Colors.grey[500], fontSize: 12)),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close_rounded, color: Colors.grey),
+            onPressed: () => _respondToRequest(session['id'], false),
+          ),
+          ElevatedButton(
+            onPressed: () => _respondToRequest(session['id'], true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text("Approve"),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildActiveSessionCard(Map<String, dynamic> session) {
-    final textColor = Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87;
-    return Card(
-      color: Colors.green.withOpacity(0.1),
-       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.green.withOpacity(0.3))),
-      child: ListTile(
-        title: Text(session['userName'] ?? 'Child', style: TextStyle(color: textColor, fontWeight: FontWeight.bold)),
-        subtitle: const Text("Session Active"),
-        trailing: ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-          child: const Text("Control"),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => CompanionControlPage(
-                  sessionId: session['id'],
-                  companionId: widget.userData['id'],
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final studentName = session['userName'] ?? 'Child';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.green.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.green.withOpacity(0.2)),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundColor: Colors.green.withOpacity(0.1),
+            child: Text(studentName[0].toUpperCase(), style: const TextStyle(color: Colors.green)),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(studentName, style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold)),
+                const Text('Session Active', style: TextStyle(color: Colors.green, fontSize: 12)),
+              ],
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CompanionControlPage(
+                    sessionId: session['id'],
+                    companionId: widget.userData['id'],
+                  ),
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text("Control"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUnlockRequestCard(Map<String, dynamic> req) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.blueAccent.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.blueAccent.withOpacity(0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.lock_open, color: Colors.blueAccent, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  "${req['studentName']} requested to unlock ${req['appName']}",
+                  style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold),
                 ),
               ),
-            );
-          },
-        ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            "\"${req['reason']}\"",
+            style: TextStyle(color: Colors.grey.withOpacity(0.8), fontStyle: FontStyle.italic, fontSize: 13),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                onPressed: () => _handleUnlockRequest(req, false),
+                child: const Text("Refuse", style: TextStyle(color: Colors.redAccent)),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: () => _handleUnlockRequest(req, true),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent, foregroundColor: Colors.white, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                child: const Text("Approve"),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -417,73 +658,25 @@ class _ParentDashboardState extends State<ParentDashboard> {
       );
     } else {
       await _firestore.collection('companion_sessions').doc(sessionId).update({'status': 'REJECTED'});
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Request rejected"), backgroundColor: Colors.orange),
+        );
+      }
     }
-  }
-
-  Widget _buildUnlockRequestCard(Map<String, dynamic> req) {
-    final textColor = Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87;
-    return Card(
-      color: Colors.blueAccent.withOpacity(0.1),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.blueAccent.withOpacity(0.3))),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.lock_open, color: Colors.blueAccent, size: 20),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    "${req['studentName']} requested to unlock ${req['appName']}",
-                    style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              "\"${req['reason']}\"",
-              style: TextStyle(color: Colors.grey.withOpacity(0.8), fontStyle: FontStyle.italic),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: () => _handleUnlockRequest(req, false),
-                  child: const Text("Refuse", style: TextStyle(color: Colors.redAccent)),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: () => _handleUnlockRequest(req, true),
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent, foregroundColor: Colors.white),
-                  child: const Text("Approve"),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   Future<void> _handleUnlockRequest(Map<String, dynamic> req, bool approve) async {
     try {
-      // 1. Update request status
       await _firestore.collection('unlock_requests').doc(req['id']).update({
         'status': approve ? 'approved' : 'rejected',
         'respondedAt': FieldValue.serverTimestamp(),
       });
-
       if (approve) {
-        // 2. Remove app from child's lockedApps array
         await _firestore.collection('users').doc(req['studentId']).update({
           'lockedApps': FieldValue.arrayRemove([req['packageName']]),
         });
       }
-
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -494,9 +687,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-           SnackBar(content: Text("Failed to process request: $e"), backgroundColor: Colors.red)
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed: $e"), backgroundColor: Colors.red));
       }
     }
   }

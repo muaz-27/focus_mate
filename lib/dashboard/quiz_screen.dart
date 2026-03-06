@@ -61,16 +61,30 @@ class _QuizScreenState extends State<QuizScreen> {
           'lockEndTime': null,
         });
         
-        // Update quiz status to completed
-        await _firestore
+        final quizDocRef = _firestore
             .collection('users')
             .doc(widget.userId)
             .collection('saved_quizzes')
-            .doc(widget.quizDocId)
-            .update({
+            .doc(widget.quizDocId);
+            
+        final quizDoc = await quizDocRef.get();
+        final companionSessionId = quizDoc.data()?['companionSessionId'];
+
+        // Update quiz status to completed
+        await quizDocRef.update({
           'status': 'completed',
           'lastScore': _score,
         });
+
+        // If part of a companion session, end it
+        if (companionSessionId != null) {
+            await _firestore.collection('companion_sessions').doc(companionSessionId).update({
+               'status': 'ENDED',
+               'endedAt': FieldValue.serverTimestamp(),
+               'updatedAt': FieldValue.serverTimestamp(),
+               'quizPassed': true,
+            });
+        }
         
         if (mounted) {
            ScaffoldMessenger.of(context).showSnackBar(

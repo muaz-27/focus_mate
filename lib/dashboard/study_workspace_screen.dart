@@ -1,9 +1,11 @@
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:device_apps/device_apps.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../core/gemini_service.dart';
 import '../theme/app_colors.dart';
@@ -28,11 +30,24 @@ class _StudyWorkspaceScreenState extends State<StudyWorkspaceScreen> {
   List<Application> installedApps = [];
   List<String> lockedPackages = [];
   bool loadingApps = true;
+  bool companionActive = false;
+  String? companionId;
+  String? userName;
+  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
     _loadApps();
+    _timer = Timer.periodic(const Duration(seconds: 30), (_) {
+       if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadApps() async {
@@ -52,6 +67,9 @@ class _StudyWorkspaceScreenState extends State<StudyWorkspaceScreen> {
           if (doc.exists) {
             final data = doc.data()!;
             lockedPackages = List<String>.from(data['lockedApps'] ?? []);
+            companionId = data['linkedCompanion'] ?? data['linkedParent'];
+            companionActive = companionId != null;
+            userName = data['name'];
           }
           loadingApps = false;
         });
@@ -248,7 +266,114 @@ class _StudyWorkspaceScreenState extends State<StudyWorkspaceScreen> {
     );
   }
 
-  Future<void> _startStudyModeFlow() async {
+  void _showDurationPickerPrompt(String buttonText, Future<void> Function(int) onStart) {
+    int selectedDuration = 60; // Default 60 mins
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setModalState) {
+            return Container(
+              height: MediaQuery.of(context).size.height * 0.5,
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Column(
+                children: [
+                  const SizedBox(height: 12),
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.white24 : Colors.black12,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    "Select Study Duration",
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black87,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    "Your companion will select apps to lock.",
+                    style: TextStyle(color: isDark ? Colors.white70 : Colors.black54),
+                  ),
+                  const SizedBox(height: 32),
+                  
+                  // Duration Slider
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "$selectedDuration mins",
+                          style: const TextStyle(
+                            color: Colors.cyanAccent,
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Slider(
+                    value: selectedDuration.toDouble(),
+                    min: 15,
+                    max: 240,
+                    divisions: 15,
+                    activeColor: Colors.cyanAccent,
+                    inactiveColor: isDark ? Colors.white10 : Colors.black12,
+                    onChanged: (val) {
+                      setModalState(() => selectedDuration = val.toInt());
+                    },
+                  ),
+
+                  const Spacer(),
+                  
+                  // Start Button
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context); // Close bottom sheet
+                          onStart(selectedDuration);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.cyanAccent,
+                          foregroundColor: Colors.black,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
+                        child: Text(
+                          buttonText, 
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _startStudyModeFlowWithDuration(int? duration) async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
@@ -264,71 +389,116 @@ class _StudyWorkspaceScreenState extends State<StudyWorkspaceScreen> {
         
         final fileName = result.files.single.name;
 
-        if (mounted) {
-           showDialog(
-              context: context,
-              barrierDismissible: false,
-              builder: (_) => AlertDialog(
-                 backgroundColor: AppColors.background,
-                 content: Row(
-                    children: [
-                       const CircularProgressIndicator(color: Colors.cyanAccent),
-                       const SizedBox(width: 20),
-                       Expanded(child: Text("Generating quiz from $fileName...", style: const TextStyle(color: Colors.white))),
-                    ],
-                 )
-              ),
-           );
-        }
+        if (companionActive && companionId != null) {
+              // 1. Save PDF locally to defer generation
+              final tempDir = await getApplicationDocumentsDirectory();
+              final sanitizedName = fileName.replaceAll(RegExp(r'[^a-zA-Z0-9_\.]'), '_');
+              final localFile = File('${tempDir.path}/$sanitizedName');
+              await localFile.writeAsBytes(bytes);
 
-        // 1. Extract text and prompt Gemini locally
-        final geminiService = GeminiService();
-        final quizQuestions = await geminiService.generateQuizFromPdf(bytes);
-
-        if (mounted) {
-           Navigator.pop(context); // Close loading indicator
-        }
-
-        if (quizQuestions != null && quizQuestions.isNotEmpty) {
-          // 2. Lock apps now that quiz is ready
-          if (lockedPackages.isNotEmpty) {
-            await platform.invokeMethod('setBlockedApps', {'apps': lockedPackages});
-            await _firestore.collection('users').doc(widget.userId).update({
-              'lockedApps': lockedPackages,
-              'lockEndTime': null, // Clear any previous expiration timer
+              // 2. Send request to companion instead of locking apps
+              final newSessionRef = _firestore.collection('companion_sessions').doc();
+              await newSessionRef.set({
+                  'userId': widget.userId,
+                  'userName': userName ?? 'Student',
+                  'companionId': companionId,
+                  'status': 'REQUESTED',
+                  'type': 'study_session',
+                  'duration': duration ?? 60, 
+                  'lockedApps': [],
+                  'quizDocId': null, // Will update next
+                  'requestedAt': FieldValue.serverTimestamp(),
+                  'updatedAt': FieldValue.serverTimestamp(),
+              });
+              
+              final quizRef = await _firestore
+                .collection('users')
+                .doc(widget.userId)
+                .collection('saved_quizzes')
+                .add({
+              'sourceName': fileName,
+              'questions': [], // empty questions to defer generation
+              'status': 'active', // Important for filtering
+              'lastScore': 0,
+              'timestamp': FieldValue.serverTimestamp(),
+              'companionSessionId': newSessionRef.id,
+              'localPdfPath': localFile.path,
             });
+
+            await newSessionRef.update({'quizDocId': quizRef.id});
 
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Apps locked for Study Mode!")),
+                const SnackBar(content: Text("Study session requested! Waiting for companion approval.")),
               );
             }
-          }
-          
-          // 3. Save JSON to Firestore with active tracker fields
-          await _firestore
-              .collection('users')
-              .doc(widget.userId)
-              .collection('saved_quizzes')
-              .add({
-            'sourceName': fileName,
-            'questions': quizQuestions,
-            'status': 'active', // Important for filtering
-            'lastScore': 0,
-            'timestamp': FieldValue.serverTimestamp(),
-          });
-          
-          if (mounted) {
-             ScaffoldMessenger.of(context).showSnackBar(
-               const SnackBar(content: Text("Quiz generated and apps locked! You can start the quiz later from 'Take Saved Quiz'.")),
-             );
-          }
-        } else {
-           if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Failed to generate quiz. No questions produced.")),
-              );
-           }
+          } else {
+             // 1. Extract text and prompt Gemini locally for Non-Companion mode
+             if (mounted) {
+                showDialog(
+                   context: context,
+                   barrierDismissible: false,
+                   builder: (_) => AlertDialog(
+                      backgroundColor: AppColors.background,
+                      content: Row(
+                         children: [
+                            const CircularProgressIndicator(color: Colors.cyanAccent),
+                            const SizedBox(width: 20),
+                            Expanded(child: Text("Generating quiz from $fileName...", style: const TextStyle(color: Colors.white))),
+                         ],
+                      )
+                   ),
+                );
+             }
+
+             final geminiService = GeminiService();
+             final quizQuestions = await geminiService.generateQuizFromPdf(bytes);
+
+             if (mounted) {
+                Navigator.pop(context); // Close loading indicator
+             }
+
+             if (quizQuestions != null && quizQuestions.isNotEmpty) {
+                 // 2. Lock apps now that quiz is ready (Self-Control)
+                if (lockedPackages.isNotEmpty) {
+                    await platform.invokeMethod('setBlockedApps', {'apps': lockedPackages});
+                    await _firestore.collection('users').doc(widget.userId).update({
+                    'lockedApps': lockedPackages,
+                    'lockEndTime': null, // Clear any previous expiration timer
+                    });
+
+                    if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Apps locked for Study Mode!")),
+                    );
+                    }
+                }
+                
+                // 3. Save JSON to Firestore with active tracker fields
+                await _firestore
+                    .collection('users')
+                    .doc(widget.userId)
+                    .collection('saved_quizzes')
+                    .add({
+                    'sourceName': fileName,
+                    'questions': quizQuestions,
+                    'status': 'active', // Important for filtering
+                    'lastScore': 0,
+                    'timestamp': FieldValue.serverTimestamp(),
+                });
+                
+                if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Quiz generated and apps locked! You can start the quiz later from 'Take Saved Quiz'.")),
+                    );
+                }
+             } else {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Failed to generate quiz. No questions produced.")),
+                  );
+                }
+             }
         }
       }
     } catch (e) {
@@ -340,6 +510,7 @@ class _StudyWorkspaceScreenState extends State<StudyWorkspaceScreen> {
       }
     }
   }
+
 
   Future<void> _openCurrentQuiz() async {
     try {
@@ -410,13 +581,68 @@ class _StudyWorkspaceScreenState extends State<StudyWorkspaceScreen> {
     }
   }
 
-  void _startQuiz(String docId, Map<String, dynamic> data) {
+  Future<void> _startQuiz(String docId, Map<String, dynamic> data) async {
       final questions = data['questions'] as List<dynamic>? ?? [];
       if (questions.isEmpty) {
-        if (mounted) {
-           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Error: Selected quiz format invalid.")));
-        }
-        return;
+         // Deferred quiz generation
+         final localPdfPath = data['localPdfPath'];
+         if (localPdfPath != null) {
+            final localFile = File(localPdfPath);
+            if (await localFile.exists()) {
+               final bytes = await localFile.readAsBytes();
+               if (mounted) {
+                 showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (_) => AlertDialog(
+                       backgroundColor: AppColors.background,
+                       content: Row(
+                          children: [
+                             const CircularProgressIndicator(color: Colors.cyanAccent),
+                             const SizedBox(width: 20),
+                             Expanded(child: Text("Generating quiz from study material...", style: const TextStyle(color: Colors.white))),
+                          ],
+                       )
+                    ),
+                 );
+               }
+               final geminiService = GeminiService();
+               final generatedQuestions = await geminiService.generateQuizFromPdf(bytes);
+               if (mounted) Navigator.pop(context); // Close dialog
+
+               if (generatedQuestions != null && generatedQuestions.isNotEmpty) {
+                   await _firestore
+                       .collection('users')
+                       .doc(widget.userId)
+                       .collection('saved_quizzes')
+                       .doc(docId)
+                       .update({'questions': generatedQuestions});
+                   
+                   final mappedQuestions = generatedQuestions.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+                   if (mounted) {
+                     Navigator.push(
+                       context,
+                       MaterialPageRoute(
+                         builder: (context) => QuizScreen(
+                           userId: widget.userId,
+                           quizDocId: docId, 
+                           questions: mappedQuestions,
+                         ),
+                       ),
+                     );
+                   }
+               } else {
+                   if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Failed to generate quiz from the material.")));
+                   }
+               }
+            } else {
+               if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Error: Study material not found on device.")));
+            }
+         } else {
+            if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Error: No questions and no local PDF!")));
+         }
+         return;
       }
 
       final mappedQuestions = questions.map((e) => Map<String, dynamic>.from(e as Map)).toList();
@@ -498,85 +724,108 @@ class _StudyWorkspaceScreenState extends State<StudyWorkspaceScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Useful tools for studying
-            const Text("Tools", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildToolCard(
-                    "Read PDF",
-                    Icons.picture_as_pdf,
-                    Colors.redAccent,
-                    () => _pickPdfFile(context), 
-                  ),
+      body: _buildWorkspaceBody(),
+    );
+  }
+
+  Widget _buildContent({
+    required bool hasActiveSession,
+    required bool isWaitingForCompanion,
+    required bool canTakeQuiz,
+    required Widget indicator,
+  }) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Useful tools for studying
+          const Text("Tools", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildToolCard(
+                  "Read PDF",
+                  Icons.picture_as_pdf,
+                  Colors.redAccent,
+                  () => _pickPdfFile(context), 
+                  isDisabled: false, // Always enabled
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildToolCard(
-                    "Start Session",
-                    Icons.school,
-                    Colors.amberAccent,
-                    () => _showAppLockPrompt("Next: Pick Material", _startStudyModeFlow),
-                  ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildToolCard(
+                  "Start Session",
+                  Icons.school,
+                  Colors.amberAccent,
+                  () {
+                    if (companionActive) {
+                       _showDurationPickerPrompt("Next: Pick Material", (duration) async {
+                          await _startStudyModeFlowWithDuration(duration);
+                       });
+                    } else {
+                       _showAppLockPrompt("Next: Pick Material", () async {
+                           await _startStudyModeFlowWithDuration(null);
+                       });
+                    }
+                  },
+                  isDisabled: hasActiveSession || isWaitingForCompanion,
                 ),
-              ],
-            ),
-            const SizedBox(height: 32),
-            _buildActiveSessionIndicator(),
-            const SizedBox(height: 16),
-            const Text("Quiz Management", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildToolCard(
-                    "Current Quiz",
-                    Icons.play_circle_fill,
-                    Colors.cyanAccent,
-                    _openCurrentQuiz,
-                  ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 32),
+          indicator,
+          const SizedBox(height: 16),
+          const Text("Quiz Management", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildToolCard(
+                  "Current Quiz",
+                  Icons.play_circle_fill,
+                  Colors.cyanAccent,
+                  _openCurrentQuiz,
+                  isDisabled: !canTakeQuiz || (!hasActiveSession && !isWaitingForCompanion),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildToolCard(
-                    "Quiz History",
-                    Icons.history,
-                    Colors.greenAccent,
-                    () => Navigator.push(context, MaterialPageRoute(builder: (_) => QuizHistoryScreen(userId: widget.userId))),
-                  ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildToolCard(
+                  "Quiz History",
+                  Icons.history,
+                  Colors.greenAccent,
+                  () => Navigator.push(context, MaterialPageRoute(builder: (_) => QuizHistoryScreen(userId: widget.userId))),
+                  isDisabled: false,
                 ),
-              ],
-            ),
-            const SizedBox(height: 24),
-          ],
-        ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+        ],
       ),
     );
   }
 
-  Widget _buildToolCard(String title, IconData icon, Color color, VoidCallback onTap) {
+  Widget _buildToolCard(String title, IconData icon, Color color, VoidCallback onTap, {bool isDisabled = false}) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: isDisabled ? null : onTap,
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: AppColors.cardOverlay,
+          color: isDisabled ? Colors.white10 : AppColors.cardOverlay,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: isDisabled ? Colors.transparent : color.withOpacity(0.3)),
         ),
         child: Column(
           children: [
-            Icon(icon, color: color, size: 32),
+            Icon(icon, color: isDisabled ? Colors.white30 : color, size: 32),
             const SizedBox(height: 12),
             Text(
               title, 
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              style: TextStyle(color: isDisabled ? Colors.white30 : Colors.white, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
           ],
@@ -585,7 +834,7 @@ class _StudyWorkspaceScreenState extends State<StudyWorkspaceScreen> {
     );
   }
 
-  Widget _buildActiveSessionIndicator() {
+  Widget _buildWorkspaceBody() {
     return StreamBuilder<QuerySnapshot>(
       stream: _firestore
           .collection('users')
@@ -595,25 +844,20 @@ class _StudyWorkspaceScreenState extends State<StudyWorkspaceScreen> {
           .snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData && !snapshot.hasError) {
-          return const SizedBox.shrink(); // Loading state handled subtly
+          return const Center(child: CircularProgressIndicator());
         }
 
-        List<DocumentSnapshot> docs = [];
+        List<DocumentSnapshot> activeQuizzes = [];
         
         if (snapshot.hasData) {
-           docs = snapshot.data!.docs.where((doc) {
+           activeQuizzes = snapshot.data!.docs.where((doc) {
                final data = doc.data() as Map<String, dynamic>;
                return data['status'] == 'active';
            }).toList();
-        } else if (snapshot.hasError && snapshot.error.toString().toLowerCase().contains('failed-precondition')) {
-           // If index is missing, we can't reliably build a live stream for active only
-           // But since Current Quiz button handles fallback manually, we'll just show
-           // a generic header if we can't build the stream. 
-           return const Text("Active Sessions", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold));
         }
 
-        if (docs.isEmpty) {
-           return Column(
+        if (activeQuizzes.isEmpty) {
+           final indicator = Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                  const Text("Status", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
@@ -635,12 +879,218 @@ class _StudyWorkspaceScreenState extends State<StudyWorkspaceScreen> {
                  ),
               ]
            );
+           return _buildContent(
+               hasActiveSession: false,
+               isWaitingForCompanion: false,
+               canTakeQuiz: false,
+               indicator: indicator,
+           );
         }
 
-        final data = docs.first.data() as Map<String, dynamic>;
+        final data = activeQuizzes.first.data() as Map<String, dynamic>;
         final String sourceName = data['sourceName'] ?? 'Unknown Material';
+        final String? companionSessionId = data['companionSessionId'];
         
-        return Column(
+        if (companionSessionId != null) {
+          return StreamBuilder<DocumentSnapshot>(
+            stream: _firestore.collection('companion_sessions').doc(companionSessionId).snapshots(),
+            builder: (context, sessionSnapshot) {
+              if (!sessionSnapshot.hasData || !sessionSnapshot.data!.exists) {
+                 return const Center(child: CircularProgressIndicator());
+              }
+              final sessionData = sessionSnapshot.data!.data() as Map<String, dynamic>;
+              final status = sessionData['status'];
+              
+              bool isWaiting = status == 'REQUESTED';
+              bool isActive = status == 'ACTIVE';
+              bool canTakeQuiz = false;
+              Widget sessionIndicator;
+
+              if (isWaiting) {
+                 sessionIndicator = _buildWaitingBanner(sourceName);
+              } else if (isActive) {
+                 final startedAt = sessionData['startedAt']?.toDate();
+                 final duration = sessionData['duration'] ?? 60;
+                 final earlyApproved = sessionData['earlyAttemptApproved'] == true;
+                 
+                 if (earlyApproved) {
+                     canTakeQuiz = true;
+                 } else if (startedAt != null) {
+                     final endTime = startedAt.add(Duration(minutes: duration));
+                     if (DateTime.now().isAfter(endTime)) canTakeQuiz = true;
+                 }
+                 sessionIndicator = _buildActiveSessionCard(sourceName, sessionData, sessionSnapshot.data!.id);
+              } else {
+                 sessionIndicator = _buildSelfControlActiveCard(sourceName); 
+              }
+              
+              return _buildContent(
+                  hasActiveSession: isActive,
+                  isWaitingForCompanion: isWaiting,
+                  canTakeQuiz: canTakeQuiz,
+                  indicator: sessionIndicator,
+              );
+            }
+          );
+        }
+
+        return _buildContent(
+            hasActiveSession: true,
+            isWaitingForCompanion: false,
+            canTakeQuiz: true,
+            indicator: _buildSelfControlActiveCard(sourceName),
+        );
+      }
+    );
+  }
+
+  Widget _buildWaitingBanner(String sourceName) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text("Active Session", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.orangeAccent.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.orangeAccent.withOpacity(0.3)),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.hourglass_top, color: Colors.orangeAccent, size: 28),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text("WAITING FOR APPROVAL", style: TextStyle(color: Colors.orangeAccent, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+                    Text(sourceName, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                    const SizedBox(height: 4),
+                    const Text("Your companion is reviewing your request.", style: TextStyle(color: Colors.white70, fontSize: 12)),
+                  ]
+                ),
+              )
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActiveSessionCard(String sourceName, Map<String, dynamic> sessionData, String sessionId) {
+      final startedAt = sessionData['startedAt']?.toDate();
+      final duration = sessionData['duration'] ?? 60;
+      final earlyRequested = sessionData['earlyQuizRequest'] == true;
+      final earlyApproved = sessionData['earlyAttemptApproved'] == true;
+      
+      bool canTakeQuiz = false;
+      String timeLeftStr = "Calculating...";
+
+      if (earlyApproved) {
+         canTakeQuiz = true;
+         timeLeftStr = "Early attempt approved!";
+      } else if (startedAt != null) {
+         final endTime = startedAt.add(Duration(minutes: duration));
+         final now = DateTime.now();
+         if (now.isAfter(endTime)) {
+            canTakeQuiz = true;
+            timeLeftStr = "Study time up!";
+         } else {
+            final diff = endTime.difference(now);
+            timeLeftStr = "Quiz unlocks in ${diff.inMinutes}m";
+         }
+      }
+
+      return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text("Active Session (Companion)", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                   BoxShadow(color: Colors.deepPurpleAccent.withOpacity(0.2), blurRadius: 10, offset: const Offset(0, 4)),
+                ]
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.shield, color: Colors.white, size: 28),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text("STUDYING", style: TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+                            Text(sourceName, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                          ]
+                        ),
+                      )
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Center(
+                    child: Text(timeLeftStr, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  if (canTakeQuiz)
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: _openCurrentQuiz,
+                        icon: const Icon(Icons.play_arrow, color: Colors.black),
+                        label: const Text("Take Quiz to Unlock Apps", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.cyanAccent,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                      ),
+                    )
+                  else
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: earlyRequested 
+                           ? null 
+                           : () async {
+                              await _firestore.collection('companion_sessions').doc(sessionId).update({
+                                 'earlyQuizRequest': true,
+                                 'earlyAttemptApproved': false,
+                                 'updatedAt': FieldValue.serverTimestamp(),
+                              });
+                              if (mounted) {
+                                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Early attempt requested.")));
+                              }
+                           },
+                        icon: Icon(earlyRequested ? Icons.hourglass_empty : Icons.fast_forward, color: Colors.white),
+                        label: Text(earlyRequested ? "Waiting for Approval..." : "Request Early Attempt", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white24,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                      ),
+                    )
+                ],
+              ),
+            ),
+          ],
+        );
+  }
+
+  Widget _buildSelfControlActiveCard(String sourceName) {
+      return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text("Active Session", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
@@ -735,7 +1185,5 @@ class _StudyWorkspaceScreenState extends State<StudyWorkspaceScreen> {
             ),
           ],
         );
-      }
-    );
   }
 }

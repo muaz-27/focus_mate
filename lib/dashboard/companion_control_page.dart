@@ -116,9 +116,37 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
 
       if (mounted) {
         setState(() {
-          // Filter out our own app and decode icons
+          // Blacklist of common system apps that typically don't need to be locked
+          const ignoredPackages = [
+            'android',
+            'com.android.settings',
+            'com.android.systemui',
+            'com.android.vending',
+            'com.google.android.gms',
+            'com.google.android.googlequicksearchbox',
+            'com.google.android.inputmethod.latin',
+            'com.google.android.packageinstaller',
+            'com.android.permissioncontroller',
+            'com.google.android.apps.docs', // Drive (usually okay)
+            'com.android.shell',
+            'com.android.providers.calendar',
+            'com.android.providers.contacts',
+          ];
+
+          // Filter out our own app and unnecessary system apps
           _installedApps = apps
-              .where((app) => app['packageName'] != 'com.example.focus_mate')
+              .where((app) {
+                final pkg = app['packageName'] as String;
+                if (pkg == 'com.example.focus_mate') return false;
+                
+                // Hide system apps that start with com.android or com.google.android.providers unless explicitly useful
+                if (ignoredPackages.contains(pkg)) return false;
+                if (pkg.startsWith('com.android.providers')) return false;
+                if (pkg.contains('overlay')) return false;
+                if (pkg.contains('service')) return false;
+                
+                return true;
+              })
               .map((app) {
                 final newApp = Map<String, dynamic>.from(app);
                 final pkg = newApp['packageName'];
@@ -187,8 +215,63 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
         if (data['emergencyRequested'] == true && mounted) {
           _showEmergencyRequestDialog(data);
         }
+
+        // Check for early quiz request
+        if (data['earlyQuizRequest'] == true && data['earlyAttemptApproved'] != true && mounted) {
+           _showEarlyQuizRequestDialog(data);
+        }
       }
     });
+  }
+
+  void _showEarlyQuizRequestDialog(Map<String, dynamic> sessionData) {
+    showCustomDialog(
+      context: context,
+      barrierDismissible: false,
+      title: "📖 Early Quiz Request",
+      titleColor: Colors.blueAccent,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Student: ${sessionData['userName']} is requesting to take the quiz early.",
+            style: const TextStyle(color: Colors.white),
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            "If approved, they can attempt the quiz now to unlock their apps.",
+            style: TextStyle(color: Colors.white70),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () async {
+             Navigator.pop(context);
+             await _firestore.collection('companion_sessions').doc(widget.sessionId).update({
+                 'earlyQuizRequest': false,
+                 'updatedAt': FieldValue.serverTimestamp(),
+             });
+          },
+          child: const Text("Deny", style: TextStyle(color: Colors.grey)),
+        ),
+        ElevatedButton(
+          onPressed: () async {
+             Navigator.pop(context);
+             await _firestore.collection('companion_sessions').doc(widget.sessionId).update({
+                 'earlyAttemptApproved': true,
+                 'updatedAt': FieldValue.serverTimestamp(),
+             });
+             if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Early attempt approved.")));
+             }
+          },
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent),
+          child: const Text("Approve"),
+        ),
+      ],
+    );
   }
 
   void _showEmergencyRequestDialog(Map<String, dynamic> sessionData) {
@@ -342,6 +425,7 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
             'status': 'ACTIVE',
             'startedAt': FieldValue.serverTimestamp(),
             'lockedApps': _selectedApps,
+            'duration': _sessionData['duration'] ?? 60, // Ensure duration is saved
             'updatedAt': FieldValue.serverTimestamp(),
           });
       
@@ -542,20 +626,50 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
                         ],
                       ),
                       const SizedBox(height: 10),
-                      Text(
-                        _timeLeft,
-                        style: const TextStyle(
-                          color: Colors.greenAccent,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+                      if (isActive)
+                        Text(
+                          _timeLeft,
+                          style: const TextStyle(
+                            color: Colors.greenAccent,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
                       Text(
                         isActive 
                             ? "${_lockedApps.length} apps locked"
-                            : "Select apps to lock",
+                            : "Select apps to lock and duration",
                         style: TextStyle(color: subTextColor),
                       ),
+                      if (!isActive)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text("Study Duration", style: TextStyle(color: textColor, fontWeight: FontWeight.bold)),
+                                  Text("${_sessionData['duration'] ?? 60} mins", style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold)),
+                                ],
+                              ),
+                              Slider(
+                                value: (_sessionData['duration'] ?? 60).toDouble(),
+                                min: 15,
+                                max: 240,
+                                divisions: 15,
+                                activeColor: Colors.blueAccent,
+                                inactiveColor: isDark ? Colors.white10 : Colors.black12,
+                                onChanged: (val) {
+                                  setState(() {
+                                    _sessionData['duration'] = val.toInt();
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                        )
                     ],
                   ),
                 ),

@@ -1,0 +1,69 @@
+Resolving dependencies...
+Downloading packages...
+  _fe_analyzer_shared 85.0.0 (97.0.0 available)
+  _flutterfire_internals 1.3.66 (1.3.67 available)
+  analyzer 7.7.1 (11.0.0 available)
+  android_intent_plus 5.3.1 (6.0.0 available)
+  characters 1.4.0 (1.4.1 available)
+  cloud_firestore 6.1.0 (6.1.3 available)
+  cloud_firestore_platform_interface 7.0.4 (7.0.7 available)
+  cloud_firestore_web 5.1.0 (5.1.3 available)
+! device_apps 2.2.0 from path packages\device_apps (overridden)
+  ffi 2.1.4 (2.2.0 available)
+  firebase_app_check 0.4.1+4 (0.4.1+5 available)
+  firebase_app_check_platform_interface 0.2.1+4 (0.2.1+5 available)
+  firebase_app_check_web 0.2.2+2 (0.2.2+3 available)
+  firebase_auth 6.1.2 (6.2.0 available)
+  firebase_auth_platform_interface 8.1.4 (8.1.7 available)
+  firebase_auth_web 6.1.0 (6.1.3 available)
+  firebase_core 4.4.0 (4.5.0 available)
+  firebase_core_web 3.4.0 (3.5.0 available)
+  flutter_lints 5.0.0 (6.0.0 available)
+  flutter_riverpod 3.0.3 (3.2.1 available)
+  google_fonts 6.3.3 (8.0.2 available)
+  lints 5.1.1 (6.1.0 available)
+  matcher 0.12.17 (0.12.19 available)
+  material_color_utilities 0.11.1 (0.13.0 available)
+  meta 1.17.0 (1.18.1 available)
+  path_provider_foundation 2.5.1 (2.6.0 available)
+  riverpod 3.0.3 (3.2.1 available)
+  source_span 1.10.1 (1.10.2 available)
+  syncfusion_flutter_core 32.2.7 (32.2.8 available)
+  syncfusion_flutter_pdf 32.2.7 (32.2.8 available)
+  syncfusion_flutter_pdfviewer 32.2.7 (32.2.8 available)
+  syncfusion_flutter_signaturepad 32.2.7 (32.2.8 available)
+  syncfusion_pdfviewer_linux 32.2.7 (32.2.8 available)
+  syncfusion_pdfviewer_macos 32.2.7 (32.2.8 available)
+  syncfusion_pdfviewer_platform_interface 32.2.7 (32.2.8 available)
+  syncfusion_pdfviewer_web 32.2.7 (32.2.8 available)
+  syncfusion_pdfviewer_windows 32.2.7 (32.2.8 available)
+  test 1.26.3 (1.30.0 available)
+  test_api 0.7.7 (0.7.10 available)
+  test_core 0.6.12 (0.6.16 available)
+  watcher 1.1.4 (1.2.1 available)
+  win32 5.15.0 (6.0.0 available)
+  win32_registry 2.1.0 (3.0.2 available)
+Got dependencies!
+42 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+Running Gradle task 'assembleRelease'...                        
+Font asset "MaterialIcons-Regular.otf" was tree-shaken, reducing it from 1645184 to 11116 bytes (99.3% reduction). Tree-shaking can be disabled by providing the --no-tree-shake-icons flag when building your app.
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':usage_stats:verifyReleaseResources'.
+> A failure occurred while executing com.android.build.gradle.tasks.VerifyLibraryResourcesTask$Action
+   > Android resource linking failed
+     ERROR: D:\AI project\flutter projects\focus_mate\focus_mate\build\usage_stats\intermediates\merged_res\release\mergeReleaseResources\values\values.xml:194: AAPT: error: resource android:attr/lStar not found.
+
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 27s
+Running Gradle task 'assembleRelease'...                           28.5s
+Gradle task assembleRelease failed with exit code 1

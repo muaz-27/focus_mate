@@ -161,11 +161,10 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
       appBar: AppBar(
         title: Text(
           "Companion Dashboard",
-          style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
+          style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 22),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: IconThemeData(color: textColor),
         actions: [
           IconButton(
             onPressed: () => AuthService().signOut(),
@@ -173,441 +172,417 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
           ),
         ],
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark 
-              ? [const Color(0xFF1A1F35), const Color(0xFF0B0E17)] 
-              : [const Color(0xFFF8FAFC), const Color(0xFFE2E8F0)],
-            stops: const [0.0, 1.0],
+      body: Stack(
+        children: [
+          // Background Gradient
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: isDark 
+                  ? [const Color(0xFF0F172A), const Color(0xFF1E293B)] 
+                  : [const Color(0xFFF1F5F9), const Color(0xFFE2E8F0)],
+              ),
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF4F46E5), Color(0xFF3B82F6)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+          
+          SafeArea(
+            child: CustomScrollView(
+              slivers: [
+                // Link Code Section
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: _buildHeaderCard(isDark),
+                  ),
                 ),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Your Link Code",
-                    style: TextStyle(color: isDark ? Colors.white70 : Colors.white.withOpacity(0.9)),
+
+                // Session Requests
+                if (_pendingSessions.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: _buildSessionRequestsSection(),
+                    ),
                   ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        linkCode ?? "Generating...",
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 2,
-                        ),
-                      ),
-                      Row(
-                        children: [
-                          IconButton(
-                            icon: const Icon(
-                              Icons.refresh,
-                              color: Colors.white,
-                            ),
-                            onPressed: _refreshCode,
+
+                // Active Sessions
+                if (_activeSessions.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: _buildActiveSessionsSection(),
+                    ),
+                  ),
+
+                // Connected Students Header
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+                    child: Row(
+                      children: [
+                        Text(
+                          "Monitored Children",
+                          style: TextStyle(
+                            color: textColor,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
                           ),
-                          if (linkCode != null)
-                            IconButton(
-                              icon: const Icon(Icons.copy, color: Colors.white),
-                              onPressed: () {
-                                Clipboard.setData(
-                                  ClipboardData(text: linkCode!),
-                                );
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text("Code copied!")),
-                                );
-                              },
-                            ),
-                        ],
-                      ),
-                    ],
+                        ),
+                        const Spacer(),
+                        const Icon(Icons.sync, size: 16, color: Colors.blueAccent),
+                      ],
+                    ),
                   ),
-                  Text(
-                    "Share this code with a student to connect.",
-                    style: TextStyle(color: isDark ? Colors.white38 : Colors.white70, fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
+                ),
 
-            const SizedBox(height: 24),
+                // Connected Students List
+                StreamBuilder<DocumentSnapshot>(
+                  stream: _firestore
+                      .collection('users')
+                      .doc(widget.userData['id'])
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const SliverToBoxAdapter(child: Center(child: CircularProgressIndicator()));
+                    }
 
-            if (_pendingSessions.isNotEmpty) ...[
-              _buildSessionRequestsSection(),
-              const SizedBox(height: 24),
-            ],
+                    if (!snapshot.hasData || !snapshot.data!.exists) {
+                      return const SliverToBoxAdapter(child: Center(child: Text("No connection data found.")));
+                    }
 
-            if (_activeSessions.isNotEmpty) ...[
-              _buildActiveSessionsSection(),
-              const SizedBox(height: 24),
-            ],
+                    final data = snapshot.data!.data() as Map<String, dynamic>;
+                    
+                    // FIX: Standardize syncing by merging linkedUsers and linkedStudents
+                    final linkedSet = <String>{
+                      ...List<String>.from(data['linkedStudents'] ?? []),
+                      ...List<String>.from(data['linkedUsers'] ?? []),
+                    };
+                    final linked = linkedSet.toList();
 
-            Text(
-              "Connected Students",
-              style: TextStyle(
-                color: textColor,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            Expanded(
-              child: StreamBuilder<DocumentSnapshot>(
-                stream: _firestore
-                    .collection('users')
-                    .doc(widget.userData['id'])
-                    .snapshots(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  if (!snapshot.hasData || !snapshot.data!.exists) {
-                    return const Center(child: Text("No data"));
-                  }
-
-                  final data = snapshot.data!.data() as Map<String, dynamic>;
-                  final linked = List<String>.from(
-                    data['linkedStudents'] ?? [],
-                  );
-
-                  if (linked.isEmpty) {
-                    return Center(
-                      child: Text(
-                        "No students connected yet.",
-                        style: TextStyle(color: Colors.grey[600]),
-                      ),
-                    );
-                  }
-
-                  return ListView.builder(
-                    itemCount: linked.length,
-                    itemBuilder: (context, index) {
-                      final studentId = linked[index];
-
-                      return FutureBuilder<DocumentSnapshot>(
-                        future: _firestore
-                            .collection('users')
-                            .doc(studentId)
-                            .get(),
-                        builder: (context, snap) {
-                          if (!snap.hasData) return const SizedBox();
-
-                          final student =
-                              snap.data!.data() as Map<String, dynamic>;
-                          final studentName = student['name'] ?? "Unknown";
-
-                            return Container(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            decoration: BoxDecoration(
-                              color: isDark ? Colors.white.withOpacity(0.05) : Colors.white70,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: isDark ? Colors.white10 : Colors.black12),
-                            ),
-                            child: ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: Colors.blueAccent.withOpacity(0.2),
-                                child: Text(
-                                  studentName[0].toUpperCase(),
-                                  style: const TextStyle(
-                                    color: Colors.blueAccent,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
+                    if (linked.isEmpty) {
+                      return SliverToBoxAdapter(
+                        child: Container(
+                          padding: const EdgeInsets.all(40),
+                          child: Column(
+                            children: [
+                              Icon(Icons.child_care_rounded, size: 64, color: Colors.grey.withOpacity(0.3)),
+                              const SizedBox(height: 16),
+                              Text(
+                                "No children linked yet.\nShare your code to get started!",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(color: Colors.grey[500], fontSize: 16),
                               ),
-                              title: Text(
-                                studentName,
-                                style: TextStyle(color: textColor),
-                              ),
-                              subtitle: const Text(
-                                "Tap to view usage",
-                                style: TextStyle(color: Colors.grey),
-                              ),
-                              trailing: const Icon(
-                                Icons.arrow_forward_ios,
-                                size: 16,
-                                color: Colors.white54,
-                              ),
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => AnalyticsScreen(
-                                      userId: studentId,
-                                      userName: studentName,
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+
+                    return SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final studentId = linked[index];
+                          return Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                            child: _buildStudentTile(studentId, isDark),
                           );
                         },
-                      );
-                    },
-                  );
-                },
-              ),
+                        childCount: linked.length,
+                      ),
+                    );
+                  },
+                ),
+                
+                const SliverToBoxAdapter(child: SizedBox(height: 40)),
+              ],
             ),
-            ],
           ),
-        ),
+        ],
       ),
-    ));
+    );
   }
 
-  /// Builds the section displaying pending session requests.
+  Widget _buildHeaderCard(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF6366F1), Color(0xFF3B82F6)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF6366F1).withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          )
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            "Share Link Code",
+            style: TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                linkCode ?? "...",
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 36,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 4,
+                ),
+              ),
+              Row(
+                children: [
+                  _glassIconButton(Icons.refresh, _refreshCode),
+                  const SizedBox(width: 8),
+                  _glassIconButton(Icons.copy, () {
+                    if (linkCode != null) {
+                      Clipboard.setData(ClipboardData(text: linkCode!));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Code copied!")),
+                      );
+                    }
+                  }),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            "Connect children by letting them enter this code in their Focus Mate dashboard.",
+            style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _glassIconButton(IconData icon, VoidCallback onPressed) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: IconButton(
+        icon: Icon(icon, color: Colors.white, size: 20),
+        onPressed: onPressed,
+      ),
+    );
+  }
+
+
+  Widget _buildStudentTile(String studentId, bool isDark) {
+    return FutureBuilder<DocumentSnapshot>(
+      future: _firestore.collection('users').doc(studentId).get(),
+      builder: (context, snap) {
+        if (!snap.hasData) {
+          return Container(height: 80, decoration: BoxDecoration(color: isDark ? Colors.white.withOpacity(0.05) : Colors.white70, borderRadius: BorderRadius.circular(16)));
+        }
+
+        final student = snap.data!.data() as Map<String, dynamic>;
+        final studentName = student['name'] ?? "Unknown";
+        final isOnline = student['isOnline'] ?? false; // Assuming we have this field or similar
+
+        return Container(
+          decoration: BoxDecoration(
+            color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05)),
+          ),
+          child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            leading: Stack(
+              children: [
+                CircleAvatar(
+                  radius: 24,
+                  backgroundColor: Colors.blueAccent.withOpacity(0.1),
+                  child: Text(studentName[0].toUpperCase(), style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 20)),
+                ),
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    width: 14,
+                    height: 14,
+                    decoration: BoxDecoration(
+                      color: isOnline ? Colors.green : Colors.grey,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: isDark ? const Color(0xFF1E293B) : Colors.white, width: 2),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            title: Text(studentName, style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold, fontSize: 16)),
+            subtitle: Text("Level ${student['level'] ?? 1} • Focus Scholar", style: TextStyle(color: Colors.grey[500], fontSize: 12)),
+            trailing: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(color: Colors.blueAccent.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+              child: const Icon(Icons.analytics_outlined, color: Colors.blueAccent, size: 20),
+            ),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AnalyticsScreen(
+                    userId: studentId,
+                    userName: studentName,
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildSessionRequestsSection() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : Colors.black87;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            const Icon(Icons.notifications_active, color: Colors.orange, size: 24),
-            const SizedBox(width: 8),
-            Text(
-              "Session Requests",
-              style: TextStyle(
-                color: textColor,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colors.orange,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                _pendingSessions.length.toString(),
-                style: const TextStyle(color: Colors.white, fontSize: 12),
-              ),
-            ),
-          ],
-        ),
+        _buildSectionTitle("Session Requests", Icons.notifications_active, Colors.orange, isDark),
         const SizedBox(height: 12),
         ..._pendingSessions.map((session) => _buildSessionRequestCard(session)),
       ],
     );
   }
 
-  /// Builds the section displaying currently active sessions.
   Widget _buildActiveSessionsSection() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : Colors.black87;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            const Icon(Icons.timer, color: Colors.green, size: 24),
-            const SizedBox(width: 8),
-            Text(
-              "Active Sessions",
-              style: TextStyle(
-                color: textColor,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colors.green,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                _activeSessions.length.toString(),
-                style: const TextStyle(color: Colors.white, fontSize: 12),
-              ),
-            ),
-          ],
-        ),
+        _buildSectionTitle("Active Sessions", Icons.play_circle_outline, Colors.green, isDark),
         const SizedBox(height: 12),
         ..._activeSessions.map((session) => _buildActiveSessionCard(session)),
       ],
     );
   }
 
+  Widget _buildSectionTitle(String title, IconData icon, Color color, bool isDark) {
+    return Row(
+      children: [
+        Icon(icon, color: color, size: 22),
+        const SizedBox(width: 8),
+        Text(title, style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 18, fontWeight: FontWeight.bold)),
+      ],
+    );
+  }
+
   Widget _buildSessionRequestCard(Map<String, dynamic> session) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : Colors.black87;
-    final subTextColor = isDark ? Colors.grey : Colors.black54;
-
     final studentName = session['userName'] ?? 'Student';
-    final duration = session['duration'] ?? 60;
-    final studyGoal = session['studyGoal'];
-    final requestedAt = session['requestedAt']?.toDate();
     
-    String timeAgo = 'Recently';
-    if (requestedAt != null) {
-      final diff = DateTime.now().difference(requestedAt);
-      if (diff.inMinutes < 1) {
-        timeAgo = 'Just now';
-      } else if (diff.inMinutes < 60) {
-        timeAgo = '${diff.inMinutes} min ago';
-      } else {
-        timeAgo = '${diff.inHours} hours ago';
-      }
-    }
-
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.orange.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.orange.withOpacity(0.3)),
+        color: Colors.orange.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.orange.withOpacity(0.2)),
       ),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: Colors.orange.withOpacity(0.2),
-          child: Text(
-            studentName[0].toUpperCase(),
-            style: const TextStyle(color: Colors.orange),
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundColor: Colors.orange.withOpacity(0.1),
+            child: Text(studentName[0].toUpperCase(), style: const TextStyle(color: Colors.orange)),
           ),
-        ),
-        title: Text(
-          studentName,
-          style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '$duration min session • $timeAgo',
-              style: TextStyle(color: subTextColor, fontSize: 12),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(studentName, style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold)),
+                Text('${session['duration'] ?? 60}m study request', style: TextStyle(color: Colors.grey[500], fontSize: 12)),
+              ],
             ),
-            if (studyGoal != null && studyGoal.isNotEmpty)
-              Text(
-                'Goal: $studyGoal',
-                style: const TextStyle(color: Colors.orange, fontSize: 12),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-          ],
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.close, color: Colors.red, size: 20),
-              onPressed: () => _respondToRequest(session['id'], false),
-              tooltip: 'Reject',
+          ),
+          IconButton(
+            icon: const Icon(Icons.close_rounded, color: Colors.grey),
+            onPressed: () => _respondToRequest(session['id'], false),
+          ),
+          ElevatedButton(
+            onPressed: () => _respondToRequest(session['id'], true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
             ),
-            const SizedBox(width: 4),
-            ElevatedButton(
-              onPressed: () => _respondToRequest(session['id'], true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              ),
-              child: const Text('Accept'),
-            ),
-          ],
-        ),
+            child: const Text("Approve"),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildActiveSessionCard(Map<String, dynamic> session) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : Colors.black87;
-    final subTextColor = isDark ? Colors.grey : Colors.black54;
-
     final studentName = session['userName'] ?? 'Student';
-    final startedAt = session['startedAt']?.toDate();
-    final duration = session['duration'] ?? 60;
-    
-    String timeLeft = '';
-    if (startedAt != null) {
-      final endTime = startedAt.add(Duration(minutes: duration));
-      final now = DateTime.now();
-      if (now.isAfter(endTime)) {
-        timeLeft = 'Session ended';
-      } else {
-        final diff = endTime.difference(now);
-        final hours = diff.inHours;
-        final minutes = diff.inMinutes.remainder(60);
-        timeLeft = '${hours}h ${minutes}m left';
-      }
-    }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.green.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.green.withOpacity(0.3)),
+        color: Colors.green.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.green.withOpacity(0.2)),
       ),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: Colors.green.withOpacity(0.2),
-          child: Text(
-            studentName[0].toUpperCase(),
-            style: const TextStyle(color: Colors.green),
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundColor: Colors.green.withOpacity(0.1),
+            child: Text(studentName[0].toUpperCase(), style: const TextStyle(color: Colors.green)),
           ),
-        ),
-        title: Text(
-          studentName,
-          style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
-        ),
-        subtitle: Text(
-          '$timeLeft • ${session['lockedApps']?.length ?? 0} apps locked',
-          style: TextStyle(color: subTextColor, fontSize: 12),
-        ),
-        trailing: ElevatedButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => CompanionControlPage(
-                  sessionId: session['id'],
-                  companionId: widget.userData['id'],
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(studentName, style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold)),
+                const Text('Session In-Progress', style: TextStyle(color: Colors.green, fontSize: 12, fontWeight: FontWeight.w500)),
+              ],
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CompanionControlPage(
+                    sessionId: session['id'],
+                    companionId: widget.userData['id'],
+                  ),
                 ),
-              ),
-            );
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.green,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text("Manage"),
           ),
-          child: const Text('Manage'),
-        ),
+        ],
       ),
     );
   }
 
-  /// Handles accepting or rejecting a session request.
   Future<void> _respondToRequest(String sessionId, bool accept) async {
     if (accept) {
       Navigator.push(
@@ -620,18 +595,12 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
         ),
       );
     } else {
-      await _firestore
-          .collection('companion_sessions')
-          .doc(sessionId)
-          .update({
-            'status': 'REJECTED',
-            'updatedAt': FieldValue.serverTimestamp(),
-          });
-      
+      await _firestore.collection('companion_sessions').doc(sessionId).update({
+        'status': 'REJECTED',
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Session request rejected')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Session request rejected')));
       }
     }
   }

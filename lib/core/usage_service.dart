@@ -43,8 +43,8 @@ class UsageService {
     try {
       final apps = await DeviceApps.getInstalledApplications(
         includeAppIcons: true,
-        includeSystemApps: true,
-        onlyAppsWithLaunchIntent: false,
+        includeSystemApps: false,
+        onlyAppsWithLaunchIntent: true,
       );
       return apps.where((app) => !_isIgnoredApp(app.packageName)).toList();
     } catch (e) {

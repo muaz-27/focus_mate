@@ -256,7 +256,12 @@ class _StudentDashboardState extends State<StudentDashboard>
         final data = docSnap.data() as Map<String, dynamic>;
         print("F_MATE: Direct Listener saw snapshotRequest=${data['snapshotRequest']}");
         if (data['snapshotRequest'] == true) {
-           _handleSnapshotRequest();
+           if (_companionRole == 'parent') {
+             _handleSnapshotRequest();
+           } else {
+             // Dismiss the request if not a parent
+             _firestore.collection('users').doc(widget.userData['id']).update({'snapshotRequest': false});
+           }
         }
       }
     });
@@ -265,11 +270,11 @@ class _StudentDashboardState extends State<StudentDashboard>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _usageService.syncUsageToFirebase(widget.userData['id']);
       _usageService.syncInstalledAppsToFirebase(widget.userData['id']);
-      if (companionActive) {
-        print("F_MATE: companionActive=true, calling _initScreenCapture");
+      if (companionActive && _companionRole == 'parent') {
+        print("F_MATE: companionActive=true and role=parent, calling _initScreenCapture");
         _initScreenCapture();
       } else {
-        print("F_MATE: companionActive=false, skipping screen capture init. linkedCompanion=${widget.userData['linkedCompanion']}");
+        print("F_MATE: not parent companion, skipping screen capture init. linkedCompanion=${widget.userData['linkedCompanion']} role=$_companionRole");
       }
     });
 
@@ -297,10 +302,10 @@ class _StudentDashboardState extends State<StudentDashboard>
       });
       _getCompanionDetails();
       
-      if (companionActive && oldWidget.userData['linkedCompanion'] == null) {
+      if (companionActive && _companionRole == 'parent' && oldWidget.userData['linkedCompanion'] == null) {
         ScreenCaptureService.requestPermission();
-      } else if (!companionActive && oldWidget.userData['linkedCompanion'] != null) {
-        // Parent unlinked child — stop the background capture service
+      } else if ((!companionActive || _companionRole != 'parent') && oldWidget.userData['linkedCompanion'] != null) {
+        // Parent unlinked child or changed role — stop the background capture service
         ScreenCaptureService.stopService();
       }
     }
@@ -344,7 +349,11 @@ class _StudentDashboardState extends State<StudentDashboard>
     print("F_MATE: didUpdateWidget -> oldSnapshotReq: $oldSnapshotRequest, newSnapshotReq: $newSnapshotRequest");
     
     if (!oldSnapshotRequest && newSnapshotRequest) {
-      _handleSnapshotRequest();
+      if (_companionRole == 'parent') {
+        _handleSnapshotRequest();
+      } else {
+        _firestore.collection('users').doc(widget.userData['id']).update({'snapshotRequest': false});
+      }
     }
   }
   
@@ -647,6 +656,7 @@ class _StudentDashboardState extends State<StudentDashboard>
       final companionRef = _firestore.collection('users').doc(companionDoc.id);
       batch.update(companionRef, {
         'linkedUsers': FieldValue.arrayUnion([widget.userData['id']]),
+        'linkedStudents': FieldValue.arrayUnion([widget.userData['id']]),
       });
 
       await batch.commit();
@@ -1510,8 +1520,8 @@ class _StudentDashboardState extends State<StudentDashboard>
   Widget _buildManagementGrid(bool isDark) {
     final bool isSessionLocked = _activeSessionData != null;
     
-    // Parental Locks Tile (always available to students with a companion)
-    final Widget parentalLocksTile = _companionId != null ? _buildGlassTile(
+    // Parental Locks Tile (only available to students with a parent companion)
+    final Widget parentalLocksTile = (_companionId != null && _companionRole == 'parent') ? _buildGlassTile(
       isDark: isDark,
       title: "Parental Locks",
       icon: Icons.admin_panel_settings,
