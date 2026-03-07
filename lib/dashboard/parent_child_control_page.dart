@@ -7,6 +7,7 @@ import 'analytics_screen.dart';
 import 'remote_app_lock_screen.dart';
 import 'snapshots_screen.dart';
 import 'pdf_viewer_screen.dart';
+import 'quiz_history_screen.dart'; // NEW import
 
 class ParentChildControlPage extends StatefulWidget {
   final String studentId;
@@ -184,6 +185,25 @@ class _ParentChildControlPageState extends State<ParentChildControlPage> {
                         builder: (_) => SnapshotsScreen(
                           studentId: widget.studentId,
                           studentName: widget.studentName,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 16),
+                _buildControlTile(
+                  context,
+                  title: "Study Analytics (Quizzes)",
+                  subtitle: "View quiz history and performance",
+                  icon: Icons.history_edu,
+                  color: Colors.purpleAccent,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => QuizHistoryScreen(
+                          userId: widget.studentId,
+                          isReadOnly: true,
                         ),
                       ),
                     );

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_theme.dart';
+import 'quiz_history_screen.dart';
 
 class AnalyticsScreen extends StatefulWidget {
   final String userId;
@@ -187,6 +188,21 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           fontWeight: FontWeight.bold,
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.history_edu),
+            tooltip: "Study Analytics (Quizzes)",
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => QuizHistoryScreen(
+                    userId: widget.userId,
+                    isReadOnly: true,
+                  ),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {

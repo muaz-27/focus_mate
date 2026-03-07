@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../core/auth_service.dart';
+import '../theme/app_colors.dart';
 import 'analytics_screen.dart'; 
 import './companion_control_page.dart';
 

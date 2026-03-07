@@ -5,8 +5,9 @@ import 'quiz_review_screen.dart';
 
 class QuizHistoryScreen extends StatefulWidget {
   final String userId;
+  final bool isReadOnly;
 
-  const QuizHistoryScreen({super.key, required this.userId});
+  const QuizHistoryScreen({super.key, required this.userId, this.isReadOnly = false});
 
   @override
   State<QuizHistoryScreen> createState() => _QuizHistoryScreenState();
@@ -197,11 +198,12 @@ class _QuizHistoryScreenState extends State<QuizHistoryScreen> {
                             ],
                           ),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.delete_outline,
-                              color: Colors.white54),
-                          onPressed: () => _deleteQuiz(doc.id),
-                        ),
+                        if (!widget.isReadOnly)
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline,
+                                color: Colors.white54),
+                            onPressed: () => _deleteQuiz(doc.id),
+                          ),
                       ],
                     ),
                   ),
