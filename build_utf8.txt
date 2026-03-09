@@ -1,0 +1,125 @@
+﻿> Task :gradle:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :gradle:compileKotlin UP-TO-DATE
+> Task :gradle:compileJava NO-SOURCE
+> Task :gradle:compileGroovy NO-SOURCE
+> Task :gradle:pluginDescriptors UP-TO-DATE
+> Task :gradle:processResources UP-TO-DATE
+> Task :gradle:classes UP-TO-DATE
+> Task :gradle:jar UP-TO-DATE
+> Task :android_intent_plus:preBuild UP-TO-DATE
+> Task :android_intent_plus:preDebugBuild UP-TO-DATE
+> Task :android_intent_plus:mergeDebugJniLibFolders UP-TO-DATE
+> Task :android_intent_plus:mergeDebugNativeLibs NO-SOURCE
+> Task :android_intent_plus:stripDebugDebugSymbols NO-SOURCE
+> Task :android_intent_plus:copyDebugJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :android_intent_plus:generateDebugResValues UP-TO-DATE
+> Task :android_intent_plus:generateDebugResources UP-TO-DATE
+> Task :android_intent_plus:packageDebugResources UP-TO-DATE
+> Task :android_intent_plus:parseDebugLocalResources UP-TO-DATE
+> Task :android_intent_plus:generateDebugRFile UP-TO-DATE
+> Task :android_intent_plus:extractDebugAnnotations UP-TO-DATE
+> Task :android_intent_plus:extractDeepLinksForAarDebug UP-TO-DATE
+> Task :android_intent_plus:mergeDebugShaders UP-TO-DATE
+> Task :android_intent_plus:compileDebugShaders NO-SOURCE
+> Task :android_intent_plus:generateDebugAssets UP-TO-DATE
+> Task :android_intent_plus:mergeDebugAssets UP-TO-DATE
+> Task :android_intent_plus:javaPreCompileDebug UP-TO-DATE
+> Task :android_intent_plus:compileDebugJavaWithJavac UP-TO-DATE
+> Task :android_intent_plus:mergeDebugGeneratedProguardFiles UP-TO-DATE
+> Task :android_intent_plus:mergeDebugConsumerProguardFiles UP-TO-DATE
+> Task :android_intent_plus:prepareDebugArtProfile UP-TO-DATE
+> Task :android_intent_plus:prepareLintJarForPublish UP-TO-DATE
+> Task :android_intent_plus:processDebugManifest UP-TO-DATE
+> Task :android_intent_plus:processDebugJavaRes NO-SOURCE
+> Task :android_intent_plus:mergeDebugJavaResource UP-TO-DATE
+> Task :android_intent_plus:syncDebugLibJars UP-TO-DATE
+> Task :android_intent_plus:writeDebugAarMetadata UP-TO-DATE
+> Task :android_intent_plus:bundleDebugAar UP-TO-DATE
+> Task :android_intent_plus:assembleDebug UP-TO-DATE
+> Task :app:DebugMinSdkCheck
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :android_intent_plus:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+
+> Task :app:compileFlutterBuildDebug
+cmd : lib/dashboard/st
+udent_dashboard.dart:4
+97:8: Error: 
+'dispose' is already 
+declared in this 
+scope.
+At line:1 char:1
++ cmd /c "cd android 
+&& gradlew 
+assembleDebug" > 
+build_output.txt 2>&1
++ ~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
+~~~~
+    + CategoryInfo    
+          : 
+NotSpecified: (l    
+ib/dashboard/s... in  
+   this 
+scope.:String) [    
+], RemoteException
+    + 
+FullyQualifiedError   
+ Id : 
+NativeCommandErr    or
+ 
+  void dispose() {
+       ^^^^^^^
+lib/dashboard/student_
+dashboard.dart:306:8: 
+Context: Previous 
+declaration of 
+'dispose'.
+  void dispose() {
+       ^^^^^^^
+Target kernel_snapshot
+_program failed: 
+Exception
+
+
+> Task :app:compileFlutterBuildDebug FAILED
+
+[Incubating] Problems report is available at: file:///D:/AI%20project/flutter%20projects/focus_mate/focus_mate/build/reports/problems/problems-report.html
+
+FAILURE: Build failed 
+with an exception.
+
+* What went wrong:
+Execution failed for 
+task ':app:compileFlut
+terBuildDebug'.
+> Process 'command 'C:
+\Users\cw\Desktop\flut
+ter\bin\flutter.bat'' 
+finished with 
+non-zero exit value 1
+
+* Try:
+> Run with 
+--stacktrace option 
+to get the stack 
+trace.
+> Run with --info or 
+--debug option to get 
+more log output.
+> Run with --scan to 
+get full insights.
+> Get more help at htt
+ps://help.gradle.org.
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.14/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 15s
+29 actionable tasks: 2 executed, 27 up-to-date

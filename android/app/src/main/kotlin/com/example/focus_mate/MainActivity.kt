@@ -33,6 +33,11 @@ class MainActivity: FlutterActivity() {
                 if (apps != null) { FocusAccessibilityService.updateCompanionBlockedApps(context, apps); result.success(true) }
                 else result.error("INVALID", "App list null", null)
             }
+            else if (call.method == "setSchedules") {
+                val schedulesJson = call.argument<String>("schedulesJson")
+                if (schedulesJson != null) { FocusAccessibilityService.updateSchedules(context, schedulesJson); result.success(true) }
+                else result.error("INVALID", "Schedules JSON null", null)
+            }
             else if (call.method == "isAccessibilityEnabled") {
                 result.success(isAccessibilityServiceEnabled(context, FocusAccessibilityService::class.java))
             } 

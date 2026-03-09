@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -6,6 +7,7 @@ import '../core/auth_service.dart';
 import '../theme/app_colors.dart';
 import 'analytics_screen.dart'; 
 import './companion_control_page.dart';
+import 'schedule_approval_screen.dart';
 
 /// Dashboard for companions (parents/partners) to manage linked students and sessions.
 class CompanionDashboard extends StatefulWidget {
@@ -27,6 +29,13 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   List<Map<String, dynamic>> _pendingSessions = [];
   List<Map<String, dynamic>> _activeSessions = [];
+  List<Map<String, dynamic>> _pendingSchedules = [];
+  List<Map<String, dynamic>> _activeSchedules = [];
+  List<Map<String, dynamic>> _pendingUnlockRequests = [];
+
+  final Map<String, StreamSubscription> _studentScheduleSubscriptions = {};
+  final Map<String, StreamSubscription> _studentUnlockSubscriptions = {};
+  StreamSubscription? _userDocSubscription;
 
   @override
   void initState() {
@@ -34,6 +43,124 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
     _loadLinkCode();
     _listenForSessionRequests();
     _listenForActiveSessions();
+    _listenForUserChanges();
+  }
+
+  @override
+  void dispose() {
+    for (var sub in _studentScheduleSubscriptions.values) {
+      sub.cancel();
+    }
+    for (var sub in _studentUnlockSubscriptions.values) {
+      sub.cancel();
+    }
+    _userDocSubscription?.cancel();
+    super.dispose();
+  }
+
+  /// Listens to the companion's own document to manage student-specific listeners.
+  void _listenForUserChanges() {
+    _userDocSubscription = _firestore
+        .collection('users')
+        .doc(widget.userData['id'])
+        .snapshots()
+        .listen((doc) {
+      if (!mounted || !doc.exists) return;
+      final data = doc.data() as Map<String, dynamic>;
+      
+      final linkedSet = <String>{
+        ...List<String>.from(data['linkedStudents'] ?? []),
+        ...List<String>.from(data['linkedUsers'] ?? []),
+      };
+      
+      final currentStudentIds = linkedSet.toList();
+      
+      // Remove stale listeners
+      final staleIds = _studentScheduleSubscriptions.keys.where((id) => !currentStudentIds.contains(id)).toList();
+      for (var id in staleIds) {
+        _studentScheduleSubscriptions.remove(id)?.cancel();
+        _studentUnlockSubscriptions.remove(id)?.cancel();
+      }
+
+      // Add new listeners
+      for (var studentId in currentStudentIds) {
+        if (!_studentScheduleSubscriptions.containsKey(studentId)) {
+          _startStudentListeners(studentId);
+        }
+      }
+    });
+  }
+
+  void _startStudentListeners(String studentId) {
+    // 1. Listen for ALL Schedules
+    _studentScheduleSubscriptions[studentId] = _firestore
+        .collection('users')
+        .doc(studentId)
+        .collection('schedules')
+        .snapshots()
+        .listen((snapshot) async {
+       _updateSchedules(studentId, snapshot.docs);
+    });
+
+    // 2. Listen for Unlock Requests
+    _studentUnlockSubscriptions[studentId] = _firestore
+        .collection('users')
+        .doc(studentId)
+        .collection('unlock_requests')
+        .where('status', isEqualTo: 'pending')
+        .snapshots()
+        .listen((snapshot) async {
+       _updatePendingUnlockRequests(studentId, snapshot.docs);
+    });
+  }
+
+  // Intermediate storage per student to simplify merging
+  final Map<String, List<Map<String, dynamic>>> _perStudentPendingSchedules = {};
+  final Map<String, List<Map<String, dynamic>>> _perStudentActiveSchedules = {};
+  final Map<String, List<Map<String, dynamic>>> _perStudentUnlocks = {};
+
+  Future<void> _updateSchedules(String studentId, List<QueryDocumentSnapshot> docs) async {
+    if (!mounted) return;
+    String userName = "Student";
+    try {
+      final userDoc = await _firestore.collection('users').doc(studentId).get();
+      userName = userDoc.data()?['name'] ?? "Student";
+    } catch (_) {}
+
+    final allSchedules = docs.map((doc) => {
+      'id': doc.id,
+      'userId': studentId,
+      'userName': userName,
+      ...doc.data() as Map<String, dynamic>
+    }).toList();
+
+    setState(() {
+      _perStudentPendingSchedules[studentId] = allSchedules.where((s) => s['status'] == 'requested').toList();
+      _perStudentActiveSchedules[studentId] = allSchedules.where((s) => s['status'] == 'active').toList();
+      _pendingSchedules = _perStudentPendingSchedules.values.expand((x) => x).toList();
+      _activeSchedules = _perStudentActiveSchedules.values.expand((x) => x).toList();
+    });
+  }
+
+  Future<void> _updatePendingUnlockRequests(String studentId, List<QueryDocumentSnapshot> docs) async {
+    if (!mounted) return;
+    String userName = "Student";
+    try {
+      final userDoc = await _firestore.collection('users').doc(studentId).get();
+      userName = userDoc.data()?['name'] ?? "Student";
+    } catch (_) {}
+
+    final requests = docs.map((doc) => {
+      'id': doc.id,
+      'userId': studentId,
+      'userName': userName,
+      ...doc.data() as Map<String, dynamic>
+    }).toList();
+
+    setState(() {
+      _perStudentUnlocks[studentId] = requests;
+      _pendingUnlockRequests = _perStudentUnlocks.values.expand((x) => x).toList();
+    });
   }
 
   /// Listens for incoming session requests, deduplicating to show only the latest per user.
@@ -113,6 +240,8 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
       }
     });
   }
+
+
 
   /// Loads the companion's unique link code from Firestore.
   Future<void> _loadLinkCode() async {
@@ -208,12 +337,39 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
                     ),
                   ),
 
-                // Active Sessions
+                // Schedule Requests
+                if (_pendingSchedules.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: _buildScheduleRequestsSection(),
+                    ),
+                  ),
+
+                // Active Sessions (Manual)
                 if (_activeSessions.isNotEmpty)
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: _buildActiveSessionsSection(),
+                    ),
+                  ),
+
+                // Active App Lock Schedules
+                if (_activeSchedules.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: _buildActiveSchedulesSection(),
+                    ),
+                  ),
+
+                // Unlock Requests
+                if (_pendingUnlockRequests.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: _buildUnlockRequestsSection(),
                     ),
                   ),
 
@@ -473,6 +629,91 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
     );
   }
 
+  Widget _buildActiveSchedulesSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle("Active App Lock Schedules", Icons.lock, Colors.amber, isDark),
+        const SizedBox(height: 12),
+        ..._activeSchedules.map((schedule) => _buildActiveScheduleCard(schedule)),
+      ],
+    );
+  }
+
+  Widget _buildActiveScheduleCard(Map<String, dynamic> schedule) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final studentName = schedule['userName'] ?? 'Student';
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.amber.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.amber.withOpacity(0.2)),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundColor: Colors.amber.withOpacity(0.1),
+            child: Text(studentName[0].toUpperCase(), style: const TextStyle(color: Colors.amber)),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("$studentName - ${schedule['name']}", style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold)),
+                Text("${(schedule['lockedApps'] as List?)?.length ?? 0} apps locked", style: TextStyle(color: Colors.grey[500], fontSize: 12)),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.stop_circle_outlined, color: Colors.amber),
+            tooltip: "Stop Schedule",
+            onPressed: () => _stopSchedule(schedule['userId'], schedule['id']),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _stopSchedule(String studentId, String scheduleId) async {
+    try {
+      await _firestore.collection('users').doc(studentId).collection('schedules').doc(scheduleId).update({
+        'status': 'inactive',
+      });
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Schedule stopped")));
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+    }
+  }
+
+  Widget _buildScheduleRequestsSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle("Schedule Requests", Icons.schedule, Colors.amber, isDark),
+        const SizedBox(height: 12),
+        ..._pendingSchedules.map((schedule) => _buildScheduleRequestCard(schedule)),
+      ],
+    );
+  }
+
+  Widget _buildUnlockRequestsSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle("App Unlock Requests", Icons.lock_open, Colors.purpleAccent, isDark),
+        const SizedBox(height: 12),
+        ..._pendingUnlockRequests.map((req) => _buildUnlockRequestCard(req)),
+      ],
+    );
+  }
+
   Widget _buildSectionTitle(String title, IconData icon, Color color, bool isDark) {
     return Row(
       children: [
@@ -525,6 +766,73 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
             ),
             child: const Text("Approve"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScheduleRequestCard(Map<String, dynamic> schedule) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final studentName = schedule['userName'] ?? 'Student';
+    final scheduleName = schedule['name'] ?? 'Schedule';
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.amber.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.amber.withOpacity(0.2)),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundColor: Colors.amber.withOpacity(0.1),
+            child: Text(studentName[0].toUpperCase(), style: const TextStyle(color: Colors.amber)),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(studentName, style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold)),
+                Text('New Schedule: $scheduleName', style: TextStyle(color: Colors.amber, fontSize: 12, fontWeight: FontWeight.bold)),
+              ],
+            ),
+          ),
+          // Reject button
+          IconButton(
+            icon: const Icon(Icons.close_rounded, color: Colors.grey),
+            onPressed: () async {
+              await _firestore
+                 .collection('users')
+                 .doc(schedule['userId'])
+                 .collection('schedules')
+                 .doc(schedule['id'])
+                 .delete();
+            },
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ScheduleApprovalScreen(
+                    schedule: schedule,
+                    companionId: widget.userData['id'],
+                  ),
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.amber,
+              foregroundColor: Colors.black,
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+            ),
+            child: const Text("Review"),
           ),
         ],
       ),
@@ -604,5 +912,153 @@ class _CompanionDashboardState extends State<CompanionDashboard> {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Session request rejected')));
       }
     }
+  }
+
+  Future<void> _approveUnlockRequest(Map<String, dynamic> req) async {
+    final userId = req['userId'];
+    final reqId = req['id'];
+    final packageName = req['packageName'];
+
+    // Update request status
+    await _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('unlock_requests')
+        .doc(reqId)
+        .update({'status': 'approved'});
+
+    if (packageName == 'all') {
+      // Suspend all locks: Quick locks, active schedules, and companion sessions
+      final batch = _firestore.batch();
+      
+      final userRef = _firestore.collection('users').doc(userId);
+      batch.update(userRef, {
+        'lockedApps': [],
+        'lockEndTime': null,
+      });
+
+      final sessionsSnap = await _firestore
+          .collection('companion_sessions')
+          .where('userId', isEqualTo: userId)
+          .where('status', isEqualTo: 'ACTIVE')
+          .get();
+      for (var doc in sessionsSnap.docs) {
+         batch.update(doc.reference, {'status': 'COMPLETED'});
+      }
+
+      final schedulesSnap = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('schedules')
+          .where('status', isEqualTo: 'active')
+          .get();
+      for (var doc in schedulesSnap.docs) {
+        batch.update(doc.reference, {'status': 'inactive'});
+      }
+      
+      await batch.commit();
+    } else if (packageName.toString().startsWith('schedule_')) {
+      final scheduleId = packageName.toString().substring('schedule_'.length);
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('schedules')
+          .doc(scheduleId)
+          .update({'status': 'inactive'});
+    } else {
+      // Legacy or specific app unlock
+      final sessionsSnap = await _firestore
+          .collection('companion_sessions')
+          .where('userId', isEqualTo: userId)
+          .where('status', isEqualTo: 'ACTIVE')
+          .get();
+          
+      for (var doc in sessionsSnap.docs) {
+         await doc.reference.update({
+           'lockedApps': FieldValue.arrayRemove([packageName]),
+           'manuallyUnlockedApps': FieldValue.arrayUnion([packageName]),
+         });
+      }
+
+      await _firestore.collection('users').doc(userId).update({
+        'lockedApps': FieldValue.arrayRemove([packageName]),
+      });
+
+      final schedulesSnap = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('schedules')
+          .get();
+
+      for (var doc in schedulesSnap.docs) {
+        await doc.reference.update({
+          'exemptions': FieldValue.arrayUnion([packageName]),
+        });
+      }
+    }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("App unlocked successfully")));
+    }
+  }
+
+  Future<void> _denyUnlockRequest(Map<String, dynamic> req) async {
+    final userId = req['userId'];
+    final reqId = req['id'];
+    await _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('unlock_requests')
+        .doc(reqId)
+        .update({'status': 'denied'});
+  }
+
+  Widget _buildUnlockRequestCard(Map<String, dynamic> req) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final studentName = req['userName'] ?? 'Student';
+    final appName = req['appName'] ?? 'Unknown App';
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.purple.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.purple.withOpacity(0.2)),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundColor: Colors.purple.withOpacity(0.1),
+            child: Text(studentName[0].toUpperCase(), style: const TextStyle(color: Colors.purple)),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(studentName, style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold)),
+                Text('Unlock: $appName', style: const TextStyle(color: Colors.purpleAccent, fontSize: 12, fontWeight: FontWeight.bold)),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close_rounded, color: Colors.grey),
+            onPressed: () => _denyUnlockRequest(req),
+          ),
+          ElevatedButton(
+            onPressed: () => _approveUnlockRequest(req),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.purpleAccent,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+            ),
+            child: const Text("Unlock"),
+          ),
+        ],
+      ),
+    );
   }
 }

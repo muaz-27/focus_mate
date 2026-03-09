@@ -2,12 +2,14 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
-import '../theme/app_colors.dart';
+
 import 'analytics_screen.dart';
 import 'remote_app_lock_screen.dart';
 import 'snapshots_screen.dart';
 import 'pdf_viewer_screen.dart';
 import 'quiz_history_screen.dart'; // NEW import
+import 'package:firebase_auth/firebase_auth.dart';
+import 'parent_schedule_list_screen.dart';
 
 class ParentChildControlPage extends StatefulWidget {
   final String studentId;
@@ -125,9 +127,10 @@ class _ParentChildControlPageState extends State<ParentChildControlPage> {
           ),
         ),
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildHeaderCard(isDark),
@@ -160,14 +163,70 @@ class _ParentChildControlPageState extends State<ParentChildControlPage> {
                   icon: Icons.phonelink_lock,
                   color: Colors.orangeAccent,
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => RemoteAppLockScreen(
-                          studentId: widget.studentId,
-                          studentName: widget.studentName,
+                    final parentId = FirebaseAuth.instance.currentUser?.uid ?? '';
+                    final isDark = Theme.of(context).brightness == Brightness.dark;
+                    showModalBottomSheet(
+                      context: context,
+                      backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+                      useSafeArea: true,
+                      builder: (context) => SafeArea(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24.0),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text("App Locks", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
+                            const SizedBox(height: 16),
+                            ListTile(
+                              leading: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(color: Colors.orangeAccent.withOpacity(0.2), borderRadius: BorderRadius.circular(8)),
+                                child: const Icon(Icons.lock_clock, color: Colors.orangeAccent)
+                              ),
+                              title: Text("Instant Lock", style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold)),
+                              subtitle: Text("Lock apps right now or with a timer", style: TextStyle(color: isDark ? Colors.white70 : Colors.black54)),
+                              onTap: () {
+                                Navigator.pop(context);
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => RemoteAppLockScreen(
+                                      studentId: widget.studentId,
+                                      studentName: widget.studentName,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 12),
+                            ListTile(
+                              leading: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(color: Colors.cyanAccent.withOpacity(0.2), borderRadius: BorderRadius.circular(8)),
+                                child: const Icon(Icons.schedule, color: Colors.cyanAccent)
+                              ),
+                              title: Text("Schedule Lock", style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold)),
+                              subtitle: Text("Set up recurring app locks", style: TextStyle(color: isDark ? Colors.white70 : Colors.black54)),
+                              onTap: () {
+                                Navigator.pop(context);
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => ParentScheduleListScreen(
+                                      studentId: widget.studentId,
+                                      studentName: widget.studentName,
+                                      parentId: parentId,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
                         ),
                       ),
+                      ), // Close SafeArea
                     );
                   },
                 ),
@@ -223,6 +282,7 @@ class _ParentChildControlPageState extends State<ParentChildControlPage> {
           ),
         ),
       ),
+    ),
     );
   }
 

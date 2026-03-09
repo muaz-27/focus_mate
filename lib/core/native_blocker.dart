@@ -25,6 +25,16 @@ class NativeBlocker {
     }
   }
 
+  /// Sends a JSON string of all active schedules to the native service.
+  static Future<void> setSchedules(String schedulesJson) async {
+    try {
+      await _channel.invokeMethod('setSchedules', {'schedulesJson': schedulesJson});
+      print("FocusMate: Schedules updated");
+    } on PlatformException catch (e) {
+      print("FocusMate: Failed to update schedules: '${e.message}'.");
+    }
+  }
+
   /// Checks if the Accessibility Service is currently enabled in Android Settings.
   static Future<bool> isAccessibilityEnabled() async {
     try {

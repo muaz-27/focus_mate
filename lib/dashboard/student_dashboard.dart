@@ -25,6 +25,9 @@ import './waiting_for_companion_page.dart';
 import './parental_locks_screen.dart';
 import '../core/widgets/custom_dialog.dart';
 import '../core/native_blocker.dart';
+import '../core/schedule_service.dart';
+import 'schedule_list_screen.dart';
+import 'unlock_request_screen.dart';
 
 /// Entry point for the student dashboard.
 /// 
@@ -206,6 +209,8 @@ class _StudentDashboardState extends State<StudentDashboard>
   Map<String, dynamic>? _activeSessionData;
   StreamSubscription? _activeSessionSubscription;
   StreamSubscription<DocumentSnapshot>? _userDocSubscription;
+  StreamSubscription<QuerySnapshot>? _schedulesSubscription;
+  List<AppSchedule> _schedules = [];
 
   @override
   void initState() {
@@ -233,6 +238,25 @@ class _StudentDashboardState extends State<StudentDashboard>
     
     _refreshUsageStats();
     _startRuleSync();
+    
+    // Sync scheduled locks to Native Service initially
+    ScheduleService().syncSchedulesToNative(widget.userData['id']);
+
+    // Listen to schedule changes to push to native dynamically
+    _schedulesSubscription = _firestore
+        .collection('users')
+        .doc(widget.userData['id'])
+        .collection('schedules')
+        .snapshots()
+        .listen((snapshot) {
+      if (mounted) {
+        setState(() {
+          _schedules = snapshot.docs.map((doc) => AppSchedule.fromMap(doc.data(), doc.id)).toList();
+        });
+      }
+      ScheduleService().syncSchedulesToNative(widget.userData['id']);
+    });
+
     _getCompanionDetails();
     _checkActiveSession();
 
@@ -282,6 +306,18 @@ class _StudentDashboardState extends State<StudentDashboard>
     _usageSyncTimer = Timer.periodic(const Duration(minutes: 1), (_) {
       _refreshUsageStats();
     });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _ruleSyncTimer?.cancel();
+    _usageSyncTimer?.cancel();
+    _activeSessionSubscription?.cancel();
+    _userDocSubscription?.cancel();
+    _schedulesSubscription?.cancel();
+    _companionCodeController.dispose();
+    super.dispose();
   }
 
   @override
@@ -462,17 +498,6 @@ class _StudentDashboardState extends State<StudentDashboard>
         }
       }
     });
-  }
-
-  @override
-  void dispose() {
-    _ruleSyncTimer?.cancel();
-    _usageSyncTimer?.cancel();
-    _activeSessionSubscription?.cancel();
-    _userDocSubscription?.cancel();
-    _companionCodeController.dispose();
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
   }
 
   @override
@@ -759,6 +784,10 @@ class _StudentDashboardState extends State<StudentDashboard>
                         _buildActiveSessionBanner(),
                         const SizedBox(height: 24),
                       ],
+                      if (_schedules.any((s) => ScheduleService().isCurrentlyActive(s))) ...[
+                        _buildActiveScheduleBanner(),
+                        const SizedBox(height: 24),
+                      ],
                       _buildDailyFocusHero(progress, remaining, isDark),
                       const SizedBox(height: 32), 
                       Text("QUICK ACTIONS", 
@@ -897,6 +926,63 @@ class _StudentDashboardState extends State<StudentDashboard>
               ),
             ),
             const Icon(Icons.arrow_forward_ios, color: Colors.white70, size: 14),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Displays a banner when an App Lock Schedule is currently active.
+  Widget _buildActiveScheduleBanner() {
+    final activeCount = _schedules.where((s) => ScheduleService().isCurrentlyActive(s)).length;
+    return GestureDetector(
+      onTap: () {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("$activeCount schedule(s) currently active.")));
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
+          ),
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.purpleAccent.withOpacity(0.4),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
+            )
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.schedule, color: Colors.white, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Schedule Active",
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    "Apps are currently locked by a schedule.",
+                    style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.info_outline, color: Colors.white70, size: 18),
           ],
         ),
       ),
@@ -1454,53 +1540,12 @@ class _StudentDashboardState extends State<StudentDashboard>
   }
 
   Widget _buildActionGrid(bool isDark) {
-    // If Parent Mode, hide "Start Session"
-    if (_companionRole == 'parent') {
-      return Row(
-        children: [
-           Expanded(
-            child: _buildGlassTile(
-              isDark: isDark,
-              title: "Workspace",
-              icon: Icons.book,
-              color: Colors.purpleAccent,
-              onTap: () {
-                 Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => StudyWorkspaceScreen(userId: widget.userData['id']),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      );
-    }
-
     return Row(
       children: [
         Expanded(
           child: _buildGlassTile(
             isDark: isDark,
-            title: "Start Session",
-            icon: Icons.play_circle_fill,
-            color: Colors.cyan,
-            onTap: () {
-               Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => SessionSetupScreen(userId: widget.userData['id']),
-                ),
-              );
-            },
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildGlassTile(
-            isDark: isDark,
-            title: "Workspace",
+            title: "Study Workspace",
             icon: Icons.book,
             color: Colors.purpleAccent,
             onTap: () {
@@ -1637,16 +1682,57 @@ class _StudentDashboardState extends State<StudentDashboard>
             ),
           ],
         ),
-        if (_companionId != null) ...[
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(child: parentalLocksTile),
-              const SizedBox(width: 16),
-              const Expanded(child: SizedBox.shrink()), // Empty tile placeholder
-            ],
-          ),
-        ],
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: _buildGlassTile(
+                isDark: isDark,
+                title: "Schedules",
+                icon: Icons.schedule,
+                color: Colors.amberAccent,
+                subtitle: "Automated Limits",
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ScheduleListScreen(
+                        userId: widget.userData['id'],
+                        companionActive: companionActive,
+                        companionId: _companionId,
+                        companionName: _companionName,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(width: 16),
+            if (_companionId != null)
+              Expanded(
+                child: _buildGlassTile(
+                  isDark: isDark,
+                  title: "Unlock Request",
+                  icon: Icons.lock_open,
+                  color: Colors.purpleAccent,
+                  subtitle: "Ask to unblock",
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => UnlockRequestScreen(
+                          userId: widget.userData['id'],
+                          companionId: _companionId!,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              )
+            else
+              const Expanded(child: SizedBox.shrink()),
+          ],
+        ),
       ],
     );
   }

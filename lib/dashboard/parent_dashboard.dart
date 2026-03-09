@@ -170,8 +170,8 @@ class _ParentDashboardState extends State<ParentDashboard> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: isDark 
-                  ? [const Color(0xFF1E1B4B), const Color(0xFF450A0A)] 
-                  : [const Color(0xFFFFF1F2), const Color(0xFFFEE2E2)],
+                  ? [const Color(0xFF1A1F35), const Color(0xFF0B0E17)] 
+                  : [const Color(0xFFF8FAFC), const Color(0xFFE2E8F0)],
               ),
             ),
           ),
@@ -334,14 +334,14 @@ class _ParentDashboardState extends State<ParentDashboard> {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFFEC4899), Color(0xFFEF4444)], // Parent Red/Pink
+          colors: [Color(0xFF6366F1), Color(0xFF3B82F6)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFEC4899).withOpacity(0.3),
+            color: const Color(0xFF6366F1).withOpacity(0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           )
@@ -409,7 +409,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
   Widget _buildActivitySummaryBar() {
     return Row(
       children: [
-        _summaryItem("Children", (linkCode != null) ? "Syncing..." : "0", Icons.people, Colors.pink),
+        _summaryItem("Children", (linkCode != null) ? "Syncing..." : "0", Icons.people, Colors.purple),
         const SizedBox(width: 12),
         _summaryItem("Pending", _pendingSessions.length.toString(), Icons.pending_actions, Colors.orange),
         const SizedBox(width: 12),
@@ -469,14 +469,35 @@ class _ParentDashboardState extends State<ParentDashboard> {
           ),
           child: ListTile(
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            leading: CircleAvatar(
-              radius: 24,
-              backgroundColor: Colors.pinkAccent.withOpacity(0.1),
-              child: Text(studentName[0].toUpperCase(), style: const TextStyle(color: Colors.pinkAccent, fontWeight: FontWeight.bold, fontSize: 20)),
+            leading: Stack(
+              children: [
+                CircleAvatar(
+                  radius: 24,
+                  backgroundColor: Colors.blueAccent.withOpacity(0.1),
+                  child: Text(studentName[0].toUpperCase(), style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 20)),
+                ),
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    width: 14,
+                    height: 14,
+                    decoration: BoxDecoration(
+                      color: Colors.green, // Placeholder for online status
+                      shape: BoxShape.circle,
+                      border: Border.all(color: isDark ? const Color(0xFF1E293B) : Colors.white, width: 2),
+                    ),
+                  ),
+                ),
+              ],
             ),
             title: Text(studentName, style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold, fontSize: 16)),
-            subtitle: const Text("Parental Control & Monitoring", style: TextStyle(color: Colors.grey, fontSize: 12)),
-            trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+            subtitle: Text("Level ${student['level'] ?? 1} • Focus Scholar", style: TextStyle(color: Colors.grey[500], fontSize: 12)),
+            trailing: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(color: Colors.blueAccent.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+              child: const Icon(Icons.analytics_outlined, color: Colors.blueAccent, size: 20),
+            ),
             onTap: () {
               Navigator.push(
                 context,
@@ -673,9 +694,45 @@ class _ParentDashboardState extends State<ParentDashboard> {
         'respondedAt': FieldValue.serverTimestamp(),
       });
       if (approve) {
-        await _firestore.collection('users').doc(req['studentId']).update({
-          'lockedApps': FieldValue.arrayRemove([req['packageName']]),
-        });
+        if (req['packageName'] == 'all') {
+             // Suspend ALL locks
+             final batch = _firestore.batch();
+             
+             // 1. Clear instant locks and timer
+             final userRef = _firestore.collection('users').doc(req['studentId']);
+             batch.update(userRef, {
+               'lockedApps': [],
+               'lockEndTime': null,
+             });
+             
+             // 2. Clear schedules mapping to this user
+             final schedulesSnapshot = await _firestore
+                 .collection('users')
+                 .doc(req['studentId'])
+                 .collection('schedules')
+                 .where('status', isEqualTo: 'active')
+                 .get();
+                 
+             for (var doc in schedulesSnapshot.docs) {
+                 batch.update(doc.reference, {'status': 'inactive'});
+             }
+             
+             await batch.commit();
+        } else if (req['packageName'].toString().startsWith('schedule_')) {
+            // Unlock specific schedule
+            final scheduleId = req['packageName'].toString().substring('schedule_'.length);
+            await _firestore
+                .collection('users')
+                .doc(req['studentId'])
+                .collection('schedules')
+                .doc(scheduleId)
+                .update({'status': 'inactive'});
+        } else {
+            // Normal single app unlock
+            await _firestore.collection('users').doc(req['studentId']).update({
+              'lockedApps': FieldValue.arrayRemove([req['packageName']]),
+            });
+        }
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
