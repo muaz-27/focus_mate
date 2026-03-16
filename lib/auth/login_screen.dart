@@ -4,6 +4,7 @@ import 'package:focus_mate/core/widgets/custom_button.dart';
 import 'package:focus_mate/core/widgets/custom_text_field.dart';
 import '../core/auth_service.dart';
 import '../core/usage_service.dart';
+import 'forgot_password_screen.dart';
 
 /// Semantic colors associated with each user role.
 final Map<UserRole, Color> roleAccent = {
@@ -195,6 +196,28 @@ class _LoginScreenState extends State<LoginScreen> {
                                 (value == null || value.isEmpty) ? "Please enter your password" : null,
                           ),
 
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => ForgotPasswordScreen(role: widget.role),
+                                  ),
+                                );
+                              },
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                minimumSize: const Size(50, 30),
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              child: Text(
+                                "Forgot Password?",
+                                style: TextStyle(color: accent, fontSize: 13),
+                              ),
+                            ),
+                          ),
                           const SizedBox(height: 26),
 
                           CustomButton(

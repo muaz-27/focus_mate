@@ -37,6 +37,8 @@ class AuthService {
 
       await _firestore.collection('users').doc(newUser.id).set(newUser.toMap());
 
+      await result.user!.sendEmailVerification();
+
       return newUser;
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
@@ -83,6 +85,23 @@ class AuthService {
     } catch (e) {
       debugPrint("Error fetching user data: $e");
       return null;
+    }
+  }
+
+  /// Sends a password reset email to the specified address.
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found') {
+        throw Exception("No user found for that email.");
+      } else if (e.code == 'invalid-email') {
+        throw Exception("Invalid email address format.");
+      } else {
+        throw Exception(e.message ?? "Failed to send password reset email.");
+      }
+    } catch (e) {
+      throw Exception(e.toString());
     }
   }
 

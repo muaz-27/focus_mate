@@ -8,6 +8,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 // 🔹 IMPORTS
 import 'firebase_options.dart';
 import 'auth/auth_screen.dart';
+import 'auth/email_verification_screen.dart';
 import 'core/dashboard_router.dart';
 import 'theme/light_theme.dart';
 import 'theme/dark_theme.dart';
@@ -51,7 +52,7 @@ class AuthGate extends StatelessWidget {
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
       // 1. Listen to Auth Changes
-      stream: FirebaseAuth.instance.authStateChanges(),
+      stream: FirebaseAuth.instance.userChanges(),
       builder: (context, snapshot) {
         
         // Loading...
@@ -66,6 +67,11 @@ class AuthGate extends StatelessWidget {
 
         // Logged In -> Fetch User Data
         User currentUser = snapshot.data!;
+
+        // Check Email Verification
+        if (!currentUser.emailVerified) {
+          return const EmailVerificationScreen();
+        }
 
         return FutureBuilder<UserModel?>(
           future: AuthService().getUserData(currentUser.uid),
