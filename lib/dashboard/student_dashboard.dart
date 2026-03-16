@@ -566,7 +566,7 @@ class _StudentDashboardState extends State<StudentDashboard>
 
   /// Fetches details of the linked companion if not already available.
   Future<void> _getCompanionDetails() async {
-    if (_companionName != null) return;
+    if (_companionName != null && _companionRole != null) return; // Wait until both are loaded
     String? companionId = widget.userData['linkedCompanion'];
     if (companionId != null) {
       try {
@@ -575,13 +575,27 @@ class _StudentDashboardState extends State<StudentDashboard>
             .doc(companionId)
             .get();
         if (doc.exists) {
+          final docData = doc.data() as Map<String, dynamic>;
           if (mounted) {
+            String resolvedRole = docData.containsKey('role') ? docData['role'] : 'companion';
             setState(() {
-              _companionName = doc['name'];
-              // If role is missing, assume companion for backward compatibility, unless explicitly parent
-              _companionRole = doc.data().toString().contains('role') ? doc['role'] : 'companion'; 
+              _companionName = docData['name'];
+              _companionRole = resolvedRole;
               companionActive = true;
             });
+            
+            // FIX: If the companion is a parent, ensure screen capture service is requested.
+            // This handles legacy linked accounts where 'linkedCompanionRole' was not saved on the child doc.
+            if (resolvedRole == 'parent') {
+               _initScreenCapture();
+               
+               // Backfill the role to the child document so future initializations are instant
+               if (widget.userData['linkedCompanionRole'] == null) {
+                 _firestore.collection('users').doc(widget.userData['id']).update({
+                   'linkedCompanionRole': 'parent'
+                 });
+               }
+            }
           }
         }
       } catch (e) {}

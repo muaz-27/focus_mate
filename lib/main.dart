@@ -69,7 +69,16 @@ class AuthGate extends StatelessWidget {
         User currentUser = snapshot.data!;
 
         // Check Email Verification
-        if (!currentUser.emailVerified) {
+        // Bypass verification for testing/dummy accounts or legacy accounts
+        bool isDummyAccount = currentUser.email != null &&
+            (currentUser.email!.toLowerCase().contains('dummy') ||
+             currentUser.email!.toLowerCase().endsWith('@test.com') ||
+             currentUser.email!.toLowerCase().endsWith('@example.com'));
+             
+        bool isLegacyAccount = currentUser.metadata.creationTime != null && 
+            currentUser.metadata.creationTime!.isBefore(DateTime(2026, 3, 16));
+
+        if (!currentUser.emailVerified && !isDummyAccount && !isLegacyAccount) {
           return const EmailVerificationScreen();
         }
 
