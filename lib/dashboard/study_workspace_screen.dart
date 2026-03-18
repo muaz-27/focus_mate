@@ -53,7 +53,7 @@ class _StudyWorkspaceScreenState extends State<StudyWorkspaceScreen> {
   Future<void> _loadApps() async {
     try {
       final apps = await DeviceApps.getInstalledApplications(
-        includeAppIcons: true,
+        includeAppIcons: false, // Instant load
         includeSystemApps: false,
         onlyAppsWithLaunchIntent: true,
       );
@@ -174,10 +174,6 @@ class _StudyWorkspaceScreenState extends State<StudyWorkspaceScreen> {
                             itemBuilder: (context, index) {
                               final app = installedApps[index];
                               final isSelected = lockedPackages.contains(app.packageName);
-                              Uint8List? iconData;
-                              if (app is ApplicationWithIcon) {
-                                iconData = app.icon;
-                              }
                               
                               return GestureDetector(
                                 onTap: () {
@@ -205,12 +201,11 @@ class _StudyWorkspaceScreenState extends State<StudyWorkspaceScreen> {
                                           borderRadius: BorderRadius.circular(8),
                                           color: Colors.black.withOpacity(0.3),
                                         ),
-                                        child: iconData != null && iconData.isNotEmpty
-                                            ? ClipRRect(
-                                                borderRadius: BorderRadius.circular(8),
-                                                child: Image.memory(iconData, fit: BoxFit.cover, gaplessPlayback: true),
-                                              )
-                                            : const Icon(Icons.apps, color: Colors.white54, size: 24),
+                                        child: _AppIconWidget(
+                                          packageName: app.packageName,
+                                          size: 36,
+                                          iconSize: 24,
+                                        ),
                                       ),
                                       const SizedBox(height: 4),
                                       Padding(
@@ -390,6 +385,14 @@ class _StudyWorkspaceScreenState extends State<StudyWorkspaceScreen> {
         final fileName = result.files.single.name;
 
         if (companionActive && companionId != null) {
+              // **NEW**: Clean up old active quizzes
+              final activeQ = await _firestore.collection('users').doc(widget.userId).collection('saved_quizzes').where('status', isEqualTo: 'active').get();
+              final batch = _firestore.batch();
+              for (var doc in activeQ.docs) {
+                 batch.update(doc.reference, {'status': 'abandoned'});
+              }
+              await batch.commit();
+
               // 1. Save PDF locally to defer generation
               final tempDir = await getApplicationDocumentsDirectory();
               final sanitizedName = fileName.replaceAll(RegExp(r'[^a-zA-Z0-9_\.]'), '_');
@@ -459,6 +462,14 @@ class _StudyWorkspaceScreenState extends State<StudyWorkspaceScreen> {
              }
 
              if (quizQuestions != null && quizQuestions.isNotEmpty) {
+                 // **NEW**: Clean up old active quizzes
+                 final activeQ = await _firestore.collection('users').doc(widget.userId).collection('saved_quizzes').where('status', isEqualTo: 'active').get();
+                 final batch = _firestore.batch();
+                 for (var doc in activeQ.docs) {
+                    batch.update(doc.reference, {'status': 'abandoned'});
+                 }
+                 await batch.commit();
+
                  // 2. Lock apps now that quiz is ready (Self-Control)
                 if (lockedPackages.isNotEmpty) {
                     await platform.invokeMethod('setBlockedApps', {'apps': lockedPackages});
@@ -770,7 +781,7 @@ class _StudyWorkspaceScreenState extends State<StudyWorkspaceScreen> {
                        });
                     }
                   },
-                  isDisabled: hasActiveSession || isWaitingForCompanion,
+                  isDisabled: hasActiveSession || isWaitingForCompanion || loadingApps,
                 ),
               ),
             ],
@@ -1139,13 +1150,9 @@ class _StudyWorkspaceScreenState extends State<StudyWorkspaceScreen> {
                           final matches = installedApps.where((a) => a.packageName == pkg);
                           final app = matches.isNotEmpty ? matches.first : null;
                           
-                          Uint8List? iconData;
                           String appNameStr = pkg;
                           if (app != null) {
                              appNameStr = app.appName;
-                             if (app is ApplicationWithIcon) {
-                                iconData = app.icon;
-                             }
                           }
                           
                           return Tooltip(
@@ -1157,12 +1164,11 @@ class _StudyWorkspaceScreenState extends State<StudyWorkspaceScreen> {
                                 borderRadius: BorderRadius.circular(8),
                                 color: Colors.black26,
                               ),
-                              child: iconData != null && iconData.isNotEmpty
-                                  ? ClipRRect(
-                                      borderRadius: BorderRadius.circular(8),
-                                      child: Image.memory(iconData, fit: BoxFit.cover, gaplessPlayback: true),
-                                    )
-                                  : const Icon(Icons.apps, color: Colors.white54, size: 20),
+                              child: _AppIconWidget(
+                                 packageName: pkg,
+                                 size: 36,
+                                 iconSize: 20,
+                              ),
                             ),
                           );
                         }).toList(),
@@ -1185,5 +1191,58 @@ class _StudyWorkspaceScreenState extends State<StudyWorkspaceScreen> {
             ),
           ],
         );
+  }
+}
+
+class _AppIconWidget extends StatefulWidget {
+  final String packageName;
+  final double size;
+  final double iconSize;
+
+  const _AppIconWidget({
+    required this.packageName,
+    this.size = 36,
+    this.iconSize = 24,
+  });
+
+  @override
+  State<_AppIconWidget> createState() => _AppIconWidgetState();
+}
+
+class _AppIconWidgetState extends State<_AppIconWidget> {
+  Uint8List? iconData;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchIcon();
+  }
+
+  Future<void> _fetchIcon() async {
+    try {
+      Application? app = await DeviceApps.getApp(widget.packageName, true);
+      if (app is ApplicationWithIcon && mounted) {
+        setState(() => iconData = app.icon);
+      }
+    } catch (e) {
+      // Ignore
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (iconData != null && iconData!.isNotEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image.memory(
+          iconData!,
+          fit: BoxFit.cover,
+          gaplessPlayback: true,
+          width: widget.size,
+          height: widget.size,
+        ),
+      );
+    }
+    return Icon(Icons.apps, color: Colors.white54, size: widget.iconSize);
   }
 }

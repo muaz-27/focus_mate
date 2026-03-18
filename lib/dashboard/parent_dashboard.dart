@@ -182,16 +182,8 @@ class _ParentDashboardState extends State<ParentDashboard> {
                 // Link Code Section
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
                     child: _buildHeaderCard(isDark),
-                  ),
-                ),
-
-                // Activity Summary
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: _buildActivitySummaryBar(),
                   ),
                 ),
 
@@ -402,40 +394,6 @@ class _ParentDashboardState extends State<ParentDashboard> {
       child: IconButton(
         icon: Icon(icon, color: Colors.white, size: 20),
         onPressed: onPressed,
-      ),
-    );
-  }
-
-  Widget _buildActivitySummaryBar() {
-    return Row(
-      children: [
-        _summaryItem("Children", (linkCode != null) ? "Syncing..." : "0", Icons.people, Colors.purple),
-        const SizedBox(width: 12),
-        _summaryItem("Pending", _pendingSessions.length.toString(), Icons.pending_actions, Colors.orange),
-        const SizedBox(width: 12),
-        _summaryItem("Unlocks", _unlockRequests.length.toString(), Icons.lock_open, Colors.blue),
-      ],
-    );
-  }
-
-  Widget _summaryItem(String label, String value, IconData icon, Color color) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-        decoration: BoxDecoration(
-          color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05)),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: color, size: 24),
-            const SizedBox(height: 8),
-            Text(value, style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 18, fontWeight: FontWeight.bold)),
-            Text(label, style: TextStyle(color: Colors.grey[500], fontSize: 11)),
-          ],
-        ),
       ),
     );
   }

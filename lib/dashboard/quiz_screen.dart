@@ -54,27 +54,57 @@ class _QuizScreenState extends State<QuizScreen> {
     
     // Unlock apps if >= 70%
     if (percentage >= 70.0) {
+      bool unlockFailed = false;
+      String errorMsg = "";
+
       try {
         await platform.invokeMethod('setBlockedApps', {'apps': []});
+      } catch (e) {
+        unlockFailed = true;
+        errorMsg = e.toString();
+      }
+
+      try {
         await _firestore.collection('users').doc(widget.userId).update({
           'lockedApps': [],
-          'lockEndTime': null,
+          'lockEndTime': FieldValue.delete(),
         });
-        
+      } catch (e) {
+        debugPrint("Error clearing lockedApps: $e");
+      }
+
+      try {
         final quizDocRef = _firestore
             .collection('users')
             .doc(widget.userId)
             .collection('saved_quizzes')
             .doc(widget.quizDocId);
-            
+
         final quizDoc = await quizDocRef.get();
         final companionSessionId = quizDoc.data()?['companionSessionId'];
 
-        // Update quiz status to completed
+        // Update current quiz status to completed
         await quizDocRef.update({
           'status': 'completed',
           'lastScore': _score,
         });
+
+        // **NEW**: Clean up ANY other active quizzes so they don't pop up next
+        final otherActiveQ = await _firestore
+            .collection('users')
+            .doc(widget.userId)
+            .collection('saved_quizzes')
+            .where('status', isEqualTo: 'active')
+            .get();
+        if (otherActiveQ.docs.isNotEmpty) {
+           final batch = _firestore.batch();
+           for (var doc in otherActiveQ.docs) {
+              if (doc.id != widget.quizDocId) {
+                  batch.update(doc.reference, {'status': 'abandoned'});
+              }
+           }
+           await batch.commit();
+        }
 
         // If part of a companion session, end it
         if (companionSessionId != null) {
@@ -85,16 +115,16 @@ class _QuizScreenState extends State<QuizScreen> {
                'quizPassed': true,
             });
         }
-        
+
         if (mounted) {
            ScaffoldMessenger.of(context).showSnackBar(
-             const SnackBar(content: Text("Apps Unlocked successfully! Great job!")),
+             SnackBar(content: Text(unlockFailed ? "Quiz Passed! (Unlock error: $errorMsg)" : "Apps Unlocked successfully! Great job!")),
            );
         }
       } catch (e) {
          if (mounted) {
            ScaffoldMessenger.of(context).showSnackBar(
-             SnackBar(content: Text("Error unlocking apps: $e")),
+             SnackBar(content: Text("Error saving quiz score: $e")),
            );
          }
       }
