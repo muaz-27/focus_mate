@@ -146,9 +146,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.all(26),
                     decoration: BoxDecoration(
-                      color: Colors.grey[900]!.withOpacity(0.8),
+                      color: Colors.grey[900]!.withValues(alpha: 0.8),
                       borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: accent.withOpacity(0.3), width: 1),
+                      border: Border.all(color: accent.withValues(alpha: 0.3), width: 1),
                     ),
                     child: Form(
                       key: _formKey,
@@ -156,7 +156,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         children: [
                           CircleAvatar(
                             radius: 36,
-                            backgroundColor: accent.withOpacity(0.15),
+                            backgroundColor: accent.withValues(alpha: 0.15),
                             child: Icon(Icons.lock, color: accent, size: 32),
                           ),
                           const SizedBox(height: 16),

@@ -403,7 +403,9 @@ class _StudentDashboardState extends State<StudentDashboard>
       await FirebaseFirestore.instance.collection('users').doc(childId).update({
         'snapshotRequest': false,
       });
-    } catch (_) {}
+    } catch (e) {
+      debugPrint("F_MATE: Error clearing stale snapshotRequest: $e");
+    }
     // Now request permission — the dialog appears in the foreground
     await ScreenCaptureService.requestPermission();
   }
@@ -598,7 +600,9 @@ class _StudentDashboardState extends State<StudentDashboard>
             }
           }
         }
-      } catch (e) {}
+      } catch (e) {
+        debugPrint("F_MATE: Error fetching companion details: $e");
+      }
     }
   }
 
@@ -747,9 +751,14 @@ class _StudentDashboardState extends State<StudentDashboard>
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.redAccent),
               title: const Text("Log Out", style: TextStyle(color: Colors.white)),
-              onTap: () {
+              onTap: () async {
+                final scaffold = ScaffoldMessenger.of(context);
                 Navigator.pop(context);
-                AuthService().signOut();
+                try {
+                  await AuthService().signOut();
+                } catch (e) {
+                  scaffold.showSnackBar(SnackBar(content: Text("Logout failed: $e")));
+                }
               },
             ),
           ],

@@ -25,36 +25,45 @@ class _FocusSessionScreenState extends State<FocusSessionScreen> {
   Timer? _timer;
   int _remainingSeconds = 0;
   int _totalSeconds = 0;
+  bool _isPaused = false;
+  DateTime? _endTime;
 
   @override
   void initState() {
     super.initState();
     _totalSeconds = widget.durationMinutes * 60;
     _remainingSeconds = _totalSeconds;
-    _setSessionStatus(true); // Let the database know we started studying
+    _endTime = DateTime.now().add(Duration(minutes: widget.durationMinutes));
+    _setSessionStatus(true, _endTime); 
     _startTimer();
   }
 
   @override
   void dispose() {
     _timer?.cancel();
+    _setSessionStatus(false, null);
     super.dispose();
   }
 
-  Future<void> _setSessionStatus(bool isActive) async {
+  Future<void> _setSessionStatus(bool isActive, DateTime? expectedEnd) async {
     await FirebaseFirestore.instance
         .collection('users')
         .doc(widget.userId)
-        .update({'activeSession': isActive});
+        .update({
+          'activeSession': isActive,
+          if (isActive && expectedEnd != null) 'sessionEndTime': Timestamp.fromDate(expectedEnd),
+        });
   }
 
   void _startTimer() {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (mounted) {
+      if (mounted && !_isPaused && _endTime != null) {
         setState(() {
-          if (_remainingSeconds > 0) {
-            _remainingSeconds--;
+          final now = DateTime.now();
+          if (now.isBefore(_endTime!)) {
+            _remainingSeconds = _endTime!.difference(now).inSeconds;
           } else {
+            _remainingSeconds = 0;
             _finishSession();
           }
         });
@@ -64,16 +73,15 @@ class _FocusSessionScreenState extends State<FocusSessionScreen> {
 
   Future<void> _finishSession() async {
     _timer?.cancel();
-    await _setSessionStatus(false); // Let the database know we stopped
+    await _setSessionStatus(false, null);
 
-    // Update Study Time
     await FirebaseFirestore.instance
         .collection('users')
         .doc(widget.userId)
         .update({'studyTime': FieldValue.increment(widget.durationMinutes)});
 
     if (mounted) {
-      Navigator.pop(context); // Go back to Dashboard
+      Navigator.pop(context); 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Session Complete! +XP Gained")),
       );
@@ -98,7 +106,7 @@ class _FocusSessionScreenState extends State<FocusSessionScreen> {
     );
 
     if (confirm == true) {
-      await _setSessionStatus(false);
+      await _setSessionStatus(false, null);
       if (mounted) Navigator.pop(context);
     }
   }
@@ -179,9 +187,18 @@ class _FocusSessionScreenState extends State<FocusSessionScreen> {
                   FloatingActionButton(
                     backgroundColor: Colors.white,
                     onPressed: () {
-                      // Toggle timer logic
+                      setState(() {
+                        _isPaused = !_isPaused;
+                        if (_isPaused) {
+                          // Timer stopped by _startTimer check, just need to record state
+                        } else {
+                          // Resuming: recalculate _endTime based on current _remainingSeconds
+                          _endTime = DateTime.now().add(Duration(seconds: _remainingSeconds));
+                          _setSessionStatus(true, _endTime);
+                        }
+                      });
                     },
-                    child: const Icon(Icons.pause, color: Colors.black),
+                    child: Icon(_isPaused ? Icons.play_arrow : Icons.pause, color: Colors.black),
                   ),
                   const SizedBox(width: 24),
                   

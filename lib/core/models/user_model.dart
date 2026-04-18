@@ -13,7 +13,7 @@ class UserModel {
   final UserRole role;
   final DateTime createdAt;
   final List<String>? linkedUsers;
-  final String? linkedCompanion; // Added this
+  final String? linkedCompanion;
   final int studyTime;
   final int dailyGoal;
 
@@ -24,7 +24,7 @@ class UserModel {
     required this.role,
     required this.createdAt,
     this.linkedUsers,
-    this.linkedCompanion, // Added this
+    this.linkedCompanion,
     this.studyTime = 0,
     this.dailyGoal = 120,
   });
@@ -37,7 +37,7 @@ class UserModel {
       role: _parseRole(data['role']),
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       linkedUsers: (data['linkedUsers'] as List<dynamic>?)?.map((e) => e.toString()).toList(),
-      linkedCompanion: data['linkedCompanion'], // Added this
+      linkedCompanion: data['linkedCompanion'],
       studyTime: data['studyTime'] ?? 0,
       dailyGoal: data['dailyGoal'] ?? 120,
     );
@@ -50,7 +50,7 @@ class UserModel {
       'role': role.name,
       'createdAt': Timestamp.fromDate(createdAt),
       if (linkedUsers != null) 'linkedUsers': linkedUsers,
-      if (linkedCompanion != null) 'linkedCompanion': linkedCompanion, // Added this
+      if (linkedCompanion != null) 'linkedCompanion': linkedCompanion,
       'studyTime': studyTime,
       'dailyGoal': dailyGoal,
     };
@@ -65,5 +65,28 @@ class UserModel {
       default:
         return UserRole.user;
     }
+  }
+
+  UserModel copyWith({
+    String? name,
+    String? email,
+    UserRole? role,
+    DateTime? createdAt,
+    List<String>? linkedUsers,
+    String? linkedCompanion,
+    int? studyTime,
+    int? dailyGoal,
+  }) {
+    return UserModel(
+      id: this.id,
+      name: name ?? this.name,
+      email: email ?? this.email,
+      role: role ?? this.role,
+      createdAt: createdAt ?? this.createdAt,
+      linkedUsers: linkedUsers ?? this.linkedUsers,
+      linkedCompanion: linkedCompanion ?? this.linkedCompanion,
+      studyTime: studyTime ?? this.studyTime,
+      dailyGoal: dailyGoal ?? this.dailyGoal,
+    );
   }
 }

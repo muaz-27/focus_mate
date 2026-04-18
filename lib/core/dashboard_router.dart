@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // ADD THIS IMPORT
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:focus_mate/core/models/user_model.dart';
+import 'package:focus_mate/core/auth_service.dart';
 import 'package:focus_mate/dashboard/companion_dashboard.dart';
 import 'package:focus_mate/dashboard/parent_dashboard.dart';
 import 'package:focus_mate/dashboard/student_dashboard.dart';
-import 'package:focus_mate/dashboard/companion_controlled_page.dart'; // ADD THIS IMPORT
+import 'package:focus_mate/dashboard/companion_controlled_page.dart';
 
 class DashboardRouter extends StatelessWidget {
   final UserModel user;
@@ -20,22 +21,21 @@ class DashboardRouter extends StatelessWidget {
     required this.appsUnlocked,
   });
 
-  void handleLogout(BuildContext context) {
-    // implement logout
+  void handleLogout(BuildContext context) async {
+    await AuthService().signOut();
+    // AuthGate will automatically handle the navigation
   }
 
   void handleStartSession(String mode) {
-    // implement session start
+    // implement session start logic if needed locally
+    debugPrint("Starting session in $mode mode");
   }
 
   @override
   Widget build(BuildContext context) {
-    // Convert UserModel to Map for legacy dashboards
     final userData = user.toMap();
-    // Add ID explicitly as it might not be in toMap depending on implementation
     userData['id'] = user.id; 
 
-    // Check for active companion session FIRST (only for students)
     if (user.role == UserRole.user) {
       return FutureBuilder<QuerySnapshot>(
         future: FirebaseFirestore.instance
@@ -53,7 +53,6 @@ class DashboardRouter extends StatelessWidget {
           }
           
           if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
-            // User has active companion session
             final sessionId = snapshot.data!.docs.first.id;
             return CompanionControlledPage(
               sessionId: sessionId,
@@ -61,7 +60,6 @@ class DashboardRouter extends StatelessWidget {
             );
           }
           
-          // No active companion session, proceed to normal student dashboard
           return StudentDashboard(
             userData: userData,
             studyTime: user.studyTime,
@@ -76,20 +74,7 @@ class DashboardRouter extends StatelessWidget {
       );
     }
 
-    // For non-student roles (companion/parent), use normal routing
     switch (user.role) {
-      case UserRole.user:
-        // This case is already handled above, but keeping for completeness
-        return StudentDashboard(
-          userData: userData,
-          studyTime: user.studyTime,
-          dailyGoal: user.dailyGoal,
-          activeSession: activeSession,
-          companionActive: companionActive,
-          appsUnlocked: appsUnlocked,
-          onLogout: () => handleLogout(context),
-          onStartSession: handleStartSession,
-        );
       case UserRole.companion:
         return CompanionDashboard(
           userData: userData,
@@ -99,6 +84,17 @@ class DashboardRouter extends StatelessWidget {
         return ParentDashboard(
           userData: userData,
           onLogout: () => handleLogout(context),
+        );
+      default:
+        return StudentDashboard(
+          userData: userData,
+          studyTime: user.studyTime,
+          dailyGoal: user.dailyGoal,
+          activeSession: activeSession,
+          companionActive: companionActive,
+          appsUnlocked: appsUnlocked,
+          onLogout: () => handleLogout(context),
+          onStartSession: handleStartSession,
         );
     }
   }
