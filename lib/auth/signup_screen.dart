@@ -1,9 +1,18 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+<<<<<<< Updated upstream
 import 'auth_screen.dart'; // Make sure this path is correct
 import 'auth_service.dart'; // Make sure this path is correct
 import 'auth_service.dart';
+=======
+import 'package:focus_mate/core/models/user_model.dart';
+import 'package:focus_mate/core/widgets/custom_button.dart';
+import 'package:focus_mate/core/widgets/custom_text_field.dart';
+import 'package:focus_mate/core/auth_service.dart';
+import 'package:focus_mate/theme/app_colors.dart';
+import 'package:focus_mate/theme/app_theme.dart';
+>>>>>>> Stashed changes
 
 // --- THIS IS THE MISSING PART ---
 class SignupScreen extends StatefulWidget {

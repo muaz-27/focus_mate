@@ -1,1 +1,29 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"focusmate-7a9c5","appId":"1:115673374904:android:3715a2ccbb955db735544d","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"focusmate-7a9c5","configurations":{"android":"1:115673374904:android:3715a2ccbb955db735544d","ios":"1:115673374904:ios:c9490bed690f353a35544d","macos":"1:115673374904:ios:c9490bed690f353a35544d","web":"1:115673374904:web:01708f1b3f60fc0135544d","windows":"1:115673374904:web:8921329b1068816f35544d"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "focusmate-7a9c5",
+          "appId": "1:115673374904:android:3715a2ccbb955db735544d",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "focusmate-7a9c5",
+          "configurations": {
+            "android": "1:115673374904:android:3715a2ccbb955db735544d",
+            "ios": "1:115673374904:ios:c9490bed690f353a35544d",
+            "macos": "1:115673374904:ios:c9490bed690f353a35544d",
+            "web": "1:115673374904:web:01708f1b3f60fc0135544d",
+            "windows": "1:115673374904:web:8921329b1068816f35544d"
+          }
+        }
+      }
+    }
+  },
+  "functions": {
+    "source": "functions",
+    "runtime": "nodejs18"
+  }
+}

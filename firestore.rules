@@ -1,0 +1,109 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Helper Functions ───
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isLinkedCompanion(userId) {
+      // The companion/parent must be listed as linkedCompanion on the student's doc
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(userId)).data.linkedCompanion == request.auth.uid;
+    }
+
+    function isSessionParticipant() {
+      return isAuthenticated() && (
+        request.auth.uid == resource.data.userId || 
+        request.auth.uid == resource.data.companionId
+      );
+    }
+
+    // ─── User Documents ───
+    match /users/{userId} {
+      // Users can read/write their own document
+      // Linked companions can read student data
+      allow read: if isOwner(userId) || isLinkedCompanion(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) || isLinkedCompanion(userId);
+      // Never allow deleting user docs from client
+      allow delete: if false;
+
+      // ─── Subcollections ───
+      match /daily_stats/{statId} {
+        allow read: if isOwner(userId) || isLinkedCompanion(userId);
+        allow write: if isOwner(userId);
+      }
+
+      match /saved_quizzes/{quizId} {
+        allow read: if isOwner(userId) || isLinkedCompanion(userId);
+        allow write: if isOwner(userId);
+      }
+
+      match /snapshots/{snapId} {
+        // Only the student's device writes snapshots; companion/parent can read
+        allow read: if isOwner(userId) || isLinkedCompanion(userId);
+        allow create: if isOwner(userId);
+        allow delete: if isOwner(userId) || isLinkedCompanion(userId);
+      }
+
+      match /data/{docId} {
+        allow read: if isOwner(userId) || isLinkedCompanion(userId);
+        allow write: if isOwner(userId);
+      }
+
+      match /data_v2/{shardId} {
+        allow read: if isOwner(userId) || isLinkedCompanion(userId);
+        allow write: if isOwner(userId);
+      }
+
+      match /app_icons/{iconId} {
+        allow read: if isOwner(userId) || isLinkedCompanion(userId);
+        allow write: if isOwner(userId);
+      }
+
+      match /schedules/{scheduleId} {
+        allow read: if isOwner(userId) || isLinkedCompanion(userId);
+        // Students can create self-schedules; companions can create/update too
+        allow write: if isOwner(userId) || isLinkedCompanion(userId);
+      }
+    }
+
+    // ─── Companion Sessions ───
+    match /companion_sessions/{sessionId} {
+      // Both the student and companion can read their sessions
+      allow read: if isAuthenticated() && (
+        request.auth.uid == resource.data.userId || 
+        request.auth.uid == resource.data.companionId
+      );
+      // Only the student can create a session request
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userId;
+      // Both parties can update (companion accepts/ends, student sends emergency)
+      allow update: if isSessionParticipant();
+      // Never allow deleting sessions — use status changes instead
+      allow delete: if false;
+    }
+
+    // ─── Unlock Requests (Top-Level) ───
+    match /unlock_requests/{reqId} {
+      // Student or parent/companion can read
+      allow read: if isAuthenticated() && (
+        request.auth.uid == resource.data.studentId || 
+        request.auth.uid == resource.data.parentId
+      );
+      // Student creates the request
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.studentId;
+      // Parent/companion approves/denies
+      allow update: if isAuthenticated() && (
+        request.auth.uid == resource.data.parentId || 
+        request.auth.uid == resource.data.studentId
+      );
+      allow delete: if false;
+    }
+  }
+}

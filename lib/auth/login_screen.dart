@@ -1,8 +1,17 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+<<<<<<< Updated upstream
 import 'auth_screen.dart'; // Make sure this path is correct
 import 'auth_service.dart'; // Make sure this path is correct
+=======
+import 'package:focus_mate/core/models/user_model.dart';
+import 'package:focus_mate/core/widgets/custom_button.dart';
+import 'package:focus_mate/core/widgets/custom_text_field.dart';
+import 'package:focus_mate/core/auth_service.dart';
+import 'package:focus_mate/core/usage_service.dart';
+import 'package:focus_mate/auth/forgot_password_screen.dart';
+>>>>>>> Stashed changes
 
 // --- This is the StatefulWidget class ---
 class LoginScreen extends StatefulWidget {
@@ -167,6 +176,7 @@ class _LoginScreenState extends State<LoginScreen>
                   child: TextButton.icon(
                     onPressed: widget.onBack,
                     icon: const Icon(Icons.arrow_back, color: Colors.white70),
+<<<<<<< Updated upstream
                     label: const Text(
                       'Back',
                       style: TextStyle(color: Colors.white70),
@@ -174,6 +184,30 @@ class _LoginScreenState extends State<LoginScreen>
                   ),
                 ),
                 const SizedBox(height: 20),
+=======
+                    label: const Text("Back", style: TextStyle(color: Colors.white70)),
+                  ),
+                  const SizedBox(height: 10),
+
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(26),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[900]!.withValues(alpha: 0.8),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: accent.withValues(alpha: 0.3), width: 1),
+                    ),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          CircleAvatar(
+                            radius: 36,
+                            backgroundColor: accent.withValues(alpha: 0.15),
+                            child: Icon(Icons.lock, color: accent, size: 32),
+                          ),
+                          const SizedBox(height: 16),
+>>>>>>> Stashed changes
 
                 // Card container
                 Container(
@@ -334,4 +368,8 @@ class _LoginScreenState extends State<LoginScreen>
       ),
     );
   }
+<<<<<<< Updated upstream
 }
+=======
+}
+>>>>>>> Stashed changes

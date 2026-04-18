@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
+<<<<<<< Updated upstream
 import 'login_screen.dart';
 import 'signup_screen.dart';
+=======
+import 'package:focus_mate/core/models/user_model.dart';
+import 'package:focus_mate/auth/login_screen.dart';
+import 'package:focus_mate/auth/signup_screen.dart';
+import 'package:focus_mate/theme/app_colors.dart';
+>>>>>>> Stashed changes
 
 enum UserRole { user, companion, parent }
 
@@ -288,4 +295,104 @@ class _AuthScreenState extends State<AuthScreen> {
       ),
     );
   }
+<<<<<<< Updated upstream
 }
+=======
+
+  /// Builds a visual card for a user role with icon, title, description, and feature list.
+  Widget buildRoleCard(Map role) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              height: 55,
+              width: 55,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                gradient: LinearGradient(
+                  colors: (role['color'] as List<Color>),
+                ),
+              ),
+              child: Icon(role['icon'], color: Colors.white, size: 30),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    role['title'],
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    role['description'],
+                    style: TextStyle(color: Colors.grey.shade400, fontSize: 13),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+
+        GridView.builder(
+          physics: const NeverScrollableScrollPhysics(),
+          shrinkWrap: true,
+          itemCount: role['features'].length,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            mainAxisExtent: 20,
+          ),
+          itemBuilder: (context, idx) {
+            return Row(
+              children: [
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: (role['color'] as List<Color>),
+                    ),
+                    borderRadius: BorderRadius.circular(50),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    role['features'][idx],
+                    style: const TextStyle(color: Colors.white70, fontSize: 11),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+        const SizedBox(height: 20),
+
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            gradient: LinearGradient(colors: (role['color'] as List<Color>)),
+          ),
+          alignment: Alignment.center,
+          child: const Text(
+            "Get Started →",
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+>>>>>>> Stashed changes
