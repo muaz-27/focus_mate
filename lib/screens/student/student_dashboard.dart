@@ -199,17 +199,19 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
         }
 
         // 2. Snapshot Request Listener
+        // We only skip the first event if it's 'false' (stale). If it's 'true', handle it!
+        final bool isRequest = data['snapshotRequest'] == true;
         if (!_snapshotListenerReady) {
           _snapshotListenerReady = true;
-          return; // Skip the first event for snapshotRequest to avoid stale races
+          if (!isRequest) return; // Skip first event only if no active request
         }
         
-        debugPrint("F_MATE: Direct Listener saw snapshotRequest=${data['snapshotRequest']}");
-        if (data['snapshotRequest'] == true) {
+        debugPrint("F_MATE: Snapshot listener triggered. request=$isRequest");
+        if (isRequest) {
            if (_companionRole == 'parent') {
              _handleSnapshotRequest();
-           } else {
-             // Dismiss the request if not a parent
+           } else if (_companionRole != null) {
+             debugPrint("F_MATE: Snapshot ignored — companion role is '$_companionRole' (not parent)");
              _firestore.collection('users').doc(widget.userData['id']).update({'snapshotRequest': false});
            }
         }
@@ -333,24 +335,30 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
     await ScreenCaptureService.requestPermission();
   }
 
+  bool _isProcessingSnapshot = false;
+  
   Future<void> _handleSnapshotRequest() async {
-    debugPrint("F_MATE: _handleSnapshotRequest triggered!");
+    if (_isProcessingSnapshot) return;
+    _isProcessingSnapshot = true;
+    
+    debugPrint("F_MATE: _handleSnapshotRequest started...");
     final String childId = widget.userData['id'];
 
     Uint8List? bytes;
-    // Retry loop: waits up to ~12 seconds for the user to accept the permission dialog
-    for (int attempt = 0; attempt < 8; attempt++) {
-      bytes = await ScreenCaptureService.captureScreen();
-      if (bytes != null) break;
-      debugPrint("F_MATE: capture attempt $attempt failed (service not ready), retrying...");
-      await Future.delayed(const Duration(milliseconds: 1500));
-    }
-
     try {
+      // Retry loop: waits up to ~12 seconds for the user to accept the permission dialog
+      for (int attempt = 0; attempt < 8; attempt++) {
+        bytes = await ScreenCaptureService.captureScreen();
+        if (bytes != null) break;
+        debugPrint("F_MATE: capture attempt $attempt failed (service not ready), retrying in 1.5s...");
+        await Future.delayed(const Duration(milliseconds: 1500));
+      }
+
       if (bytes != null) {
         final String fileName = "${DateTime.now().millisecondsSinceEpoch}.jpg";
         final storageRef = FirebaseStorage.instance.ref().child('snapshots/$childId/$fileName');
         
+        debugPrint("F_MATE: Uploading to Storage: ${storageRef.fullPath}");
         final uploadTask = storageRef.putData(
           bytes, 
           SettableMetadata(contentType: 'image/jpeg'),
@@ -364,14 +372,18 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
           'imageUrl': downloadUrl,
           'capturedBy': 'parent',
         });
-        debugPrint("F_MATE: snapshot saved successfully.");
+        debugPrint("F_MATE: Snapshot saved successfully. URL: $downloadUrl");
       } else {
-        debugPrint("F_MATE: all capture attempts failed — service not available.");
+        debugPrint("F_MATE: All capture attempts failed — service not available or permission denied.");
       }
     } catch (e) {
-      debugPrint("F_MATE: Save failed: $e");
+      debugPrint("F_MATE: Screenshot process failed: $e");
+      debugPrint("F_MATE: TIP: Ensure Firebase Storage rules allow writes to 'snapshots/$childId/'");
     } finally {
+      // Ensure we reset the request flag even on failure
       await _firestore.collection('users').doc(childId).update({'snapshotRequest': false});
+      _isProcessingSnapshot = false;
+      debugPrint("F_MATE: Snapshot request cycle complete.");
     }
   }
   
