@@ -1,3 +1,4 @@
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:usage_stats/usage_stats.dart';
 import 'package:device_apps/device_apps.dart';
@@ -177,6 +178,35 @@ class UsageService {
         'apps': appsForDailyStats, // usage stats without icons
       });
 
+      // Award Study Passes: 1 pass per 30 mins
+      final userRef = _firestore.collection('users').doc(userId);
+      final userSnap = await userRef.get();
+      if (userSnap.exists) {
+        final userData = userSnap.data() as Map<String, dynamic>;
+        
+        // This is today's total study time
+        final int oldStudyTime = userData['studyTime'] ?? 0;
+        final int delta = totalMinutes - oldStudyTime;
+        
+        if (delta > 0) {
+          int passesCount = userData['passes'] ?? 0;
+          int pool = (userData['minutesTowardsNextPass'] ?? 0) + delta;
+          
+          int earned = pool ~/ 30;
+          int remaining = pool % 30;
+          
+          await userRef.update({
+            'studyTime': totalMinutes,
+            'passes': passesCount + earned,
+            'minutesTowardsNextPass': remaining,
+          });
+          
+          if (earned > 0) {
+            debugPrint("F_MATE: User earned $earned Study Pass(es)!");
+          }
+        }
+      }
+
     } catch (e) {
       debugPrint("Error syncing usage: $e");
     }
@@ -241,6 +271,21 @@ class UsageService {
   Future<void> syncInstalledAppsToFirebase(String userId) async {
     try {
       List<Application> apps = await getInstalledAppsList();
+      
+      // OPTIMIZATION: Diff-check installed apps using a hash
+      final List<String> pNames = apps.map((a) => a.packageName).toList();
+      pNames.sort();
+      final String packageNames = pNames.join(',');
+      final int packageHash = packageNames.hashCode;
+      
+      final prefs = await SharedPreferences.getInstance();
+      final int lastHash = prefs.getInt('last_synced_apps_hash_$userId') ?? 0;
+      
+      if (lastHash == packageHash) {
+        debugPrint("F_MATE: Installed apps unchanged (hash match). Skipping sync.");
+        return;
+      }
+
       debugPrint("F_MATE: Starting App Sync for ${apps.length} apps...");
 
       // 1. Prepare Metadata List (No Icons)
@@ -329,8 +374,12 @@ class UsageService {
         debugPrint("F_MATE: Uploaded batch of ${sublist.length} icons.");
       }
 
+      await prefs.setInt('last_synced_apps_hash_$userId', packageHash);
+      debugPrint("F_MATE: App sync complete. Saved hash $packageHash.");
+
     } catch (e) {
       debugPrint("Error syncing installed apps: $e");
     }
   }
 }
+

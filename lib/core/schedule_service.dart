@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'native_blocker.dart';
+import 'package:focus_mate/core/native_blocker.dart';
 
 class AppSchedule {
   final String id;
@@ -104,7 +104,7 @@ class ScheduleService {
       final String jsonString = jsonEncode(schedules.map((s) => s.toJson()).toList());
       await NativeBlocker.setSchedules(jsonString);
     } catch (e) {
-      print("Error syncing schedules to native: \$e");
+      debugPrint("Error syncing schedules to native: $e");
     }
   }
 

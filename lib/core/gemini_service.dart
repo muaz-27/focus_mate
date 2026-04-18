@@ -1,20 +1,20 @@
 import 'dart:convert';
-import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+/// Service that generates quizzes from PDF documents using client-side Gemini AI.
 class GeminiService {
-  final GenerativeModel _model;
+  late final GenerativeModel _model;
 
-  GeminiService()
-      : _model = GenerativeModel(
-          model: 'gemini-2.5-flash',
-          apiKey: dotenv.env['GEMINI_API_KEY'] ?? 'MISSING_API_KEY',
-          generationConfig: GenerationConfig(
-            responseMimeType: 'application/json',
-          ),
-        );
+  GeminiService() {
+    final apiKey = dotenv.env['GEMINI_API_KEY'] ?? "";
+    _model = GenerativeModel(
+      model: 'gemini-1.5-flash',
+      apiKey: apiKey,
+    );
+  }
 
   /// Extracts text from a PDF given its bytes
   String _extractTextFromPdf(List<int> bytes) {
@@ -25,59 +25,55 @@ class GeminiService {
       document.dispose();
       return text;
     } catch (e) {
-      print("Error extracting PDF text: $e");
+      debugPrint("Error extracting PDF text: $e");
       return "";
     }
   }
 
-  /// Generates 10 MCQs from a given PDF's bytes
+  /// Generates 10 MCQs from a given PDF's bytes using client-side Gemini AI.
   Future<List<Map<String, dynamic>>?> generateQuizFromPdf(List<int> pdfBytes) async {
     final extractedText = _extractTextFromPdf(pdfBytes);
-    
+
     if (extractedText.isEmpty) {
       throw Exception("Could not extract any text from the document.");
     }
 
-    final prompt = '''
-You are an expert educational quiz generator. Read the following text and generate exactly 10 multiple-choice questions (MCQs) based on the material.
-Each question must have exactly 4 options. Mention the correct option index (0 to 3).
+    const prompt = """
+    You are an educational assistant. 
+    Analyze the provided text and generate 10 multiple-choice questions (MCQs).
+    Each question must have:
+    1. 'question': The question text.
+    2. 'options': A list of 4 possible answers.
+    3. 'correctIndex': The 0-based index of the correct answer in the options list.
 
-Return ONLY a JSON array, where each object looks exactly like this:
-{
-  "question": "The question text",
-  "options": ["Option A", "Option B", "Option C", "Option D"],
-  "correctIndex": 2
-}
+    Return the result ONLY as a valid JSON object with a single key 'questions'.
+    Do not include markdown formatting or extra text.
 
-Text to analyze:
-$extractedText
-''';
+    Text:
+    """;
 
     try {
-      final response = await _model.generateContent([Content.text(prompt)]);
-      final rawText = response.text;
+      final content = [Content.text(prompt + extractedText)];
+      final response = await _model.generateContent(content);
       
-      if (rawText != null) {
-        // Sometimes the API wraps json in markdown tags
-        String jsonString = rawText;
-        if (jsonString.startsWith('```json')) {
-          jsonString = jsonString.split('```json')[1].split('```')[0].trim();
-        } else if (jsonString.startsWith('```')) {
-          jsonString = jsonString.split('```')[1].split('```')[0].trim();
-        }
-        
-        final decoded = jsonDecode(jsonString);
-        if (decoded is List) {
-           return decoded.map((e) => e as Map<String, dynamic>).toList();
-        } else if (decoded is Map && decoded.containsKey('questions')) {
-           return (decoded['questions'] as List).map((e) => e as Map<String, dynamic>).toList();
-        }
+      final textResponse = response.text;
+      if (textResponse == null) throw Exception("Empty response from Gemini.");
+
+      // Strip potential markdown code blocks
+      final cleanJson = textResponse.replaceAll('```json', '').replaceAll('```', '').trim();
+      
+      final Map<String, dynamic> data = jsonDecode(cleanJson);
+      
+      if (data['questions'] != null) {
+        return (data['questions'] as List)
+            .map((e) => Map<String, dynamic>.from(e as Map))
+            .toList();
       }
     } catch (e) {
-      print("Error calling Gemini API: $e");
+      debugPrint("Error generating quiz with client Gemini: $e");
       throw Exception("Failed to generate quiz: $e");
     }
-    
+
     return null;
   }
 }

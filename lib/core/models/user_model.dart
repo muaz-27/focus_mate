@@ -16,6 +16,8 @@ class UserModel {
   final String? linkedCompanion;
   final int studyTime;
   final int dailyGoal;
+  final int passes;
+  final int minutesTowardsNextPass;
 
   UserModel({
     required this.id,
@@ -27,6 +29,8 @@ class UserModel {
     this.linkedCompanion,
     this.studyTime = 0,
     this.dailyGoal = 120,
+    this.passes = 0,
+    this.minutesTowardsNextPass = 0,
   });
 
   factory UserModel.fromMap(Map<String, dynamic> data, String id) {
@@ -40,6 +44,8 @@ class UserModel {
       linkedCompanion: data['linkedCompanion'],
       studyTime: data['studyTime'] ?? 0,
       dailyGoal: data['dailyGoal'] ?? 120,
+      passes: data['passes'] ?? 0,
+      minutesTowardsNextPass: data['minutesTowardsNextPass'] ?? 0,
     );
   }
 
@@ -53,6 +59,8 @@ class UserModel {
       if (linkedCompanion != null) 'linkedCompanion': linkedCompanion,
       'studyTime': studyTime,
       'dailyGoal': dailyGoal,
+      'passes': passes,
+      'minutesTowardsNextPass': minutesTowardsNextPass,
     };
   }
 
@@ -76,6 +84,8 @@ class UserModel {
     String? linkedCompanion,
     int? studyTime,
     int? dailyGoal,
+    int? passes,
+    int? minutesTowardsNextPass,
   }) {
     return UserModel(
       id: this.id,
@@ -87,6 +97,8 @@ class UserModel {
       linkedCompanion: linkedCompanion ?? this.linkedCompanion,
       studyTime: studyTime ?? this.studyTime,
       dailyGoal: dailyGoal ?? this.dailyGoal,
+      passes: passes ?? this.passes,
+      minutesTowardsNextPass: minutesTowardsNextPass ?? this.minutesTowardsNextPass,
     );
   }
 }

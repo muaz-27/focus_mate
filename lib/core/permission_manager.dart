@@ -27,7 +27,7 @@ class PermissionManager {
   // Check if the accessibility service is on, this is needed for app blocking
   static Future<bool> checkAccessibility(BuildContext context) async {
     try {
-      final bool enabled = await _channel.invokeMethod('isAccessibilityEnabled');
+      final bool enabled = await _channel.invokeMethod('isAccessibilityServiceAlive');
       if (enabled) return true;
 
       if (context.mounted) {
@@ -46,7 +46,7 @@ class PermissionManager {
       }
       return false;
     } catch (e) {
-      print("Error checking accessibility: $e");
+      debugPrint("Error checking accessibility: $e");
       return false;
     }
   }
@@ -127,3 +127,4 @@ class PermissionManager {
     );
   }
 }
+

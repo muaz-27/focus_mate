@@ -1,8 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart'; // For debugPrint
-import 'models/user_model.dart';
-import 'screen_capture_service.dart';
+import 'package:focus_mate/core/models/user_model.dart';
+import 'package:focus_mate/core/screen_capture_service.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;

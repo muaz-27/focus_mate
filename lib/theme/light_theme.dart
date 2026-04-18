@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'app_colors.dart';
 
 /// Defines the global light theme configuration for the application.
 ThemeData lightTheme = ThemeData(

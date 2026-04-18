@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 class NativeBlocker {
@@ -8,9 +9,9 @@ class NativeBlocker {
   static Future<void> setBlockedApps(List<String> packageNames) async {
     try {
       await _channel.invokeMethod('setBlockedApps', {'apps': packageNames});
-      print("FocusMate: User block list updated: $packageNames");
+      debugPrint("FocusMate: User block list updated: $packageNames");
     } on PlatformException catch (e) {
-      print("FocusMate: Failed to update user list: '${e.message}'.");
+      debugPrint("FocusMate: Failed to update user list: '${e.message}'.");
     }
   }
 
@@ -19,9 +20,9 @@ class NativeBlocker {
   static Future<void> setCompanionBlockedApps(List<String> packageNames) async {
     try {
       await _channel.invokeMethod('setCompanionBlockedApps', {'apps': packageNames});
-      print("FocusMate: Companion block list updated: $packageNames");
+      debugPrint("FocusMate: Companion block list updated: $packageNames");
     } on PlatformException catch (e) {
-      print("FocusMate: Failed to update companion list: '${e.message}'.");
+      debugPrint("FocusMate: Failed to update companion list: '${e.message}'.");
     }
   }
 
@@ -29,20 +30,22 @@ class NativeBlocker {
   static Future<void> setSchedules(String schedulesJson) async {
     try {
       await _channel.invokeMethod('setSchedules', {'schedulesJson': schedulesJson});
-      print("FocusMate: Schedules updated");
+      debugPrint("FocusMate: Schedules updated");
     } on PlatformException catch (e) {
-      print("FocusMate: Failed to update schedules: '${e.message}'.");
+      debugPrint("FocusMate: Failed to update schedules: '${e.message}'.");
     }
   }
 
   /// Checks if the Accessibility Service is currently enabled in Android Settings.
   static Future<bool> isAccessibilityEnabled() async {
     try {
-      final bool result = await _channel.invokeMethod('isAccessibilityEnabled');
+      final bool result = await _channel.invokeMethod('isAccessibilityServiceAlive');
       return result;
     } on PlatformException catch (e) {
-      print("FocusMate: Failed to check permission: '${e.message}'.");
+      debugPrint("FocusMate: Failed to check permission: '${e.message}'.");
       return false;
     }
   }
 }
+
+

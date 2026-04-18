@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'dart:typed_data';
 
@@ -9,7 +10,7 @@ class ScreenCaptureService {
       final bool result = await platform.invokeMethod('requestScreenCapturePermission');
       return result;
     } on PlatformException catch (e) {
-      print("Failed to request permission: '${e.message}'.");
+      debugPrint("Failed to request permission: '${e.message}'.");
       return false;
     }
   }
@@ -19,7 +20,7 @@ class ScreenCaptureService {
       final Uint8List result = await platform.invokeMethod('captureScreen');
       return result;
     } on PlatformException catch (e) {
-      print("Failed to capture screen: '${e.message}'.");
+      debugPrint("Failed to capture screen: '${e.message}'.");
       return null;
     }
   }
@@ -28,7 +29,8 @@ class ScreenCaptureService {
     try {
       await platform.invokeMethod('stopScreenCaptureService');
     } on PlatformException catch (e) {
-      print("Failed to stop service: '${e.message}'.");
+      debugPrint("Failed to stop service: '${e.message}'.");
     }
   }
 }
+

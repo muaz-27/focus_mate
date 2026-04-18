@@ -38,7 +38,7 @@ class MainActivity: FlutterActivity() {
                 if (schedulesJson != null) { FocusAccessibilityService.updateSchedules(context, schedulesJson); result.success(true) }
                 else result.error("INVALID", "Schedules JSON null", null)
             }
-            else if (call.method == "isAccessibilityEnabled") {
+            else if (call.method == "isAccessibilityServiceAlive") {
                 result.success(isAccessibilityServiceEnabled(context, FocusAccessibilityService::class.java))
             } 
             // Called at startup: shows the one-time permission dialog

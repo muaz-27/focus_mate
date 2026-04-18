@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'app_colors.dart';
+import 'package:focus_mate/theme/app_colors.dart';
 
 /// Defines the global dark theme configuration for the application.
 ThemeData darkTheme = ThemeData(

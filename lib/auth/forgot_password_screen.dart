@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:focus_mate/core/auth_service.dart';
 import 'package:focus_mate/core/models/user_model.dart';
-import '../core/widgets/custom_button.dart';
-import '../core/widgets/custom_text_field.dart';
-import 'login_screen.dart'; // To access roleAccent
+import 'package:focus_mate/core/widgets/custom_button.dart';
+import 'package:focus_mate/core/widgets/custom_text_field.dart';
+import 'package:focus_mate/auth/login_screen.dart'; // To access roleAccent
 
 class ForgotPasswordScreen extends StatefulWidget {
   final UserRole role;
@@ -63,7 +63,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final accent = roleAccent[widget.role] ?? Colors.cyanAccent;
+    final accent = {
+          UserRole.user: Colors.cyanAccent,
+          UserRole.companion: Colors.purpleAccent,
+          UserRole.parent: Colors.orangeAccent,
+        }[widget.role] ??
+        Colors.cyanAccent;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
