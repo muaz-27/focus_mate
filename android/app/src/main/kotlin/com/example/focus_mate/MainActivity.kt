@@ -40,6 +40,9 @@ class MainActivity: FlutterActivity() {
             }
             else if (call.method == "isAccessibilityServiceAlive") {
                 result.success(isAccessibilityServiceEnabled(context, FocusAccessibilityService::class.java))
+            }
+            else if (call.method == "isSnapshotServiceRunning") {
+                result.success(SnapshotService.isRunning)
             } 
             // Called at startup: shows the one-time permission dialog
             else if (call.method == "requestScreenCapturePermission") {

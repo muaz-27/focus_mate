@@ -28,10 +28,12 @@ class AuthGate extends ConsumerWidget {
           return AuthScreen(onAuthComplete: (_, __) {});
         }
 
-        // Email not verified
+        // Temporarily bypassing email verification entirely as requested for testing
+        /*
         if (!user.emailVerified) {
           return const EmailVerificationScreen();
         }
+        */
 
         // Logged in + verified — watch user profile
         final userState = ref.watch(userProvider);

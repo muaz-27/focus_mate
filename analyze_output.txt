@@ -1,0 +1,66 @@
+﻿Analyzing focus_mate...                                         
+
+warning - Unused import: 'package:focus_mate/auth/login_screen.dart' - lib\auth\forgot_password_screen.dart:6:8 - unused_import
+warning - Unused import: 'package:cloud_firestore/cloud_firestore.dart' - lib\auth\login_screen.dart:2:8 - unused_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\auth\login_screen.dart:142:52 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\auth\login_screen.dart:148:46 - deprecated_member_use
+warning - Unused import: 'package:cloud_firestore/cloud_firestore.dart' - lib\auth\signup_screen.dart:2:8 - unused_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\auth\signup_screen.dart:140:52 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\auth\signup_screen.dart:146:46 - deprecated_member_use
+warning - Unused import: 'package:focus_mate/auth/email_verification_screen.dart' - lib\core\auth_gate.dart:6:8 - unused_import
+   info - The import of 'dart:typed_data' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/foundation.dart' - lib\core\screen_capture_service.dart:3:8 - unnecessary_import
+warning - Unused import: 'dart:convert' - lib\screens\analytics\analytics_screen.dart:1:8 - unused_import
+warning - Unused import: 'dart:typed_data' - lib\screens\companion\companion_control_page.dart:6:8 - unused_import
+warning - The value of the field '_usageService' isn't used - lib\screens\companion\companion_control_page.dart:28:22 - unused_field
+warning - The declaration '_endSessionEarly' isn't referenced - lib\screens\companion\companion_controlled_page.dart:219:16 - unused_element
+   info - The import of 'package:flutter/services.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\screens\companion\companion_dashboard.dart:5:8 - unnecessary_import
+warning - Unused import: 'package:focus_mate/screens/analytics/analytics_screen.dart' - lib\screens\companion\companion_dashboard.dart:6:8 - unused_import
+warning - Unused import: 'package:focus_mate/screens/companion/companion_controlled_page.dart' - lib\screens\companion\waiting_for_companion_page.dart:4:8 - unused_import
+   info - The import of 'dart:typed_data' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/services.dart' - lib\screens\locks\app_lock_screen.dart:9:8 - unnecessary_import
+   info - The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\screens\locks\app_lock_screen.dart:10:8 - unnecessary_import
+warning - Unused import: 'dart:typed_data' - lib\screens\locks\parental_locks_screen.dart:2:8 - unused_import
+   info - The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/cupertino.dart' - lib\screens\locks\remote_app_lock_screen.dart:5:8 - unnecessary_import
+warning - Unused import: 'dart:typed_data' - lib\screens\locks\remote_app_lock_screen.dart:7:8 - unused_import
+warning - Unused import: 'package:focus_mate/core/schedule_service.dart' - lib\screens\schedule\parent_schedule_list_screen.dart:3:8 - unused_import
+warning - Unused import: 'dart:typed_data' - lib\screens\schedule\parent_schedule_lock_form.dart:4:8 - unused_import
+warning - Unused import: 'dart:typed_data' - lib\screens\schedule\schedule_approval_screen.dart:4:8 - unused_import
+   info - The import of 'dart:typed_data' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/services.dart' - lib\screens\student\student_dashboard.dart:2:8 - unnecessary_import
+warning - Unused import: 'package:firebase_auth/firebase_auth.dart' - lib\screens\student\student_dashboard.dart:4:8 - unused_import
+warning - Unused import: 'package:focus_mate/core/auth_service.dart' - lib\screens\student\student_dashboard.dart:9:8 - unused_import
+warning - Unused import: 'package:focus_mate/screens/study/study_workspace_screen.dart' - lib\screens\student\student_dashboard.dart:18:8 - unused_import
+warning - Unused import: 'package:focus_mate/screens/companion/waiting_for_companion_page.dart' - lib\screens\student\student_dashboard.dart:20:8 - unused_import
+warning - Unused import: 'package:focus_mate/screens/locks/parental_locks_screen.dart' - lib\screens\student\student_dashboard.dart:21:8 - unused_import
+warning - Unused import: 'package:focus_mate/screens/schedule/schedule_list_screen.dart' - lib\screens\student\student_dashboard.dart:25:8 - unused_import
+warning - The '!' will have no effect because the receiver can't be null - lib\screens\student\student_dashboard.dart:501:53 - unnecessary_non_null_assertion
+warning - The declaration '_startRuleSync' isn't referenced - lib\screens\student\student_dashboard.dart:528:8 - unused_element
+warning - The value of the field '_selectedMaterial' isn't used - lib\screens\study\session_setup_screen.dart:19:11 - unused_field
+warning - The value of the field '_materials' isn't used - lib\screens\study\session_setup_screen.dart:22:22 - unused_field
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\screens\study\session_setup_screen.dart:102:17 - deprecated_member_use
+warning - Unused import: 'package:focus_mate/screens/quiz/quiz_history_screen.dart' - lib\screens\study\study_workspace_screen.dart:15:8 - unused_import
+warning - The declaration '_deleteQuiz' isn't referenced - lib\screens\study\study_workspace_screen.dart:679:16 - unused_element
+   info - The import of 'package:flutter/cupertino.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - packages\device_apps\example\lib\apps_events.dart:4:8 - unnecessary_import
+  error - Using a colon as the separator before a default value is no longer supported - packages\device_apps\example\lib\apps_list.dart:59:29 - obsolete_colon_for_default_value
+  error - Using a colon as the separator before a default value is no longer supported - packages\device_apps\example\lib\apps_list.dart:60:36 - obsolete_colon_for_default_value
+  error - Target of URI doesn't exist: 'package:device_apps_example/apps_events.dart' - packages\device_apps\example\lib\main.dart:1:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: 'package:device_apps_example/apps_list.dart' - packages\device_apps\example\lib\main.dart:2:8 - uri_does_not_exist
+  error - The method 'AppsListScreen' isn't defined for the type 'ExampleApp' - packages\device_apps\example\lib\main.dart:23:60 - undefined_method
+  error - The method 'AppsEventsScreen' isn't defined for the type 'ExampleApp' - packages\device_apps\example\lib\main.dart:32:60 - undefined_method
+   info - The import of 'dart:typed_data' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/services.dart' - packages\device_apps\lib\src\plugin.dart:3:8 - unnecessary_import
+  error - Using a colon as the separator before a default value is no longer supported - packages\device_apps\lib\src\plugin.dart:28:27 - obsolete_colon_for_default_value
+  error - Using a colon as the separator before a default value is no longer supported - packages\device_apps\lib\src\plugin.dart:29:25 - obsolete_colon_for_default_value
+  error - Using a colon as the separator before a default value is no longer supported - packages\device_apps\lib\src\plugin.dart:30:34 - obsolete_colon_for_default_value
+
+flutter : 49 issues found. (ran in 
+45.6s)
+At line:1 char:1
++ flutter analyze --no-pub 2>&1 | 
+Out-File -Encoding utf8 
+analyze_outpu ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : 
+NotSpeci    fied: (49 issues 
+found. (ran in 45    .6s):String) 
+[], RemoteException
+    + FullyQualifiedErrorId : 
+NativeCo    mmandError
+ 

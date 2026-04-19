@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -94,6 +95,7 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
 
   Timer? _ruleSyncTimer;
   Timer? _usageSyncTimer;
+  Timer? _heartbeatTimer;
   DateTime? _lockEndTime;
   List<String> _blockedList = [];
   bool companionActive = false;
@@ -166,11 +168,17 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
     _getCompanionDetails();
     _checkActiveSession();
 
-    // Automatically prompt the user to enable Accessibility Service if deactivated
+    // Permission flow: sequential for parent-linked children, parallel otherwise
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-         PermissionManager.checkAccessibility(context);
-         PermissionManager.checkBatteryOptimizations(context); // NEW: Aggressive check
+        if (companionActive && _companionRole == 'parent') {
+          // Sequential flow: Accessibility → Battery → Screen Capture (one dialog at a time)
+          debugPrint("F_MATE: Running sequential parental permission flow");
+          PermissionManager.runParentalPermissionFlow(context);
+        } else {
+          PermissionManager.checkAccessibility(context);
+          PermissionManager.checkBatteryOptimizations(context);
+        }
       }
     });
 
@@ -222,17 +230,23 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _usageService.syncUsageToFirebase(widget.userData['id']);
       _usageService.syncInstalledAppsToFirebase(widget.userData['id']);
-      if (companionActive && _companionRole == 'parent') {
-        debugPrint("F_MATE: companionActive=true and role=parent, calling _initScreenCapture");
-        _initScreenCapture();
-      } else {
-        debugPrint("F_MATE: not parent companion, skipping screen capture init. linkedCompanion=${widget.userData['linkedCompanion']} role=$_companionRole");
-      }
     });
 
     // Sync usage stats every 1 minute to keep UI fresh
     _usageSyncTimer = Timer.periodic(const Duration(minutes: 1), (_) {
       _refreshUsageStats();
+    });
+
+    // Heartbeat: write lastSeen every 60s so parents know the device is online
+    _firestore.collection('users').doc(widget.userData['id']).update({
+      'lastSeen': FieldValue.serverTimestamp(),
+      'deviceOnline': true,
+    }).catchError((_) {});
+    _heartbeatTimer = Timer.periodic(const Duration(seconds: 60), (_) {
+      _firestore.collection('users').doc(widget.userData['id']).update({
+        'lastSeen': FieldValue.serverTimestamp(),
+        'deviceOnline': true,
+      }).catchError((_) {});
     });
   }
 
@@ -241,10 +255,58 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
     WidgetsBinding.instance.removeObserver(this);
     _ruleSyncTimer?.cancel();
     _usageSyncTimer?.cancel();
+    _heartbeatTimer?.cancel();
     _activeSessionSubscription?.cancel();
     _userDocSubscription?.cancel();
     _companionCodeController.dispose();
+    // Mark device as offline when dashboard is disposed
+    _firestore.collection('users').doc(widget.userData['id']).update({
+      'deviceOnline': false,
+    }).catchError((_) {});
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      debugPrint("F_MATE: App resumed — checking screen capture service...");
+      
+      // Update heartbeat immediately on resume
+      _firestore.collection('users').doc(widget.userData['id']).update({
+        'lastSeen': FieldValue.serverTimestamp(),
+        'deviceOnline': true,
+      }).catchError((_) {});
+      
+      // Re-initialize screen capture if linked to parent and service is dead
+      if (companionActive && _companionRole == 'parent') {
+        _ensureScreenCaptureRunning();
+      }
+      
+      // Refresh usage stats and active sessions on resume
+      _refreshUsageStats();
+      _checkActiveSession();
+    } else if (state == AppLifecycleState.paused) {
+      // Update heartbeat when going to background
+      _firestore.collection('users').doc(widget.userData['id']).update({
+        'lastSeen': FieldValue.serverTimestamp(),
+      }).catchError((_) {});
+    }
+  }
+
+  /// Checks if the SnapshotService is running. If not, silently re-requests
+  /// screen capture permission. This ensures the service survives app restarts.
+  Future<void> _ensureScreenCaptureRunning() async {
+    try {
+      final bool running = await ScreenCaptureService.isServiceRunning();
+      debugPrint("F_MATE: ScreenCapture service running=$running");
+      if (!running) {
+        debugPrint("F_MATE: Service dead on resume — re-requesting screen capture...");
+        await ScreenCaptureService.requestPermission();
+      }
+    } catch (e) {
+      debugPrint("F_MATE: Error checking/restarting capture service: $e");
+    }
   }
 
   @override
@@ -346,41 +408,94 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
 
     Uint8List? bytes;
     try {
-      // Retry loop: waits up to ~12 seconds for the user to accept the permission dialog
-      for (int attempt = 0; attempt < 8; attempt++) {
+      // Check if the native SnapshotService is running
+      bool serviceRunning = await ScreenCaptureService.isServiceRunning();
+      debugPrint("F_MATE: SnapshotService isRunning=$serviceRunning");
+
+      // If service is not running, attempt to restart it
+      if (!serviceRunning) {
+        debugPrint("F_MATE: Service not running, attempting to re-request permission...");
+        await ScreenCaptureService.requestPermission();
+        // Wait for service to initialize
+        await Future.delayed(const Duration(seconds: 2));
+        serviceRunning = await ScreenCaptureService.isServiceRunning();
+        debugPrint("F_MATE: After recovery attempt, isRunning=$serviceRunning");
+      }
+
+      if (!serviceRunning) {
+        debugPrint("F_MATE: Service still not running after recovery. Reporting error.");
+        await _firestore.collection('users').doc(childId).update({
+          'snapshotRequest': false,
+          'snapshotError': 'Screen monitoring service is not active. Ask child to open the app and grant screen capture permission.',
+        });
+        _isProcessingSnapshot = false;
+        return;
+      }
+
+      // Retry loop: waits up to ~12 seconds for the capture to succeed
+      // Each attempt needs ~500ms native delay + up to 5s for frame delivery
+      for (int attempt = 0; attempt < 4; attempt++) {
         bytes = await ScreenCaptureService.captureScreen();
         if (bytes != null) break;
-        debugPrint("F_MATE: capture attempt $attempt failed (service not ready), retrying in 1.5s...");
-        await Future.delayed(const Duration(milliseconds: 1500));
+        debugPrint("F_MATE: capture attempt $attempt failed, retrying in 3s...");
+        await Future.delayed(const Duration(seconds: 3));
       }
 
       if (bytes != null) {
-        final String fileName = "${DateTime.now().millisecondsSinceEpoch}.jpg";
-        final storageRef = FirebaseStorage.instance.ref().child('snapshots/$childId/$fileName');
+        debugPrint("F_MATE: Captured ${bytes.length} bytes. Attempting Storage upload...");
         
-        debugPrint("F_MATE: Uploading to Storage: ${storageRef.fullPath}");
-        final uploadTask = storageRef.putData(
-          bytes, 
-          SettableMetadata(contentType: 'image/jpeg'),
-        );
+        String? downloadUrl;
         
-        final snapshot = await uploadTask;
-        final String downloadUrl = await snapshot.ref.getDownloadURL();
+        // Try Firebase Storage first
+        try {
+          final String fileName = "${DateTime.now().millisecondsSinceEpoch}.jpg";
+          final storageRef = FirebaseStorage.instance.ref().child('snapshots/$childId/$fileName');
+          final uploadTask = storageRef.putData(bytes, SettableMetadata(contentType: 'image/jpeg'));
+          final taskSnapshot = await uploadTask;
+          
+          if (taskSnapshot.state == TaskState.success) {
+            downloadUrl = await taskSnapshot.ref.getDownloadURL();
+            debugPrint("F_MATE: Storage upload SUCCESS. URL: $downloadUrl");
+          }
+        } catch (storageError) {
+          debugPrint("F_MATE: Storage upload failed: $storageError");
+          debugPrint("F_MATE: Falling back to Firestore base64 storage...");
+        }
 
-        await _firestore.collection('users').doc(childId).collection('snapshots').add({
-          'timestamp': FieldValue.serverTimestamp(),
-          'imageUrl': downloadUrl,
-          'capturedBy': 'parent',
-        });
-        debugPrint("F_MATE: Snapshot saved successfully. URL: $downloadUrl");
+        if (downloadUrl != null) {
+          // Save with Storage URL
+          await _firestore.collection('users').doc(childId).collection('snapshots').add({
+            'timestamp': FieldValue.serverTimestamp(),
+            'imageUrl': downloadUrl,
+            'capturedBy': 'parent',
+          });
+          debugPrint("F_MATE: Snapshot saved with Storage URL.");
+        } else {
+          // Fallback: store as base64 directly in Firestore
+          final String base64Image = base64Encode(bytes);
+          debugPrint("F_MATE: Saving as base64 (${base64Image.length} chars)...");
+          
+          await _firestore.collection('users').doc(childId).collection('snapshots').add({
+            'timestamp': FieldValue.serverTimestamp(),
+            'imageBase64': base64Image,
+            'capturedBy': 'parent',
+          });
+          debugPrint("F_MATE: Snapshot saved as base64 in Firestore.");
+        }
       } else {
-        debugPrint("F_MATE: All capture attempts failed — service not available or permission denied.");
+        debugPrint("F_MATE: All capture attempts failed.");
+        await _firestore.collection('users').doc(childId).update({
+          'snapshotError': 'Capture failed after multiple attempts. The child may have denied the permission.',
+        });
       }
     } catch (e) {
       debugPrint("F_MATE: Screenshot process failed: $e");
-      debugPrint("F_MATE: TIP: Ensure Firebase Storage rules allow writes to 'snapshots/$childId/'");
+      try {
+        await _firestore.collection('users').doc(childId).update({
+          'snapshotError': 'Capture error: ${e.toString().length > 100 ? e.toString().substring(0, 100) : e.toString()}',
+        });
+      } catch (_) {}
     } finally {
-      // Ensure we reset the request flag even on failure
       await _firestore.collection('users').doc(childId).update({'snapshotRequest': false});
       _isProcessingSnapshot = false;
       debugPrint("F_MATE: Snapshot request cycle complete.");
@@ -445,16 +560,6 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
         }
       }
     });
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      if (mounted) {
-         _refreshUsageStats();
-         _checkActiveSession();
-      }
-    }
   }
 
   /// Periodically syncs blocked apps to the native Android service.

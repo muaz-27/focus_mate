@@ -25,20 +25,53 @@ class SnapshotsScreen extends ConsumerStatefulWidget {
 class _SnapshotsScreenState extends ConsumerState<SnapshotsScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   bool _isRequesting = false;
+  bool _isChildOnline = true;
   StreamSubscription<DocumentSnapshot>? _userSub;
 
   @override
   void initState() {
     super.initState();
-    // Listen to snapshotRequest field to know when capture completes
+    // Listen to snapshotRequest and snapshotError fields
     _userSub = _firestore.collection('users').doc(widget.studentId).snapshots().listen((snap) {
       if (snap.exists && snap.data() != null) {
         final data = snap.data() as Map<String, dynamic>;
         final bool isCapturingRemote = data['snapshotRequest'] == true;
+        final String? snapshotError = data['snapshotError'] as String?;
+
         if (mounted) {
+          // Check device online status
+          final bool deviceOnline = data['deviceOnline'] == true;
+          final Timestamp? lastSeen = data['lastSeen'] as Timestamp?;
+          final bool isRecent = lastSeen != null && 
+              DateTime.now().difference(lastSeen.toDate()).inMinutes < 3;
+
           setState(() {
             _isRequesting = isCapturingRemote;
+            _isChildOnline = deviceOnline && isRecent;
           });
+
+          // Show error feedback from the child's device
+          if (snapshotError != null && snapshotError.isNotEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Row(
+                  children: [
+                    const Icon(Icons.error_outline, color: Colors.white, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(snapshotError)),
+                  ],
+                ),
+                backgroundColor: Colors.red.shade700,
+                behavior: SnackBarBehavior.floating,
+                duration: const Duration(seconds: 5),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+            );
+            // Clear the error after displaying it
+            _firestore.collection('users').doc(widget.studentId).update({
+              'snapshotError': FieldValue.delete(),
+            });
+          }
         }
       }
     });
@@ -212,7 +245,47 @@ class _SnapshotsScreenState extends ConsumerState<SnapshotsScreen> {
           ]
         ],
       ),
-      body: _buildBody(isDark, cardColor, subtextColor),
+      body: Column(
+        children: [
+          // Offline banner
+          if (!_isChildOnline)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF2A1A1A) : Colors.red.shade50,
+                border: Border(
+                  bottom: BorderSide(color: Colors.red.withValues(alpha: 0.3)),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.phone_disabled, color: Colors.red.shade400, size: 20),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      "Child's device is offline",
+                      style: TextStyle(
+                        color: Colors.red.shade400,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text('OFFLINE', style: TextStyle(color: Colors.red.shade400, fontSize: 11, fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+            ),
+          Expanded(child: _buildBody(isDark, cardColor, subtextColor)),
+        ],
+      ),
     );
   }
 
