@@ -7,6 +7,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:focus_mate/providers/snapshots_provider.dart';
+import 'package:focus_mate/theme/app_colors.dart';
+import 'package:focus_mate/theme/app_theme.dart';
 
 class SnapshotsScreen extends ConsumerStatefulWidget {
   final String studentId;
@@ -163,16 +165,24 @@ class _SnapshotsScreenState extends ConsumerState<SnapshotsScreen> {
   }
 
   Future<void> _confirmDelete(String docId) async {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Delete Snapshot'),
-        content: const Text('Are you sure you want to delete this snapshot?'),
+        backgroundColor: isDark ? const Color(0xFF1C1C2E) : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Delete Snapshot', style: TextStyle(color: isDark ? Colors.white : Colors.black87)),
+        content: Text('Are you sure you want to delete this snapshot?', style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[700])),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('Cancel', style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600])),
+          ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Delete', style: TextStyle(color: Colors.white)),
           ),
@@ -185,107 +195,146 @@ class _SnapshotsScreenState extends ConsumerState<SnapshotsScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark ? const Color(0xFF0F0F1A) : const Color(0xFFF0F2F8);
-    final cardColor = isDark ? const Color(0xFF1C1C2E) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black87;
     final subtextColor = isDark ? Colors.grey[400] : Colors.grey[600];
+    final cardColor = isDark ? Colors.white.withValues(alpha: 0.06) : Colors.white;
 
     return Scaffold(
-      backgroundColor: bgColor,
+      backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: isDark ? const Color(0xFF1C1C2E) : Colors.white,
-        foregroundColor: isDark ? Colors.white : Colors.black87,
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        shadowColor: Colors.transparent,
+        iconTheme: IconThemeData(color: textColor),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Snapshots', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text('Snapshots', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
             Text(widget.studentName, style: TextStyle(fontSize: 13, color: subtextColor)),
           ],
         ),
         actions: [
-          if (_isRequesting) ...[
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              child: TextButton(
-                onPressed: _cancelCapture,
-                child: const Text('Cancel', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+          // Online/Offline chip
+          Container(
+            margin: const EdgeInsets.only(right: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: _isChildOnline
+                  ? Colors.green.withValues(alpha: 0.1)
+                  : Colors.red.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: _isChildOnline
+                    ? Colors.green.withValues(alpha: 0.2)
+                    : Colors.red.withValues(alpha: 0.2),
               ),
             ),
-            Container(
-              margin: const EdgeInsets.only(right: 12),
-              child: ElevatedButton.icon(
-                onPressed: null,
-                icon: const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
-                label: const Text('Capturing...', style: TextStyle(fontWeight: FontWeight.bold)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.indigo.shade400,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 8, height: 8,
+                  decoration: BoxDecoration(
+                    color: _isChildOnline ? Colors.green : Colors.red.shade400,
+                    shape: BoxShape.circle,
+                  ),
                 ),
-              ),
+                const SizedBox(width: 6),
+                Text(
+                  _isChildOnline ? "Online" : "Offline",
+                  style: TextStyle(
+                    color: _isChildOnline ? Colors.green : Colors.red.shade400,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
-          ] else ...[
-            Container(
-              margin: const EdgeInsets.only(right: 12),
-              child: ElevatedButton.icon(
-                onPressed: _requestCapture,
-                icon: const Icon(Icons.camera_alt, size: 18),
-                label: const Text('Capture', style: TextStyle(fontWeight: FontWeight.bold)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.indigo.shade600,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
-                ),
+          ),
+          const SizedBox(width: 4),
+        ],
+      ),
+      body: Container(
+        decoration: AppTheme.screenBackground(context, AppColors.roleGradients['companion']!),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Capture button area
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                child: _buildCaptureButton(isDark),
               ),
+              // Snapshots grid
+              Expanded(
+                child: _buildBody(isDark, cardColor, subtextColor),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCaptureButton(bool isDark) {
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: _isRequesting
+          ? Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: null,
+                    icon: const SizedBox(
+                      width: 16, height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    ),
+                    label: const Text('Capturing...', style: TextStyle(fontWeight: FontWeight.bold)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.indigo.shade400,
+                      foregroundColor: Colors.white,
+                      disabledBackgroundColor: Colors.indigo.shade400,
+                      disabledForegroundColor: Colors.white70,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      elevation: 0,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                SizedBox(
+                  height: 52,
+                  child: OutlinedButton(
+                    onPressed: _cancelCapture,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.redAccent,
+                      side: BorderSide(color: Colors.redAccent.withValues(alpha: 0.4)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                    ),
+                    child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ],
             )
-          ]
-        ],
-      ),
-      body: Column(
-        children: [
-          // Offline banner
-          if (!_isChildOnline)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF2A1A1A) : Colors.red.shade50,
-                border: Border(
-                  bottom: BorderSide(color: Colors.red.withValues(alpha: 0.3)),
-                ),
+          : ElevatedButton.icon(
+              onPressed: _isChildOnline ? _requestCapture : null,
+              icon: const Icon(Icons.camera_alt_rounded, size: 20),
+              label: Text(
+                _isChildOnline ? 'Capture Screenshot' : 'Device Offline',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
               ),
-              child: Row(
-                children: [
-                  Icon(Icons.phone_disabled, color: Colors.red.shade400, size: 20),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      "Child's device is offline",
-                      style: TextStyle(
-                        color: Colors.red.shade400,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.red.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text('OFFLINE', style: TextStyle(color: Colors.red.shade400, fontSize: 11, fontWeight: FontWeight.bold)),
-                  ),
-                ],
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.indigo.shade600,
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: isDark ? Colors.grey.shade800 : Colors.grey.shade300,
+                disabledForegroundColor: isDark ? Colors.grey.shade500 : Colors.grey.shade600,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                elevation: 0,
               ),
             ),
-          Expanded(child: _buildBody(isDark, cardColor, subtextColor)),
-        ],
-      ),
     );
   }
 
@@ -294,7 +343,7 @@ class _SnapshotsScreenState extends ConsumerState<SnapshotsScreen> {
 
     return snapshotsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text("Error: $e", style: const TextStyle(color: Colors.white))),
+      error: (e, _) => Center(child: Text("Error: $e", style: TextStyle(color: isDark ? Colors.white : Colors.black87))),
       data: (docs) {
         // Filter out any debug error documents
         final validDocs = docs.where((d) {
@@ -312,18 +361,26 @@ class _SnapshotsScreenState extends ConsumerState<SnapshotsScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(28),
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.indigo.withValues(alpha: 0.15) : Colors.indigo.withValues(alpha: 0.08),
+                    color: Colors.indigo.withValues(alpha: isDark ? 0.15 : 0.08),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(Icons.photo_camera_outlined, size: 56, color: Colors.indigo.shade300),
+                  child: Icon(Icons.photo_camera_outlined, size: 52, color: Colors.indigo.shade300),
                 ),
-                const SizedBox(height: 20),
-                Text('No snapshots yet', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
+                const SizedBox(height: 24),
+                Text(
+                  'No snapshots yet',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
                 const SizedBox(height: 8),
-                Text('Tap "Capture" to take a screenshot\nof the child\'s device.',
-                  style: TextStyle(color: subtextColor, height: 1.5),
+                Text(
+                  'Tap "Capture Screenshot" to take\na screenshot of the child\'s device.',
+                  style: TextStyle(color: subtextColor, height: 1.5, fontSize: 14),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -331,78 +388,99 @@ class _SnapshotsScreenState extends ConsumerState<SnapshotsScreen> {
           );
         }
 
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
+        return GridView.builder(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            childAspectRatio: 0.72,
+          ),
           itemCount: validDocs.length,
           itemBuilder: (context, index) {
-            final doc  = validDocs[index];
+            final doc = validDocs[index];
             final data = doc.data() as Map<String, dynamic>;
-            final imageUrl   = data['imageUrl'] as String?;
-            final base64Str  = data['imageBase64'] as String?;
-            final timestamp  = data['timestamp'] as Timestamp?;
-            final dateStr    = timestamp != null
-                ? DateFormat('MMM dd, yyyy  •  hh:mm a').format(timestamp.toDate())
-                : 'Unknown Date';
+            final imageUrl = data['imageUrl'] as String?;
+            final base64Str = data['imageBase64'] as String?;
+            final timestamp = data['timestamp'] as Timestamp?;
+            final dateStr = timestamp != null
+                ? DateFormat('MMM dd, hh:mm a').format(timestamp.toDate())
+                : 'Unknown';
 
             Uint8List? imageBytes;
             if (base64Str != null) {
               try { imageBytes = base64Decode(base64Str); } catch (_) {}
             }
 
-            return Container(
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                color: cardColor,
-                borderRadius: BorderRadius.circular(18),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.07),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  )
-                ],
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  GestureDetector(
-                    onTap: () => _showFullscreen(context, imageBytes, imageUrl, dateStr),
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxHeight: 220),
+            return GestureDetector(
+              onTap: () => _showFullscreen(context, imageBytes, imageUrl, dateStr),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: cardColor,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.grey.shade200,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.06),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Image
+                    Expanded(
                       child: imageUrl != null
-                          ? Image.network(imageUrl, fit: BoxFit.cover, width: double.infinity,
+                          ? Image.network(
+                              imageUrl,
+                              fit: BoxFit.cover,
                               errorBuilder: (_, __, ___) => _buildBrokenImage(isDark),
                               loadingBuilder: (_, child, progress) {
                                 if (progress == null) return child;
-                                return const Center(child: CircularProgressIndicator());
-                              })
+                                return Center(
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: isDark ? Colors.indigo.shade300 : Colors.indigo,
+                                  ),
+                                );
+                              },
+                            )
                           : imageBytes != null
-                              ? Image.memory(imageBytes, fit: BoxFit.cover, width: double.infinity,
-                                  errorBuilder: (_, __, ___) => _buildBrokenImage(isDark))
+                              ? Image.memory(
+                                  imageBytes,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => _buildBrokenImage(isDark),
+                                )
                               : _buildBrokenImage(isDark),
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    child: Row(
-                      children: [
-                        Icon(Icons.access_time, size: 15, color: subtextColor),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(dateStr, style: TextStyle(fontSize: 13, color: subtextColor)),
-                        ),
-                        IconButton(
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                          icon: Icon(Icons.delete_outline, color: Colors.red.shade400, size: 22),
-                          tooltip: 'Delete',
-                          onPressed: () => _confirmDelete(doc.id),
-                        ),
-                      ],
+                    // Footer
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      child: Row(
+                        children: [
+                          Icon(Icons.access_time, size: 12, color: subtextColor),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              dateStr,
+                              style: TextStyle(fontSize: 11, color: subtextColor),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () => _confirmDelete(doc.id),
+                            child: Icon(Icons.delete_outline, color: Colors.red.shade400, size: 18),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             );
           },
@@ -412,15 +490,14 @@ class _SnapshotsScreenState extends ConsumerState<SnapshotsScreen> {
   }
 
   Widget _buildBrokenImage(bool isDark) => Container(
-    height: 160,
     color: isDark ? Colors.grey[850] : Colors.grey[100],
     child: Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.image_not_supported_outlined, size: 36, color: Colors.grey[500]),
-          const SizedBox(height: 8),
-          Text('Preview unavailable', style: TextStyle(color: Colors.grey[500], fontSize: 13)),
+          Icon(Icons.image_not_supported_outlined, size: 32, color: Colors.grey[500]),
+          const SizedBox(height: 6),
+          Text('Unavailable', style: TextStyle(color: Colors.grey[500], fontSize: 11)),
         ],
       ),
     ),
@@ -428,6 +505,7 @@ class _SnapshotsScreenState extends ConsumerState<SnapshotsScreen> {
 
   void _showFullscreen(BuildContext context, Uint8List? bytes, String? imageUrl, String dateStr) {
     if (bytes == null && imageUrl == null) return;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
       context: context,
       builder: (ctx) => Dialog(
@@ -436,6 +514,22 @@ class _SnapshotsScreenState extends ConsumerState<SnapshotsScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Close button
+            Align(
+              alignment: Alignment.topRight,
+              child: GestureDetector(
+                onTap: () => Navigator.pop(ctx),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.5),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.close, color: Colors.white, size: 20),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
             Flexible(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),
@@ -444,8 +538,15 @@ class _SnapshotsScreenState extends ConsumerState<SnapshotsScreen> {
                     : Image.memory(bytes!, fit: BoxFit.contain),
               ),
             ),
-            const SizedBox(height: 10),
-            Text(dateStr, style: const TextStyle(color: Colors.white70, fontSize: 13)),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.4),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(dateStr, style: const TextStyle(color: Colors.white70, fontSize: 13)),
+            ),
           ],
         ),
       ),

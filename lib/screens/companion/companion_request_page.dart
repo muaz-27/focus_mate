@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:focus_mate/screens/companion/waiting_for_companion_page.dart';
 import 'package:focus_mate/core/widgets/custom_dialog.dart';
+import 'package:focus_mate/theme/app_colors.dart';
+import 'package:focus_mate/theme/app_theme.dart';
 import 'package:flutter/cupertino.dart';
 
 class CompanionRequestPage extends StatefulWidget {
@@ -41,6 +43,8 @@ class _CompanionRequestPageState extends State<CompanionRequestPage> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        final textColor = isDark ? Colors.white : const Color(0xFF1A1A2E);
         return Container(
           height: 300,
           padding: const EdgeInsets.all(20),
@@ -49,17 +53,17 @@ class _CompanionRequestPageState extends State<CompanionRequestPage> {
               // Handle bar
               Container(
                 width: 40, height: 4,
-                decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
+                decoration: BoxDecoration(color: isDark ? Colors.white24 : Colors.grey.shade300, borderRadius: BorderRadius.circular(2)),
               ),
               const SizedBox(height: 20),
-              const Text("Select Duration", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+              Text("Select Duration", style: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 20),
               Expanded(
                 child: CupertinoTheme(
-                  data: const CupertinoThemeData(
-                    brightness: Brightness.dark,
+                  data: CupertinoThemeData(
+                    brightness: Theme.of(context).brightness,
                     textTheme: CupertinoTextThemeData(
-                      pickerTextStyle: TextStyle(color: Colors.white, fontSize: 24),
+                      pickerTextStyle: TextStyle(color: textColor, fontSize: 24),
                     ),
                   ),
                   child: CupertinoTimerPicker(
@@ -104,14 +108,9 @@ class _CompanionRequestPageState extends State<CompanionRequestPage> {
           Container(
             height: double.infinity,
             width: double.infinity,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: isDark 
-                  ? [const Color(0xFF1A1F35), const Color(0xFF0B0E17)] 
-                  : [const Color(0xFFF8FAFC), const Color(0xFFE2E8F0)],
-              ),
+            decoration: AppTheme.screenBackground(
+              context,
+              AppColors.roleGradients['user']!,
             ),
           ),
           
@@ -298,7 +297,7 @@ class _CompanionRequestPageState extends State<CompanionRequestPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+              child: Text("Cancel", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[400] : Colors.grey.shade600)),
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(context, true),

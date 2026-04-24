@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:focus_mate/theme/app_colors.dart';
+import 'package:focus_mate/theme/app_theme.dart';
 import 'package:focus_mate/screens/quiz/quiz_review_screen.dart';
 import 'package:focus_mate/providers/quiz_provider.dart';
 
@@ -42,32 +43,45 @@ class _QuizHistoryScreenState extends ConsumerState<QuizHistoryScreen> {
   Widget build(BuildContext context) {
     final quizzesAsync = ref.watch(quizzesProvider(widget.userId));
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : const Color(0xFF1A1A2E);
+    final cardBg = isDark ? AppColors.cardOverlay : Colors.white.withValues(alpha: 0.85);
+    final borderColor = isDark ? Colors.white10 : Colors.grey.shade200;
+    final iconBg = isDark ? Colors.white10 : Colors.amber.withValues(alpha: 0.1);
+    final accentAmber = isDark ? Colors.amberAccent : Colors.amber.shade700;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text("Quiz History"),
+        title: Text("Quiz History", style: TextStyle(color: textColor)),
         backgroundColor: Colors.transparent,
-        iconTheme: const IconThemeData(color: Colors.white),
+        elevation: 0,
+        iconTheme: IconThemeData(color: textColor),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: quizzesAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, _) {
-            final errorString = error.toString().toLowerCase();
-            // Firestore index not ready — fallback to unfiltered stream
-            if (errorString.contains('failed-precondition') || errorString.contains('requires an index')) {
-              return _buildFallbackStream();
-            }
-            return Center(child: Text("Error: $error", style: const TextStyle(color: Colors.white)));
-          },
-          data: (docs) {
-            final completedDocs = docs.where((doc) {
-              final data = doc.data() as Map<String, dynamic>;
-              return data['status'] == 'completed';
-            }).toList();
-            return _buildList(completedDocs);
-          },
+      body: Container(
+        decoration: AppTheme.screenBackground(context, AppColors.roleGradients['user']!),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: quizzesAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, _) {
+                final errorString = error.toString().toLowerCase();
+                if (errorString.contains('failed-precondition') || errorString.contains('requires an index')) {
+                  return _buildFallbackStream();
+                }
+                return Center(child: Text("Error: $error", style: TextStyle(color: textColor)));
+              },
+              data: (docs) {
+                final completedDocs = docs.where((doc) {
+                  final data = doc.data() as Map<String, dynamic>;
+                  return data['status'] == 'completed';
+                }).toList();
+                return _buildList(completedDocs);
+              },
+            ),
+          ),
         ),
       ),
     );
@@ -94,18 +108,25 @@ class _QuizHistoryScreenState extends ConsumerState<QuizHistoryScreen> {
   }
 
   Widget _buildList(List<QueryDocumentSnapshot> docs) {
+     final isDark = Theme.of(context).brightness == Brightness.dark;
+     final textColor = isDark ? Colors.white : const Color(0xFF1A1A2E);
+     final cardBg = isDark ? AppColors.cardOverlay : Colors.white.withValues(alpha: 0.85);
+     final borderColor = isDark ? Colors.white10 : Colors.grey.shade200;
+     final iconBg = isDark ? Colors.white10 : Colors.amber.withValues(alpha: 0.1);
+     final accentAmber = isDark ? Colors.amberAccent : Colors.amber.shade700;
+
      if (docs.isEmpty) {
          return Center(
             child: Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: AppColors.cardOverlay,
+                color: cardBg,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white10),
+                border: Border.all(color: borderColor),
               ),
-              child: const Text(
+              child: Text(
                 "No completed quizzes yet.",
-                style: TextStyle(color: Colors.white54),
+                style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.grey.shade700),
               ),
             ),
           );
@@ -142,20 +163,20 @@ class _QuizHistoryScreenState extends ConsumerState<QuizHistoryScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppColors.cardOverlay,
+                      color: cardBg,
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.white10),
+                      border: Border.all(color: borderColor),
                     ),
                     child: Row(
                       children: [
                         Container(
                           padding: const EdgeInsets.all(12),
-                          decoration: const BoxDecoration(
-                            color: Colors.white10,
+                          decoration: BoxDecoration(
+                            color: iconBg,
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.history,
-                              color: Colors.amberAccent, size: 28),
+                          child: Icon(Icons.history,
+                              color: accentAmber, size: 28),
                         ),
                         const SizedBox(width: 16),
                         Expanded(
@@ -164,8 +185,8 @@ class _QuizHistoryScreenState extends ConsumerState<QuizHistoryScreen> {
                             children: [
                               Text(
                                 sourceName,
-                                style: const TextStyle(
-                                    color: Colors.white,
+                                style: TextStyle(
+                                    color: textColor,
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold),
                                 maxLines: 1,
@@ -175,7 +196,7 @@ class _QuizHistoryScreenState extends ConsumerState<QuizHistoryScreen> {
                               Text(
                                 "Completed • Score: $score/$total",
                                 style: TextStyle(
-                                  color: Colors.amberAccent.withValues(alpha: 0.7),
+                                  color: accentAmber.withValues(alpha: 0.7),
                                   fontSize: 13,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -185,8 +206,8 @@ class _QuizHistoryScreenState extends ConsumerState<QuizHistoryScreen> {
                         ),
                         if (!widget.isReadOnly)
                           IconButton(
-                            icon: const Icon(Icons.delete_outline,
-                                color: Colors.white54),
+                            icon: Icon(Icons.delete_outline,
+                                color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.grey.shade700),
                             onPressed: () => _deleteQuiz(doc.id),
                           ),
                       ],

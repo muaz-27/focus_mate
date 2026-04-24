@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:focus_mate/screens/analytics/analytics_screen.dart';
+import 'package:focus_mate/screens/analytics/snapshots_screen.dart';
+import 'package:focus_mate/screens/locks/remote_app_lock_screen.dart';
 
 class StudentTile extends StatelessWidget {
   final String studentId;
@@ -18,64 +20,275 @@ class StudentTile extends StatelessWidget {
       future: FirebaseFirestore.instance.collection('users').doc(studentId).get(),
       builder: (context, snap) {
         if (!snap.hasData) {
-          return Container(height: 80, decoration: BoxDecoration(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white70, borderRadius: BorderRadius.circular(16)));
+          return Container(
+            height: 120,
+            decoration: BoxDecoration(
+              color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white70,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Center(
+              child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+            ),
+          );
         }
 
         final student = snap.data!.data() as Map<String, dynamic>;
         final studentName = student['name'] ?? "Unknown";
-        final isOnline = student['isOnline'] ?? false; // Assuming we have this field or similar
+        final isOnline = student['isOnline'] ?? false;
+        final studyTime = student['studyTime'] ?? 0;
+        final level = student['level'] ?? 1;
+        final lockedApps = List<String>.from(student['lockedApps'] ?? []);
 
         return Container(
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
+            color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.white,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05)),
-          ),
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            leading: Stack(
-              children: [
-                CircleAvatar(
-                  radius: 24,
-                  backgroundColor: Colors.blueAccent.withValues(alpha: 0.1),
-                  child: Text(studentName[0].toUpperCase(), style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 20)),
+            border: Border.all(
+              color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+            ),
+            boxShadow: [
+              if (!isDark)
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
                 ),
-                Positioned(
-                  right: 0,
-                  bottom: 0,
-                  child: Container(
-                    width: 14,
-                    height: 14,
-                    decoration: BoxDecoration(
-                      color: isOnline ? Colors.green : Colors.grey,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: isDark ? const Color(0xFF1E293B) : Colors.white, width: 2),
+            ],
+          ),
+          child: Column(
+            children: [
+              // Top row: Avatar + Name + Status
+              Row(
+                children: [
+                  // Avatar with online indicator
+                  Stack(
+                    children: [
+                      CircleAvatar(
+                        radius: 24,
+                        backgroundColor: Colors.blueAccent.withValues(alpha: 0.1),
+                        child: Text(
+                          studentName[0].toUpperCase(),
+                          style: const TextStyle(
+                            color: Colors.blueAccent,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20,
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        right: 0,
+                        bottom: 0,
+                        child: Container(
+                          width: 14,
+                          height: 14,
+                          decoration: BoxDecoration(
+                            color: isOnline ? Colors.green : Colors.grey,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(width: 14),
+                  // Name + info
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          studentName,
+                          style: TextStyle(
+                            color: isDark ? Colors.white : Colors.black87,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Row(
+                          children: [
+                            Icon(Icons.star_rounded, size: 14, color: Colors.amber.shade600),
+                            const SizedBox(width: 3),
+                            Text(
+                              "Level $level",
+                              style: TextStyle(
+                                color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                fontSize: 12,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Icon(Icons.timer_outlined, size: 13, color: Colors.blueAccent.withValues(alpha: 0.7)),
+                            const SizedBox(width: 3),
+                            Text(
+                              "${studyTime}m today",
+                              style: TextStyle(
+                                color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                fontSize: 12,
+                              ),
+                            ),
+                            if (lockedApps.isNotEmpty) ...[
+                              const SizedBox(width: 10),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.redAccent.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  "${lockedApps.length} locked",
+                                  style: TextStyle(
+                                    color: Colors.redAccent.shade100,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ],
                     ),
+                  ),
+                  // Online/Offline chip
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: isOnline
+                          ? Colors.green.withValues(alpha: 0.1)
+                          : Colors.grey.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      isOnline ? "ONLINE" : "OFFLINE",
+                      style: TextStyle(
+                        color: isOnline ? Colors.green : Colors.grey,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              // Divider
+              Container(
+                height: 1,
+                color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.grey.shade200,
+              ),
+              const SizedBox(height: 12),
+              // Bottom row: Quick action buttons
+              Row(
+                children: [
+                  _buildActionButton(
+                    context,
+                    icon: Icons.analytics_outlined,
+                    label: "Analytics",
+                    color: Colors.blueAccent,
+                    isDark: isDark,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => AnalyticsScreen(
+                            userId: studentId,
+                            userName: studentName,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  _buildActionButton(
+                    context,
+                    icon: Icons.lock_outline,
+                    label: "Locks",
+                    color: Colors.orangeAccent,
+                    isDark: isDark,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => RemoteAppLockScreen(
+                            studentId: studentId,
+                            studentName: studentName,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  _buildActionButton(
+                    context,
+                    icon: Icons.camera_alt_outlined,
+                    label: "Snapshots",
+                    color: Colors.indigoAccent,
+                    isDark: isDark,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => SnapshotsScreen(
+                            studentId: studentId,
+                            studentName: studentName,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildActionButton(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required Color color,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    return Expanded(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: isDark ? 0.1 : 0.08),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: color.withValues(alpha: isDark ? 0.15 : 0.12),
+              ),
+            ),
+            child: Column(
+              children: [
+                Icon(icon, color: color, size: 20),
+                const SizedBox(height: 4),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: isDark ? Colors.grey[300] : Colors.grey[700],
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
             ),
-            title: Text(studentName, style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold, fontSize: 16)),
-            subtitle: Text("Level ${student['level'] ?? 1} • Focus Scholar", style: TextStyle(color: Colors.grey[500], fontSize: 12)),
-            trailing: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(color: Colors.blueAccent.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
-              child: const Icon(Icons.analytics_outlined, color: Colors.blueAccent, size: 20),
-            ),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => AnalyticsScreen(
-                    userId: studentId,
-                    userName: studentName,
-                  ),
-                ),
-              );
-            },
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

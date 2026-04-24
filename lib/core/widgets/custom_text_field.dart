@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class CustomTextField extends StatefulWidget {
   final TextEditingController controller;
@@ -27,40 +28,49 @@ class _CustomTextFieldState extends State<CustomTextField> {
 
   @override
   Widget build(BuildContext context) {
-    final color = widget.accentColor ?? Colors.cyanAccent;
+    final color = widget.accentColor ?? Theme.of(context).colorScheme.primary;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return TextFormField(
       controller: widget.controller,
       obscureText: widget.isPassword && _obscureText,
       validator: widget.validator,
-      style: const TextStyle(color: Colors.white),
+      style: TextStyle(
+        color: Theme.of(context).colorScheme.onSurface,
+        fontSize: 16.sp,
+      ),
       decoration: InputDecoration(
-        prefixIcon: Icon(widget.icon, color: color),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+        prefixIcon: Icon(widget.icon, color: color, size: 22.sp),
         suffixIcon: widget.isPassword
             ? IconButton(
                 icon: Icon(
                   _obscureText ? Icons.visibility_off : Icons.visibility,
-                  color: Colors.white54,
+                  color: isDark ? Colors.white54 : Colors.black54,
+                  size: 22.sp,
                 ),
                 onPressed: () => setState(() => _obscureText = !_obscureText),
               )
             : null,
         hintText: widget.hint,
-        hintStyle: const TextStyle(color: Colors.white54),
+        hintStyle: TextStyle(
+          color: isDark ? Colors.white54 : Colors.black45,
+          fontSize: 14.sp,
+        ),
         filled: true,
-        fillColor: Colors.white12,
+        fillColor: isDark ? Colors.white12 : Colors.black12,
         border: _buildBorder(color.withValues(alpha: 0.2)),
         enabledBorder: _buildBorder(color.withValues(alpha: 0.2)),
         focusedBorder: _buildBorder(color.withValues(alpha: 0.5), width: 1.4),
-        errorBorder: _buildBorder(Colors.redAccent),
-        focusedErrorBorder: _buildBorder(Colors.redAccent, width: 1.4),
+        errorBorder: _buildBorder(Theme.of(context).colorScheme.error),
+        focusedErrorBorder: _buildBorder(Theme.of(context).colorScheme.error, width: 1.4),
       ),
     );
   }
 
   OutlineInputBorder _buildBorder(Color color, {double width = 1.0}) {
     return OutlineInputBorder(
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(14.r),
       borderSide: BorderSide(color: color, width: width),
     );
   }

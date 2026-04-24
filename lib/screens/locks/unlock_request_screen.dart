@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:focus_mate/theme/app_colors.dart';
+import 'package:focus_mate/theme/app_theme.dart';
 
 class UnlockRequestScreen extends StatefulWidget {
   final String userId;
@@ -72,14 +74,9 @@ class _UnlockRequestScreenState extends State<UnlockRequestScreen> {
         iconTheme: IconThemeData(color: textColor),
       ),
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark 
-              ? [const Color(0xFF1A1F35), const Color(0xFF0B0E17)] 
-              : [const Color(0xFFF8FAFC), const Color(0xFFE2E8F0)],
-          ),
+        decoration: AppTheme.screenBackground(
+          context,
+          AppColors.roleGradients['user']!,
         ),
         child: SafeArea(
           child: Center(

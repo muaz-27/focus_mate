@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:focus_mate/theme/app_colors.dart';
+import 'package:focus_mate/theme/app_theme.dart';
 import 'package:focus_mate/core/widgets/custom_dialog.dart';
 
 class FocusSessionScreen extends StatefulWidget {
@@ -111,19 +112,29 @@ class _FocusSessionScreenState extends State<FocusSessionScreen> {
         "${(_remainingSeconds ~/ 60).toString().padLeft(2, '0')}:${(_remainingSeconds % 60).toString().padLeft(2, '0')}";
 
     double progress = 1.0 - (_remainingSeconds / _totalSeconds);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : const Color(0xFF1A1A2E);
+    final mutedColor = isDark ? Colors.grey[400]! : Colors.grey.shade600;
 
     // We use this widget to stop the user from accidentally going back
     return PopScope(
       canPop: false,
       child: Scaffold(
-        backgroundColor: AppColors.background,
-        body: SafeArea(
+        backgroundColor: Colors.transparent,
+        body: Container(
+          height: double.infinity,
+          width: double.infinity,
+          decoration: AppTheme.screenBackground(
+            context,
+            AppColors.roleGradients['user']!,
+          ),
+          child: SafeArea(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text(
+              Text(
                 "FOCUS MODE",
-                style: TextStyle(color: Colors.grey, letterSpacing: 2),
+                style: TextStyle(color: mutedColor, letterSpacing: 2),
               ),
               const SizedBox(height: 40),
 
@@ -136,14 +147,14 @@ class _FocusSessionScreenState extends State<FocusSessionScreen> {
                     child: CircularProgressIndicator(
                       value: progress,
                       strokeWidth: 15,
-                      backgroundColor: AppColors.cardOverlay,
-                      color: Colors.blueAccent,
+                      backgroundColor: isDark ? AppColors.cardOverlay : Colors.grey.shade200,
+                      color: isDark ? Colors.blueAccent : Colors.blue.shade700,
                     ),
                   ),
                   Text(
                     timeText,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: textColor,
                       fontSize: 60,
                       fontWeight: FontWeight.bold,
                     ),
@@ -161,13 +172,13 @@ class _FocusSessionScreenState extends State<FocusSessionScreen> {
                 children: [
                   // Pause/Resume
                   FloatingActionButton(
-                    backgroundColor: Colors.white,
+                    backgroundColor: isDark ? Colors.white : Colors.grey.shade800,
                     onPressed: () {
                       setState(() {
                         _isPaused = !_isPaused;
                       });
                     },
-                    child: Icon(_isPaused ? Icons.play_arrow : Icons.pause, color: Colors.black),
+                    child: Icon(_isPaused ? Icons.play_arrow : Icons.pause, color: isDark ? Colors.black : Colors.white),
                   ),
                   const SizedBox(width: 24),
                   
@@ -181,6 +192,7 @@ class _FocusSessionScreenState extends State<FocusSessionScreen> {
               ),
             ],
           ),
+        ),
         ),
       ),
     );

@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:focus_mate/screens/companion/companion_controlled_page.dart';
+import 'package:focus_mate/theme/app_colors.dart';
+import 'package:focus_mate/theme/app_theme.dart';
 
 class WaitingForCompanionPage extends StatefulWidget {
   final String sessionId;
@@ -40,25 +41,25 @@ class _WaitingForCompanionPageState extends State<WaitingForCompanionPage> {
         .doc(widget.sessionId)
         .snapshots()
         .listen((snapshot) {
-      if (!mounted) return;
-      if (snapshot.exists) {
-        final data = snapshot.data()!;
-        final status = data['status'];
+          if (!mounted) return;
+          if (snapshot.exists) {
+            final data = snapshot.data()!;
+            final status = data['status'];
 
-        if (status == 'ACTIVE') {
-          // Declarative routing: pop to root, let DashboardRouter show CompanionControlledPage
-          Navigator.popUntil(context, (route) => route.isFirst);
-        } else if (status == 'REJECTED' || status == 'CANCELLED') {
-          // If we initiated the cancel, don't pop again (manual pop handles it)
-          if (_isSelfCancelling && status == 'CANCELLED') return;
+            if (status == 'ACTIVE') {
+              // Declarative routing: pop to root, let DashboardRouter show CompanionControlledPage
+              Navigator.popUntil(context, (route) => route.isFirst);
+            } else if (status == 'REJECTED' || status == 'CANCELLED') {
+              // If we initiated the cancel, don't pop again (manual pop handles it)
+              if (_isSelfCancelling && status == 'CANCELLED') return;
 
-          Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Session $status by companion")),
-          );
-        }
-      }
-    });
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text("Session $status by companion")),
+              );
+            }
+          }
+        });
   }
 
   Future<void> _cancelRequest() async {
@@ -76,7 +77,10 @@ class _WaitingForCompanionPageState extends State<WaitingForCompanionPage> {
     } catch (e) {
       setState(() => _isSelfCancelling = false); // Reset if failed
       debugPrint("Error cancelling request: $e");
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Failed to cancel request")));
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Failed to cancel request")),
+        );
     }
   }
 
@@ -85,11 +89,16 @@ class _WaitingForCompanionPageState extends State<WaitingForCompanionPage> {
     // 1. Theme Detection
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
-      extendBodyBehindAppBar: true, 
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+      extendBodyBehindAppBar: true,
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: const Text("Request Sent", style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          "Request Sent",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.transparent,
         centerTitle: true,
         elevation: 0,
@@ -97,14 +106,9 @@ class _WaitingForCompanionPageState extends State<WaitingForCompanionPage> {
       ),
       body: Container(
         // Gradient Background
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark 
-              ? [const Color(0xFF1A1F35), const Color(0xFF0B0E17)] 
-              : [const Color(0xFFF8FAFC), const Color(0xFFE2E8F0)],
-          ),
+        decoration: AppTheme.screenBackground(
+          context,
+          AppColors.roleGradients['user']!,
         ),
         child: SafeArea(
           child: Center(
@@ -117,38 +121,53 @@ class _WaitingForCompanionPageState extends State<WaitingForCompanionPage> {
                   Container(
                     padding: const EdgeInsets.all(40),
                     decoration: BoxDecoration(
-                      color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white70,
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.05)
+                          : Colors.white70,
                       borderRadius: BorderRadius.circular(32),
-                      border: Border.all(color: isDark ? Colors.white10 : Colors.black12),
+                      border: Border.all(
+                        color: isDark ? Colors.white10 : Colors.black12,
+                      ),
                       boxShadow: [
-                         BoxShadow(
-                           color: Colors.black.withValues(alpha: 0.2),
-                           blurRadius: 30,
-                           offset: const Offset(0, 10),
-                         )
-                      ]
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.2),
+                          blurRadius: 30,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
                     ),
                     child: Column(
                       children: [
                         const SizedBox(
-                          width: 60, height: 60,
-                          child: CircularProgressIndicator(color: Colors.cyanAccent, strokeWidth: 4),
+                          width: 60,
+                          height: 60,
+                          child: CircularProgressIndicator(
+                            color: Colors.cyanAccent,
+                            strokeWidth: 4,
+                          ),
                         ),
                         const SizedBox(height: 32),
                         Text(
                           "Waiting for Response",
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87),
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
                         ),
                         const SizedBox(height: 12),
-                         Text(
+                        Text(
                           "Your companion has been notified.\nSession will start once they accept.",
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 14, color: isDark ? Colors.white60 : Colors.black54),
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: isDark ? Colors.white60 : Colors.black54,
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  
+
                   const SizedBox(height: 48),
 
                   // Cancel Button
@@ -161,10 +180,18 @@ class _WaitingForCompanionPageState extends State<WaitingForCompanionPage> {
                         foregroundColor: Colors.redAccent,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
-                          side: BorderSide(color: Colors.redAccent.withValues(alpha: 0.3))
+                          side: BorderSide(
+                            color: Colors.redAccent.withValues(alpha: 0.3),
+                          ),
                         ),
                       ),
-                      child: const Text("Cancel Request", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      child: const Text(
+                        "Cancel Request",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -173,6 +200,7 @@ class _WaitingForCompanionPageState extends State<WaitingForCompanionPage> {
           ),
         ),
       ),
+    ),
     );
   }
 }

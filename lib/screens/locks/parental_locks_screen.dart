@@ -1,9 +1,10 @@
 import 'dart:convert';
-import 'dart:typed_data';
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:focus_mate/core/schedule_service.dart';
+import 'package:focus_mate/theme/app_colors.dart';
+import 'package:focus_mate/theme/app_theme.dart';
 import '../../core/widgets/app_icon_widget.dart';
 
 /// Screen where students can view apps currently locked by their companion/parent
@@ -160,7 +161,7 @@ class _ParentalLocksScreenState extends State<ParentalLocksScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+              child: Text("Cancel", style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey.shade600)),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -244,7 +245,7 @@ class _ParentalLocksScreenState extends State<ParentalLocksScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+              child: Text("Cancel", style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey.shade600)),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -406,14 +407,9 @@ class _ParentalLocksScreenState extends State<ParentalLocksScreen> {
         iconTheme: IconThemeData(color: textColor),
       ),
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark 
-              ? [const Color(0xFF1A1F35), const Color(0xFF0B0E17)] 
-              : [const Color(0xFFF8FAFC), const Color(0xFFE2E8F0)],
-          ),
+        decoration: AppTheme.screenBackground(
+          context,
+          AppColors.roleGradients['user']!,
         ),
         child: SafeArea(
           child: _isLoading 

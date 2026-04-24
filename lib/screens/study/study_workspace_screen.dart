@@ -12,18 +12,19 @@ import 'package:focus_mate/theme/app_colors.dart';
 import 'package:focus_mate/theme/app_theme.dart';
 import 'package:focus_mate/screens/shared/pdf_viewer_screen.dart';
 import 'package:focus_mate/screens/quiz/quiz_screen.dart';
-import 'package:focus_mate/screens/quiz/quiz_history_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:focus_mate/providers/quiz_provider.dart';
 import 'package:focus_mate/screens/study/widgets/quizzes_grid.dart';
 import '../../core/widgets/app_icon_widget.dart';
+
 class StudyWorkspaceScreen extends ConsumerStatefulWidget {
   final String userId;
 
   const StudyWorkspaceScreen({super.key, required this.userId});
 
   @override
-  ConsumerState<StudyWorkspaceScreen> createState() => _StudyWorkspaceScreenState();
+  ConsumerState<StudyWorkspaceScreen> createState() =>
+      _StudyWorkspaceScreenState();
 }
 
 class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
@@ -43,7 +44,7 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
     super.initState();
     _loadApps();
     _timer = Timer.periodic(const Duration(seconds: 30), (_) {
-       if (mounted) setState(() {});
+      if (mounted) setState(() {});
     });
   }
 
@@ -64,8 +65,13 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
 
       if (mounted) {
         setState(() {
-          installedApps = apps.where((app) => app.packageName != 'com.example.focus_mate').toList();
-          installedApps.sort((a, b) => a.appName.toLowerCase().compareTo(b.appName.toLowerCase()));
+          installedApps = apps
+              .where((app) => app.packageName != 'com.example.focus_mate')
+              .toList();
+          installedApps.sort(
+            (a, b) =>
+                a.appName.toLowerCase().compareTo(b.appName.toLowerCase()),
+          );
 
           if (doc.exists) {
             final data = doc.data()!;
@@ -96,22 +102,33 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
 
   Future<void> _checkAccessibilityAndRun(Future<void> Function() action) async {
     try {
-      final bool isEnabled = await platform.invokeMethod('isAccessibilityServiceAlive');
+      final bool isEnabled = await platform.invokeMethod(
+        'isAccessibilityServiceAlive',
+      );
       if (!isEnabled) {
         if (mounted) {
           showDialog(
             context: context,
             builder: (ctx) => AlertDialog(
               backgroundColor: AppColors.background,
-              title: const Text("Permission Required", style: TextStyle(color: Colors.white)),
-              content: const Text("Focus Mate requires the Accessibility Service to block apps. Please enable it in your device Settings under Accessibility.", style: TextStyle(color: Colors.white70)),
+              title: const Text(
+                "Permission Required",
+                style: TextStyle(color: Colors.white),
+              ),
+              content: const Text(
+                "Focus Mate requires the Accessibility Service to block apps. Please enable it in your device Settings under Accessibility.",
+                style: TextStyle(color: Colors.white70),
+              ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(ctx),
-                  child: const Text("OK", style: TextStyle(color: Colors.cyanAccent)),
-                )
-              ]
-            )
+                  child: const Text(
+                    "OK",
+                    style: TextStyle(color: Colors.cyanAccent),
+                  ),
+                ),
+              ],
+            ),
           );
         }
         return;
@@ -119,7 +136,9 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
       await action();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error checking permissions: $e")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error checking permissions: $e")),
+        );
       }
     }
   }
@@ -137,7 +156,9 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
               height: MediaQuery.of(context).size.height * 0.85,
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24),
+                ),
               ),
               child: Column(
                 children: [
@@ -160,24 +181,27 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Apps Grid
                   Expanded(
                     child: loadingApps
                         ? const Center(child: CircularProgressIndicator())
                         : GridView.builder(
                             padding: const EdgeInsets.symmetric(horizontal: 20),
-                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 4,
-                              childAspectRatio: 0.75,
-                              crossAxisSpacing: 10,
-                              mainAxisSpacing: 10,
-                            ),
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 4,
+                                  childAspectRatio: 0.75,
+                                  crossAxisSpacing: 10,
+                                  mainAxisSpacing: 10,
+                                ),
                             itemCount: installedApps.length,
                             itemBuilder: (context, index) {
                               final app = installedApps[index];
-                              final isSelected = lockedPackages.contains(app.packageName);
-                              
+                              final isSelected = lockedPackages.contains(
+                                app.packageName,
+                              );
+
                               return GestureDetector(
                                 onTap: () {
                                   _toggleLockSelection(app.packageName);
@@ -186,11 +210,19 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
                                 child: Container(
                                   decoration: BoxDecoration(
                                     color: isSelected
-                                        ? Colors.redAccent.withValues(alpha: 0.2)
-                                        : (isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white70),
+                                        ? Colors.redAccent.withValues(
+                                            alpha: 0.2,
+                                          )
+                                        : (isDark
+                                              ? Colors.white.withValues(
+                                                  alpha: 0.05,
+                                                )
+                                              : Colors.white70),
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
-                                      color: isSelected ? Colors.redAccent : Colors.transparent,
+                                      color: isSelected
+                                          ? Colors.redAccent
+                                          : Colors.transparent,
                                       width: 2,
                                     ),
                                   ),
@@ -201,8 +233,12 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
                                         width: 36,
                                         height: 36,
                                         decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(8),
-                                          color: Colors.black.withValues(alpha: 0.3),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                          color: Colors.black.withValues(
+                                            alpha: 0.3,
+                                          ),
                                         ),
                                         child: AppIconWidget(
                                           packageName: app.packageName,
@@ -213,12 +249,16 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
                                       ),
                                       const SizedBox(height: 4),
                                       Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 2),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 2,
+                                        ),
                                         child: Text(
                                           app.appName,
                                           textAlign: TextAlign.center,
                                           style: TextStyle(
-                                            color: isDark ? Colors.white : Colors.black87,
+                                            color: isDark
+                                                ? Colors.white
+                                                : Colors.black87,
                                             fontSize: 9,
                                           ),
                                           maxLines: 1,
@@ -247,11 +287,16 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.cyanAccent,
                           foregroundColor: Colors.black,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
                         ),
                         child: Text(
-                          buttonText, 
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)
+                          buttonText,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
@@ -265,7 +310,10 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
     );
   }
 
-  void _showDurationPickerPrompt(String buttonText, Future<void> Function(int) onStart) {
+  void _showDurationPickerPrompt(
+    String buttonText,
+    Future<void> Function(int) onStart,
+  ) {
     int selectedDuration = 60; // Default 60 mins
 
     showModalBottomSheet(
@@ -280,7 +328,9 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
               height: MediaQuery.of(context).size.height * 0.5,
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24),
+                ),
               ),
               child: Column(
                 children: [
@@ -305,10 +355,12 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
                   const SizedBox(height: 8),
                   Text(
                     "Your companion will select apps to lock.",
-                    style: TextStyle(color: isDark ? Colors.white70 : Colors.black54),
+                    style: TextStyle(
+                      color: isDark ? Colors.white70 : Colors.black54,
+                    ),
                   ),
                   const SizedBox(height: 32),
-                  
+
                   // Duration Slider
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -339,7 +391,7 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
                   ),
 
                   const Spacer(),
-                  
+
                   // Start Button
                   Padding(
                     padding: const EdgeInsets.all(20),
@@ -354,11 +406,16 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.cyanAccent,
                           foregroundColor: Colors.black,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
                         ),
                         child: Text(
-                          buttonText, 
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)
+                          buttonText,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
@@ -383,149 +440,185 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
       if (result != null && result.files.single.path != null) {
         final bytes = result.files.single.bytes;
         if (bytes == null) {
-           throw Exception("Failed to read file bytes. Make sure the file exists.");
+          throw Exception(
+            "Failed to read file bytes. Make sure the file exists.",
+          );
         }
-        
+
         final fileName = result.files.single.name;
 
         if (companionActive && companionId != null) {
-              // **NEW**: Clean up old active quizzes
-              final activeQ = await _firestore.collection('users').doc(widget.userId).collection('saved_quizzes').where('status', isEqualTo: 'active').get();
-              final batch = _firestore.batch();
-              for (var doc in activeQ.docs) {
-                 batch.update(doc.reference, {'status': 'abandoned'});
-              }
-              await batch.commit();
+          // **NEW**: Clean up old active quizzes
+          final activeQ = await _firestore
+              .collection('users')
+              .doc(widget.userId)
+              .collection('saved_quizzes')
+              .where('status', isEqualTo: 'active')
+              .get();
+          final batch = _firestore.batch();
+          for (var doc in activeQ.docs) {
+            batch.update(doc.reference, {'status': 'abandoned'});
+          }
+          await batch.commit();
 
-              // 1. Save PDF locally to defer generation
-              final tempDir = await getApplicationDocumentsDirectory();
-              final sanitizedName = fileName.replaceAll(RegExp(r'[^a-zA-Z0-9_\.]'), '_');
-              final localFile = File('${tempDir.path}/$sanitizedName');
-              await localFile.writeAsBytes(bytes);
+          // 1. Save PDF locally to defer generation
+          final tempDir = await getApplicationDocumentsDirectory();
+          final sanitizedName = fileName.replaceAll(
+            RegExp(r'[^a-zA-Z0-9_\.]'),
+            '_',
+          );
+          final localFile = File('${tempDir.path}/$sanitizedName');
+          await localFile.writeAsBytes(bytes);
 
-              // 2. Send request to companion instead of locking apps
-              final newSessionRef = _firestore.collection('companion_sessions').doc();
-              await newSessionRef.set({
-                  'userId': widget.userId,
-                  'userName': userName ?? 'Student',
-                  'companionId': companionId,
-                  'status': 'REQUESTED',
-                  'type': 'study_session',
-                  'duration': duration ?? 60, 
-                  'lockedApps': [],
-                  'quizDocId': null, // Will update next
-                  'requestedAt': FieldValue.serverTimestamp(),
-                  'updatedAt': FieldValue.serverTimestamp(),
+          // 2. Send request to companion instead of locking apps
+          final newSessionRef = _firestore
+              .collection('companion_sessions')
+              .doc();
+          await newSessionRef.set({
+            'userId': widget.userId,
+            'userName': userName ?? 'Student',
+            'companionId': companionId,
+            'status': 'REQUESTED',
+            'type': 'study_session',
+            'duration': duration ?? 60,
+            'lockedApps': [],
+            'quizDocId': null, // Will update next
+            'requestedAt': FieldValue.serverTimestamp(),
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+
+          final quizRef = await _firestore
+              .collection('users')
+              .doc(widget.userId)
+              .collection('saved_quizzes')
+              .add({
+                'sourceName': fileName,
+                'questions': [], // empty questions to defer generation
+                'status': 'active', // Important for filtering
+                'lastScore': 0,
+                'timestamp': FieldValue.serverTimestamp(),
+                'companionSessionId': newSessionRef.id,
+                'localPdfPath': localFile.path,
               });
-              
-              final quizRef = await _firestore
+
+          await newSessionRef.update({'quizDocId': quizRef.id});
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  "Study session requested! Waiting for companion approval.",
+                ),
+              ),
+            );
+          }
+        } else {
+          // 1. Extract text and prompt Gemini locally for Non-Companion mode
+          if (mounted) {
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (_) => AlertDialog(
+                backgroundColor: AppColors.background,
+                content: Row(
+                  children: [
+                    const CircularProgressIndicator(color: Colors.cyanAccent),
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: Text(
+                        "Generating quiz from $fileName...",
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          final geminiService = GeminiService();
+          final quizQuestions = await geminiService.generateQuizFromPdf(bytes);
+
+          if (mounted) {
+            Navigator.pop(context); // Close loading indicator
+          }
+
+          if (quizQuestions != null && quizQuestions.isNotEmpty) {
+            // **NEW**: Clean up old active quizzes
+            final activeQ = await _firestore
+                .collection('users')
+                .doc(widget.userId)
+                .collection('saved_quizzes')
+                .where('status', isEqualTo: 'active')
+                .get();
+            final batch = _firestore.batch();
+            for (var doc in activeQ.docs) {
+              batch.update(doc.reference, {'status': 'abandoned'});
+            }
+            await batch.commit();
+
+            // 2. Lock apps now that quiz is ready (Self-Control)
+            if (lockedPackages.isNotEmpty) {
+              await platform.invokeMethod('setBlockedApps', {
+                'apps': lockedPackages,
+              });
+              await _firestore.collection('users').doc(widget.userId).update({
+                'lockedApps': lockedPackages,
+                'lockEndTime': null, // Clear any previous expiration timer
+              });
+
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Apps locked for Study Mode!")),
+                );
+              }
+            }
+
+            // 3. Save JSON to Firestore with active tracker fields
+            await _firestore
                 .collection('users')
                 .doc(widget.userId)
                 .collection('saved_quizzes')
                 .add({
-              'sourceName': fileName,
-              'questions': [], // empty questions to defer generation
-              'status': 'active', // Important for filtering
-              'lastScore': 0,
-              'timestamp': FieldValue.serverTimestamp(),
-              'companionSessionId': newSessionRef.id,
-              'localPdfPath': localFile.path,
-            });
-
-            await newSessionRef.update({'quizDocId': quizRef.id});
+                  'sourceName': fileName,
+                  'questions': quizQuestions,
+                  'status': 'active', // Important for filtering
+                  'lastScore': 0,
+                  'timestamp': FieldValue.serverTimestamp(),
+                });
 
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Study session requested! Waiting for companion approval.")),
+                const SnackBar(
+                  content: Text(
+                    "Quiz generated and apps locked! You can start the quiz later from 'Take Saved Quiz'.",
+                  ),
+                ),
               );
             }
           } else {
-             // 1. Extract text and prompt Gemini locally for Non-Companion mode
-             if (mounted) {
-                showDialog(
-                   context: context,
-                   barrierDismissible: false,
-                   builder: (_) => AlertDialog(
-                      backgroundColor: AppColors.background,
-                      content: Row(
-                         children: [
-                            const CircularProgressIndicator(color: Colors.cyanAccent),
-                            const SizedBox(width: 20),
-                            Expanded(child: Text("Generating quiz from $fileName...", style: const TextStyle(color: Colors.white))),
-                         ],
-                      )
-                   ),
-                );
-             }
-
-             final geminiService = GeminiService();
-             final quizQuestions = await geminiService.generateQuizFromPdf(bytes);
-
-             if (mounted) {
-                Navigator.pop(context); // Close loading indicator
-             }
-
-             if (quizQuestions != null && quizQuestions.isNotEmpty) {
-                 // **NEW**: Clean up old active quizzes
-                 final activeQ = await _firestore.collection('users').doc(widget.userId).collection('saved_quizzes').where('status', isEqualTo: 'active').get();
-                 final batch = _firestore.batch();
-                 for (var doc in activeQ.docs) {
-                    batch.update(doc.reference, {'status': 'abandoned'});
-                 }
-                 await batch.commit();
-
-                 // 2. Lock apps now that quiz is ready (Self-Control)
-                if (lockedPackages.isNotEmpty) {
-                    await platform.invokeMethod('setBlockedApps', {'apps': lockedPackages});
-                    await _firestore.collection('users').doc(widget.userId).update({
-                    'lockedApps': lockedPackages,
-                    'lockEndTime': null, // Clear any previous expiration timer
-                    });
-
-                    if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Apps locked for Study Mode!")),
-                    );
-                    }
-                }
-                
-                // 3. Save JSON to Firestore with active tracker fields
-                await _firestore
-                    .collection('users')
-                    .doc(widget.userId)
-                    .collection('saved_quizzes')
-                    .add({
-                    'sourceName': fileName,
-                    'questions': quizQuestions,
-                    'status': 'active', // Important for filtering
-                    'lastScore': 0,
-                    'timestamp': FieldValue.serverTimestamp(),
-                });
-                
-                if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Quiz generated and apps locked! You can start the quiz later from 'Take Saved Quiz'.")),
-                    );
-                }
-             } else {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Failed to generate quiz. No questions produced.")),
-                  );
-                }
-             }
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    "Failed to generate quiz. No questions produced.",
+                  ),
+                ),
+              );
+            }
+          }
         }
       }
     } catch (e) {
       if (mounted) {
-        if (Navigator.canPop(context)) Navigator.pop(context); // Close loading indicator safely
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error: $e")),
-        );
+        if (Navigator.canPop(context))
+          Navigator.pop(context); // Close loading indicator safely
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Error: $e")));
       }
     }
   }
-
 
   Future<void> _openCurrentQuiz() async {
     try {
@@ -539,157 +632,197 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
           .get();
 
       if (querySnapshot.docs.isEmpty) {
-         if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-               const SnackBar(content: Text("No active quiz right now! Start a session to lock apps."))
-            );
-         }
-         return;
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                "No active quiz right now! Start a session to lock apps.",
+              ),
+            ),
+          );
+        }
+        return;
       }
 
       final doc = querySnapshot.docs.first;
       final data = doc.data();
       _startQuiz(doc.id, data);
     } catch (e) {
-       // Handle missing compound index by filtering on the client side
-       final errorString = e.toString().toLowerCase();
-       if (errorString.contains('failed-precondition') || errorString.contains('requires an index')) {
-          try {
-             final fallbackSnapshot = await _firestore
-                 .collection('users')
-                 .doc(widget.userId)
-                 .collection('saved_quizzes')
-                 .orderBy('timestamp', descending: true)
-                 .get();
-                 
-             final activeDocs = fallbackSnapshot.docs.where((doc) {
-                final data = doc.data();
-                return data['status'] == 'active';
-             }).toList();
-             
-             if (activeDocs.isNotEmpty) {
-                final doc = activeDocs.first;
-                _startQuiz(doc.id, doc.data());
-             } else {
-                if (mounted) {
-                   ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("No active quiz right now! Start a session to lock apps."))
-                   );
-                }
-             }
-             return;
-          } catch (fallbackErr) {
-             if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                   SnackBar(content: Text("Error getting current quiz: $fallbackErr"))
-                );
-             }
-             return;
+      // Handle missing compound index by filtering on the client side
+      final errorString = e.toString().toLowerCase();
+      if (errorString.contains('failed-precondition') ||
+          errorString.contains('requires an index')) {
+        try {
+          final fallbackSnapshot = await _firestore
+              .collection('users')
+              .doc(widget.userId)
+              .collection('saved_quizzes')
+              .orderBy('timestamp', descending: true)
+              .get();
+
+          final activeDocs = fallbackSnapshot.docs.where((doc) {
+            final data = doc.data();
+            return data['status'] == 'active';
+          }).toList();
+
+          if (activeDocs.isNotEmpty) {
+            final doc = activeDocs.first;
+            _startQuiz(doc.id, doc.data());
+          } else {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    "No active quiz right now! Start a session to lock apps.",
+                  ),
+                ),
+              );
+            }
           }
-       }
-       
-       if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-             SnackBar(content: Text("Error getting current quiz: $e"))
-          );
-       }
+          return;
+        } catch (fallbackErr) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text("Error getting current quiz: $fallbackErr"),
+              ),
+            );
+          }
+          return;
+        }
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error getting current quiz: $e")),
+        );
+      }
     }
   }
 
   Future<void> _startQuiz(String docId, Map<String, dynamic> data) async {
-      final questions = data['questions'] as List<dynamic>? ?? [];
-      if (questions.isEmpty) {
-         // Deferred quiz generation
-         final localPdfPath = data['localPdfPath'];
-         if (localPdfPath != null) {
-            final localFile = File(localPdfPath);
-            if (await localFile.exists()) {
-               final bytes = await localFile.readAsBytes();
-               if (mounted) {
-                 showDialog(
-                    context: context,
-                    barrierDismissible: false,
-                    builder: (_) => AlertDialog(
-                       backgroundColor: AppColors.background,
-                       content: Row(
-                          children: [
-                             const CircularProgressIndicator(color: Colors.cyanAccent),
-                             const SizedBox(width: 20),
-                             Expanded(child: Text("Generating quiz from study material...", style: const TextStyle(color: Colors.white))),
-                          ],
-                       )
+    final questions = data['questions'] as List<dynamic>? ?? [];
+    if (questions.isEmpty) {
+      // Deferred quiz generation
+      final localPdfPath = data['localPdfPath'];
+      if (localPdfPath != null) {
+        final localFile = File(localPdfPath);
+        if (await localFile.exists()) {
+          final bytes = await localFile.readAsBytes();
+          if (mounted) {
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (_) => AlertDialog(
+                backgroundColor: AppColors.background,
+                content: Row(
+                  children: [
+                    const CircularProgressIndicator(color: Colors.cyanAccent),
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: Text(
+                        "Generating quiz from study material...",
+                        style: const TextStyle(color: Colors.white),
+                      ),
                     ),
-                 );
-               }
-               final geminiService = GeminiService();
-               final generatedQuestions = await geminiService.generateQuizFromPdf(bytes);
-               if (mounted) Navigator.pop(context); // Close dialog
+                  ],
+                ),
+              ),
+            );
+          }
+          final geminiService = GeminiService();
+          final generatedQuestions = await geminiService.generateQuizFromPdf(
+            bytes,
+          );
+          if (mounted) Navigator.pop(context); // Close dialog
 
-               if (generatedQuestions != null && generatedQuestions.isNotEmpty) {
-                   await _firestore
-                       .collection('users')
-                       .doc(widget.userId)
-                       .collection('saved_quizzes')
-                       .doc(docId)
-                       .update({'questions': generatedQuestions});
-                   
-                   final mappedQuestions = generatedQuestions.map((e) => Map<String, dynamic>.from(e as Map)).toList();
-                   if (mounted) {
-                     Navigator.push(
-                       context,
-                       MaterialPageRoute(
-                         builder: (context) => QuizScreen(
-                           userId: widget.userId,
-                           quizDocId: docId, 
-                           questions: mappedQuestions,
-                         ),
-                       ),
-                     );
-                   }
-               } else {
-                   if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Failed to generate quiz from the material.")));
-                   }
-               }
-            } else {
-               if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Error: Study material not found on device.")));
+          if (generatedQuestions != null && generatedQuestions.isNotEmpty) {
+            await _firestore
+                .collection('users')
+                .doc(widget.userId)
+                .collection('saved_quizzes')
+                .doc(docId)
+                .update({'questions': generatedQuestions});
+
+            final mappedQuestions = generatedQuestions
+                .map((e) => Map<String, dynamic>.from(e as Map))
+                .toList();
+            if (mounted) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => QuizScreen(
+                    userId: widget.userId,
+                    quizDocId: docId,
+                    questions: mappedQuestions,
+                  ),
+                ),
+              );
             }
-         } else {
-            if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Error: No questions and no local PDF!")));
-         }
-         return;
-      }
-
-      final mappedQuestions = questions.map((e) => Map<String, dynamic>.from(e as Map)).toList();
-
-      if (mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => QuizScreen(
-              userId: widget.userId,
-              quizDocId: docId, 
-              questions: mappedQuestions,
+          } else {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text("Failed to generate quiz from the material."),
+                ),
+              );
+            }
+          }
+        } else {
+          if (mounted)
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text("Error: Study material not found on device."),
+              ),
+            );
+        }
+      } else {
+        if (mounted)
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Error: No questions and no local PDF!"),
             ),
-          ),
-        );
+          );
       }
+      return;
+    }
+
+    final mappedQuestions = questions
+        .map((e) => Map<String, dynamic>.from(e as Map))
+        .toList();
+
+    if (mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => QuizScreen(
+            userId: widget.userId,
+            quizDocId: docId,
+            questions: mappedQuestions,
+          ),
+        ),
+      );
+    }
   }
 
   Future<void> _deleteQuiz(String docId) async {
     try {
       await _firestore
-        .collection('users')
-        .doc(widget.userId)
-        .collection('saved_quizzes')
-        .doc(docId)
-        .delete();
+          .collection('users')
+          .doc(widget.userId)
+          .collection('saved_quizzes')
+          .doc(docId)
+          .delete();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Quiz deleted from history.")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Quiz deleted from history.")),
+        );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error deleting quiz: $e")));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Error deleting quiz: $e")));
       }
     }
   }
@@ -703,7 +836,7 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
 
       if (result != null && result.files.single.path != null) {
         File file = File(result.files.single.path!);
-        
+
         // --- Open Local PDF Viewer immediately ---
         if (context.mounted) {
           Navigator.push(
@@ -716,25 +849,38 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error picking file: $e")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Error picking file: $e")));
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: const Text("Study Workspace"),
         backgroundColor: Colors.transparent,
-        iconTheme: const IconThemeData(color: Colors.white),
-        titleTextStyle: AppTheme.headerTitle,
+        elevation: 0,
+        iconTheme: IconThemeData(color: isDark ? Colors.white : Colors.black87),
+        titleTextStyle: AppTheme.headerTitle(context),
         actions: const [],
       ),
-      body: _buildWorkspaceBody(),
+      body: Container(
+        height: double.infinity,
+        width: double.infinity,
+        decoration: AppTheme.screenBackground(
+          context,
+          AppColors.roleGradients['user']!,
+        ),
+        child: SafeArea(
+          child: _buildWorkspaceBody(),
+        ),
+      ),
     );
   }
 
@@ -772,56 +918,74 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
         }).toList();
 
         if (activeQuizzes.isEmpty) {
-           final indicator = Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                 const Text("Status", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                 const SizedBox(height: 12),
-                 Container(
-                   padding: const EdgeInsets.all(16),
-                   decoration: BoxDecoration(
-                     color: Colors.greenAccent.withValues(alpha: 0.1),
-                     borderRadius: BorderRadius.circular(16),
-                     border: Border.all(color: Colors.greenAccent.withValues(alpha: 0.3)),
-                   ),
-                   child: const Row(
-                     children: [
-                       Icon(Icons.check_circle_outline, color: Colors.greenAccent),
-                       SizedBox(width: 12),
-                       Expanded(child: Text("No active study session. Apps are unlocked.", style: TextStyle(color: Colors.greenAccent))),
-                     ],
-                   ),
-                 ),
-              ]
-           );
-           return QuizzesGrid(
-             hasActiveSession: false,
-             isWaitingForCompanion: false,
-             canTakeQuiz: false,
-             loadingApps: loadingApps,
-             companionActive: companionActive,
-             userId: widget.userId,
-             indicator: indicator,
-             onReadPdf: () => _pickPdfFile(context),
-             onStartStudySession: () {
-               if (companionActive) {
-                 _showDurationPickerPrompt("Next: Pick Material", (duration) async {
-                   await _startStudyModeFlowWithDuration(duration);
-                 });
-               } else {
-                 _showAppLockPrompt("Next: Pick Material", () async {
-                   await _startStudyModeFlowWithDuration(null);
-                 });
-               }
-             },
-             onOpenCurrentQuiz: _openCurrentQuiz,
-           );
+          final statusIsDark = Theme.of(context).brightness == Brightness.dark;
+          final statusTextColor = statusIsDark ? Colors.white : Colors.black87;
+          final indicator = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Status",
+                style: TextStyle(
+                  color: statusTextColor,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.greenAccent.withValues(alpha: statusIsDark ? 0.1 : 0.08),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Colors.greenAccent.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.check_circle_outline, color: Colors.green.shade600),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        "No active study session. Apps are unlocked.",
+                        style: TextStyle(color: Colors.green.shade700),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+          return QuizzesGrid(
+            hasActiveSession: false,
+            isWaitingForCompanion: false,
+            canTakeQuiz: false,
+            loadingApps: loadingApps,
+            companionActive: companionActive,
+            userId: widget.userId,
+            indicator: indicator,
+            onReadPdf: () => _pickPdfFile(context),
+            onStartStudySession: () {
+              if (companionActive) {
+                _showDurationPickerPrompt("Next: Pick Material", (
+                  duration,
+                ) async {
+                  await _startStudyModeFlowWithDuration(duration);
+                });
+              } else {
+                _showAppLockPrompt("Next: Pick Material", () async {
+                  await _startStudyModeFlowWithDuration(null);
+                });
+              }
+            },
+            onOpenCurrentQuiz: _openCurrentQuiz,
+          );
         }
 
         final data = activeQuizzes.first.data() as Map<String, dynamic>;
         final String sourceName = data['sourceName'] ?? 'Unknown Material';
         final String? companionSessionId = data['companionSessionId'];
-        
+
         if (companionSessionId != null) {
           return _buildCompanionSessionContent(companionSessionId, sourceName);
         }
@@ -837,7 +1001,9 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
           onReadPdf: () => _pickPdfFile(context),
           onStartStudySession: () {
             if (companionActive) {
-              _showDurationPickerPrompt("Next: Pick Material", (duration) async {
+              _showDurationPickerPrompt("Next: Pick Material", (
+                duration,
+              ) async {
                 await _startStudyModeFlowWithDuration(duration);
               });
             } else {
@@ -852,8 +1018,13 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
     );
   }
 
-  Widget _buildCompanionSessionContent(String companionSessionId, String sourceName) {
-    final sessionAsync = ref.watch(companionSessionDocProvider(companionSessionId));
+  Widget _buildCompanionSessionContent(
+    String companionSessionId,
+    String sourceName,
+  ) {
+    final sessionAsync = ref.watch(
+      companionSessionDocProvider(companionSessionId),
+    );
 
     return sessionAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -864,30 +1035,34 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
         }
         final sessionData = sessionSnapshot.data() as Map<String, dynamic>;
         final status = sessionData['status'];
-        
+
         bool isWaiting = status == 'REQUESTED';
         bool isActive = status == 'ACTIVE';
         bool canTakeQuiz = false;
         Widget sessionIndicator;
 
         if (isWaiting) {
-           sessionIndicator = _buildWaitingBanner(sourceName);
+          sessionIndicator = _buildWaitingBanner(sourceName);
         } else if (isActive) {
-           final startedAt = sessionData['startedAt']?.toDate();
-           final duration = sessionData['duration'] ?? 60;
-           final earlyApproved = sessionData['earlyAttemptApproved'] == true;
-           
-           if (earlyApproved) {
-               canTakeQuiz = true;
-           } else if (startedAt != null) {
-               final endTime = startedAt.add(Duration(minutes: duration));
-               if (DateTime.now().isAfter(endTime)) canTakeQuiz = true;
-           }
-           sessionIndicator = _buildActiveSessionCard(sourceName, sessionData, sessionSnapshot.id);
+          final startedAt = sessionData['startedAt']?.toDate();
+          final duration = sessionData['duration'] ?? 60;
+          final earlyApproved = sessionData['earlyAttemptApproved'] == true;
+
+          if (earlyApproved) {
+            canTakeQuiz = true;
+          } else if (startedAt != null) {
+            final endTime = startedAt.add(Duration(minutes: duration));
+            if (DateTime.now().isAfter(endTime)) canTakeQuiz = true;
+          }
+          sessionIndicator = _buildActiveSessionCard(
+            sourceName,
+            sessionData,
+            sessionSnapshot.id,
+          );
         } else {
-           sessionIndicator = _buildSelfControlActiveCard(sourceName); 
+          sessionIndicator = _buildSelfControlActiveCard(sourceName);
         }
-        
+
         return QuizzesGrid(
           hasActiveSession: isActive,
           isWaitingForCompanion: isWaiting,
@@ -899,7 +1074,9 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
           onReadPdf: () => _pickPdfFile(context),
           onStartStudySession: () {
             if (companionActive) {
-              _showDurationPickerPrompt("Next: Pick Material", (duration) async {
+              _showDurationPickerPrompt("Next: Pick Material", (
+                duration,
+              ) async {
                 await _startStudyModeFlowWithDuration(duration);
               });
             } else {
@@ -915,33 +1092,69 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
   }
 
   Widget _buildWaitingBanner(String sourceName) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subtextColor = isDark ? Colors.white70 : Colors.black54;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text("Active Session", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+        Text(
+          "Active Session",
+          style: TextStyle(
+            color: textColor,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         const SizedBox(height: 12),
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.orangeAccent.withValues(alpha: 0.1),
+            color: Colors.orangeAccent.withValues(alpha: isDark ? 0.1 : 0.08),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.orangeAccent.withValues(alpha: 0.3)),
+            border: Border.all(
+              color: Colors.orangeAccent.withValues(alpha: 0.3),
+            ),
           ),
           child: Row(
             children: [
-              const Icon(Icons.hourglass_top, color: Colors.orangeAccent, size: 28),
+              const Icon(
+                Icons.hourglass_top,
+                color: Colors.orangeAccent,
+                size: 28,
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text("WAITING FOR APPROVAL", style: TextStyle(color: Colors.orangeAccent, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
-                    Text(sourceName, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                    const Text(
+                      "WAITING FOR APPROVAL",
+                      style: TextStyle(
+                        color: Colors.orangeAccent,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    Text(
+                      sourceName,
+                      style: TextStyle(
+                        color: textColor,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     const SizedBox(height: 4),
-                    const Text("Your companion is reviewing your request.", style: TextStyle(color: Colors.white70, fontSize: 12)),
-                  ]
+                    Text(
+                      "Your companion is reviewing your request.",
+                      style: TextStyle(color: subtextColor, fontSize: 12),
+                    ),
+                  ],
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -949,209 +1162,328 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
     );
   }
 
-  Widget _buildActiveSessionCard(String sourceName, Map<String, dynamic> sessionData, String sessionId) {
-      final startedAt = sessionData['startedAt']?.toDate();
-      final duration = sessionData['duration'] ?? 60;
-      final earlyRequested = sessionData['earlyQuizRequest'] == true;
-      final earlyApproved = sessionData['earlyAttemptApproved'] == true;
-      
-      bool canTakeQuiz = false;
-      String timeLeftStr = "Calculating...";
+  Widget _buildActiveSessionCard(
+    String sourceName,
+    Map<String, dynamic> sessionData,
+    String sessionId,
+  ) {
+    final startedAt = sessionData['startedAt']?.toDate();
+    final duration = sessionData['duration'] ?? 60;
+    final earlyRequested = sessionData['earlyQuizRequest'] == true;
+    final earlyApproved = sessionData['earlyAttemptApproved'] == true;
 
-      if (earlyApproved) {
-         canTakeQuiz = true;
-         timeLeftStr = "Early attempt approved!";
-      } else if (startedAt != null) {
-         final endTime = startedAt.add(Duration(minutes: duration));
-         final now = DateTime.now();
-         if (now.isAfter(endTime)) {
-            canTakeQuiz = true;
-            timeLeftStr = "Study time up!";
-         } else {
-            final diff = endTime.difference(now);
-            timeLeftStr = "Quiz unlocks in ${diff.inMinutes}m";
-         }
+    bool canTakeQuiz = false;
+    String timeLeftStr = "Calculating...";
+
+    if (earlyApproved) {
+      canTakeQuiz = true;
+      timeLeftStr = "Early attempt approved!";
+    } else if (startedAt != null) {
+      final endTime = startedAt.add(Duration(minutes: duration));
+      final now = DateTime.now();
+      if (now.isAfter(endTime)) {
+        canTakeQuiz = true;
+        timeLeftStr = "Study time up!";
+      } else {
+        final diff = endTime.difference(now);
+        timeLeftStr = "Quiz unlocks in ${diff.inMinutes}m";
       }
+    }
 
-      return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text("Active Session (Companion)", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                   BoxShadow(color: Colors.deepPurpleAccent.withValues(alpha: 0.2), blurRadius: 10, offset: const Offset(0, 4)),
-                ]
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final sectionTextColor = isDark ? Colors.white : Colors.black87;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Active Session (Companion)",
+          style: TextStyle(
+            color: sectionTextColor,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.deepPurpleAccent.withValues(alpha: 0.2),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.shield, color: Colors.white, size: 28),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text("STUDYING", style: TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
-                            Text(sourceName, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
-                          ]
+                  const Icon(Icons.shield, color: Colors.white, size: 28),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "STUDYING",
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.2,
+                          ),
                         ),
-                      )
-                    ],
+                        Text(
+                          sourceName,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 16),
-                  Center(
-                    child: Text(timeLeftStr, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                  ),
-                  const SizedBox(height: 16),
-                  
-                  if (canTakeQuiz)
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: _openCurrentQuiz,
-                        icon: const Icon(Icons.play_arrow, color: Colors.black),
-                        label: const Text("Take Quiz to Unlock Apps", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.cyanAccent,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                      ),
-                    )
-                  else
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: earlyRequested 
-                           ? null 
-                           : () async {
-                              await _firestore.collection('companion_sessions').doc(sessionId).update({
-                                 'earlyQuizRequest': true,
-                                 'earlyAttemptApproved': false,
-                                 'updatedAt': FieldValue.serverTimestamp(),
-                              });
-                              if (mounted) {
-                                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Early attempt requested.")));
-                              }
-                           },
-                        icon: Icon(earlyRequested ? Icons.hourglass_empty : Icons.fast_forward, color: Colors.white),
-                        label: Text(earlyRequested ? "Waiting for Approval..." : "Request Early Attempt", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white24,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                      ),
-                    )
                 ],
               ),
-            ),
-          ],
-        );
+              const SizedBox(height: 16),
+              Center(
+                child: Text(
+                  timeLeftStr,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              if (canTakeQuiz)
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: _openCurrentQuiz,
+                    icon: const Icon(Icons.play_arrow, color: Colors.black),
+                    label: const Text(
+                      "Take Quiz to Unlock Apps",
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.cardOverlay,
+                      textStyle: AppTheme.headerTitle(context),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                )
+              else
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: earlyRequested
+                        ? null
+                        : () async {
+                            await _firestore
+                                .collection('companion_sessions')
+                                .doc(sessionId)
+                                .update({
+                                  'earlyQuizRequest': true,
+                                  'earlyAttemptApproved': false,
+                                  'updatedAt': FieldValue.serverTimestamp(),
+                                });
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("Early attempt requested."),
+                                ),
+                              );
+                            }
+                          },
+                    icon: Icon(
+                      earlyRequested
+                          ? Icons.hourglass_empty
+                          : Icons.fast_forward,
+                      color: Colors.white,
+                    ),
+                    label: Text(
+                      earlyRequested
+                          ? "Waiting for Approval..."
+                          : "Request Early Attempt",
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white24,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildSelfControlActiveCard(String sourceName) {
-      return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text("Active Session", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF00B4DB), Color(0xFF0083B0)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                   BoxShadow(color: Colors.cyanAccent.withValues(alpha: 0.2), blurRadius: 10, offset: const Offset(0, 4)),
-                ]
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final sectionTextColor = isDark ? Colors.white : Colors.black87;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Active Session",
+          style: TextStyle(
+            color: sectionTextColor,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF00B4DB), Color(0xFF0083B0)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.cyanAccent.withValues(alpha: 0.2),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.lock_clock, color: Colors.white, size: 28),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text("STUDYING", style: TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
-                            Text(sourceName, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
-                          ]
+                  const Icon(Icons.lock_clock, color: Colors.white, size: 28),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "STUDYING",
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.2,
+                          ),
                         ),
-                      )
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  const Text("Currently Locked Apps:", style: TextStyle(color: Colors.white70, fontSize: 12)),
-                  const SizedBox(height: 8),
-                  lockedPackages.isEmpty 
-                    ? const Text("No specific apps selected.", style: TextStyle(color: Colors.white54, fontStyle: FontStyle.italic))
-                    : Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: lockedPackages.map((pkg) {
-                          // Try to find icon from installed apps list
-                          final matches = installedApps.where((a) => a.packageName == pkg);
-                          final app = matches.isNotEmpty ? matches.first : null;
-                          
-                          String appNameStr = pkg;
-                          if (app != null) {
-                             appNameStr = app.appName;
-                          }
-                          
-                          return Tooltip(
-                            message: appNameStr,
-                            child: Container(
-                              width: 36,
-                              height: 36,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(8),
-                                color: Colors.black26,
-                              ),
-                              child: AppIconWidget(
-                                 packageName: pkg,
-                                 appName: appNameStr,
-                                 size: 36,
-                                 fallbackFontSize: 20,
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: _openCurrentQuiz,
-                      icon: const Icon(Icons.play_arrow, color: Colors.black),
-                      label: const Text("Take Quiz to Unlock", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.cyanAccent,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
+                        Text(
+                          sourceName,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
-                  )
+                  ),
                 ],
               ),
-            ),
-          ],
-        );
+              const SizedBox(height: 16),
+              const Text(
+                "Currently Locked Apps:",
+                style: TextStyle(color: Colors.white70, fontSize: 12),
+              ),
+              const SizedBox(height: 8),
+              lockedPackages.isEmpty
+                  ? const Text(
+                      "No specific apps selected.",
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    )
+                  : Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: lockedPackages.map((pkg) {
+                        // Try to find icon from installed apps list
+                        final matches = installedApps.where(
+                          (a) => a.packageName == pkg,
+                        );
+                        final app = matches.isNotEmpty ? matches.first : null;
+
+                        String appNameStr = pkg;
+                        if (app != null) {
+                          appNameStr = app.appName;
+                        }
+
+                        return Tooltip(
+                          message: appNameStr,
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8),
+                              color: Colors.black26,
+                            ),
+                            child: AppIconWidget(
+                              packageName: pkg,
+                              appName: appNameStr,
+                              size: 36,
+                              fallbackFontSize: 20,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _openCurrentQuiz,
+                  icon: const Icon(Icons.play_arrow, color: Colors.black),
+                  label: const Text(
+                    "Take Quiz to Unlock",
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.cyanAccent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }
-
-

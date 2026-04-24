@@ -3,7 +3,7 @@ import 'package:focus_mate/core/auth_service.dart';
 import 'package:focus_mate/core/models/user_model.dart';
 import 'package:focus_mate/core/widgets/custom_button.dart';
 import 'package:focus_mate/core/widgets/custom_text_field.dart';
-import 'package:focus_mate/auth/login_screen.dart'; // To access roleAccent
+// To access roleAccent
 
 class ForgotPasswordScreen extends StatefulWidget {
   final UserRole role;
@@ -63,7 +63,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final accent = {
+    final accent =
+        {
           UserRole.user: Colors.cyanAccent,
           UserRole.companion: Colors.purpleAccent,
           UserRole.parent: Colors.orangeAccent,
@@ -93,7 +94,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   TextButton.icon(
                     onPressed: () => Navigator.pop(context),
                     icon: const Icon(Icons.arrow_back, color: Colors.white70),
-                    label: const Text("Back", style: TextStyle(color: Colors.white70)),
+                    label: const Text(
+                      "Back",
+                      style: TextStyle(color: Colors.white70),
+                    ),
                   ),
                   const SizedBox(height: 10),
 
@@ -103,7 +107,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     decoration: BoxDecoration(
                       color: Colors.grey[900]!.withValues(alpha: 0.8),
                       borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: accent.withValues(alpha: 0.3), width: 1),
+                      border: Border.all(
+                        color: accent.withValues(alpha: 0.3),
+                        width: 1,
+                      ),
                     ),
                     child: _isSuccess
                         ? _buildSuccessView(accent)
@@ -154,7 +161,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 return "Please enter your email";
               }
               final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-              if (!emailRegex.hasMatch(value)) return 'Enter a valid email address';
+              if (!emailRegex.hasMatch(value))
+                return 'Enter a valid email address';
               return null;
             },
           ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class CustomButton extends StatelessWidget {
   final VoidCallback? onPressed;
@@ -18,32 +19,36 @@ class CustomButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bgColor = color ?? Theme.of(context).colorScheme.primary;
+    // Determine a high-contrast text color if not explicitly provided
+    final defaultTextColor = bgColor.computeLuminance() > 0.5 ? Colors.black87 : Colors.white;
+
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: color ?? Colors.cyanAccent,
-          padding: const EdgeInsets.symmetric(vertical: 14),
+          backgroundColor: bgColor,
+          padding: EdgeInsets.symmetric(vertical: 14.h),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(14.r),
           ),
         ),
         child: isLoading
-            ? const SizedBox(
-                width: 20,
-                height: 20,
+            ? SizedBox(
+                width: 20.w,
+                height: 20.h,
                 child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.black,
+                  strokeWidth: 2.w,
+                  color: defaultTextColor,
                 ),
               )
             : Text(
                 text,
                 style: TextStyle(
-                  color: textColor ?? Colors.black,
+                  color: textColor ?? defaultTextColor,
                   fontWeight: FontWeight.w600,
-                  fontSize: 16,
+                  fontSize: 16.sp,
                 ),
               ),
       ),

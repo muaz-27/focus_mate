@@ -7,7 +7,9 @@ import 'package:focus_mate/screens/analytics/analytics_screen.dart';
 import 'package:focus_mate/screens/locks/remote_app_lock_screen.dart';
 import 'package:focus_mate/screens/analytics/snapshots_screen.dart';
 import 'package:focus_mate/screens/shared/pdf_viewer_screen.dart';
-import 'package:focus_mate/screens/quiz/quiz_history_screen.dart'; // NEW import
+import 'package:focus_mate/screens/quiz/quiz_history_screen.dart';
+import 'package:focus_mate/theme/app_colors.dart';
+import 'package:focus_mate/theme/app_theme.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:focus_mate/screens/schedule/parent_schedule_list_screen.dart';
 
@@ -116,14 +118,9 @@ class _ParentChildControlPageState extends State<ParentChildControlPage> {
         ],
       ),
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark 
-              ? [const Color(0xFF1A1F35), const Color(0xFF0B0E17)] 
-              : [const Color(0xFFF8FAFC), const Color(0xFFE2E8F0)],
-          ),
+        decoration: AppTheme.screenBackground(
+          context,
+          AppColors.roleGradients['parent']!,
         ),
         child: SafeArea(
           child: SingleChildScrollView(
@@ -134,7 +131,7 @@ class _ParentChildControlPageState extends State<ParentChildControlPage> {
               children: [
                 _buildHeaderCard(isDark),
                 const SizedBox(height: 30),
-                Text("CONTROLS", style: TextStyle(color: isDark ? Colors.white54 : Colors.grey, fontSize: 13, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+                Text("CONTROLS", style: TextStyle(color: isDark ? Colors.white70 : Colors.grey.shade600, fontSize: 13, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
                 const SizedBox(height: 16),
                 _buildControlTile(
                   context,
@@ -400,7 +397,7 @@ class _ParentChildControlPageState extends State<ParentChildControlPage> {
                   Text(
                     subtitle,
                     style: TextStyle(
-                      color: isDark ? Colors.white54 : Colors.grey,
+                      color: isDark ? Colors.white70 : Colors.grey.shade600,
                       fontSize: 12,
                     ),
                   ),

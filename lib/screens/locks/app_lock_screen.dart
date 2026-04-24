@@ -5,9 +5,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:device_apps/device_apps.dart';
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:focus_mate/core/usage_service.dart';
+import 'package:focus_mate/theme/app_colors.dart';
+import 'package:focus_mate/theme/app_theme.dart';
 import 'package:flutter/cupertino.dart';
-import 'dart:typed_data';
-import 'dart:ui';
 
 class AppLockScreen extends StatefulWidget {
   final String userId;
@@ -60,16 +60,18 @@ class _AppLockScreenState extends State<AppLockScreen> {
 
       // Normal mode - load user's own app locks
       final apps = await _usageService.getInstalledAppsList();
-      final doc = await _firestore
-          .collection('users')
-          .doc(widget.userId)
-          .get();
+      final doc = await _firestore.collection('users').doc(widget.userId).get();
 
       if (mounted) {
         setState(() {
           // Filter out our own app to prevent accidental self-locking
-          installedApps = apps.where((app) => app.packageName != 'com.example.focus_mate').toList();
-          installedApps.sort((a, b) => a.appName.toLowerCase().compareTo(b.appName.toLowerCase()));
+          installedApps = apps
+              .where((app) => app.packageName != 'com.example.focus_mate')
+              .toList();
+          installedApps.sort(
+            (a, b) =>
+                a.appName.toLowerCase().compareTo(b.appName.toLowerCase()),
+          );
 
           if (doc.exists) {
             final data = doc.data()!;
@@ -93,7 +95,8 @@ class _AppLockScreenState extends State<AppLockScreen> {
 
   Future<void> _syncToNative() async {
     try {
-      final isActive = lockEndTime != null && DateTime.now().isBefore(lockEndTime!);
+      final isActive =
+          lockEndTime != null && DateTime.now().isBefore(lockEndTime!);
       final appsToSend = isActive ? lockedPackages : <String>[];
       await platform.invokeMethod('setBlockedApps', {'apps': appsToSend});
     } catch (e) {
@@ -103,14 +106,13 @@ class _AppLockScreenState extends State<AppLockScreen> {
 
   Future<void> _terminateLock() async {
     setState(() => lockEndTime = null);
-    
+
     // Sync immediately to unlock apps
     await _syncToNative();
 
-    await _firestore
-        .collection('users')
-        .doc(widget.userId)
-        .update({'lockEndTime': null});
+    await _firestore.collection('users').doc(widget.userId).update({
+      'lockEndTime': null,
+    });
   }
 
   Future<void> _toggleLock(String packageName, bool isLocked) async {
@@ -125,10 +127,9 @@ class _AppLockScreenState extends State<AppLockScreen> {
       await _syncToNative();
     }
 
-    await _firestore
-        .collection('users')
-        .doc(widget.userId)
-        .update({'lockedApps': lockedPackages});
+    await _firestore.collection('users').doc(widget.userId).update({
+      'lockedApps': lockedPackages,
+    });
   }
 
   void _openAccessibilitySettings() {
@@ -161,7 +162,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF1E293B) : Colors.white,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-             boxShadow: [
+            boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.25),
                 blurRadius: 20,
@@ -183,11 +184,11 @@ class _AppLockScreenState extends State<AppLockScreen> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 10),
               Text(
                 "Select Lock Duration",
-                 style: TextStyle(
+                style: TextStyle(
                   color: isDark ? Colors.white : Colors.black87,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -212,7 +213,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
                     initialTimerDuration: Duration(minutes: _selectedDuration),
                     onTimerDurationChanged: (Duration newDuration) {
                       setState(() {
-                         _selectedDuration = newDuration.inMinutes;
+                        _selectedDuration = newDuration.inMinutes;
                       });
                     },
                   ),
@@ -223,9 +224,9 @@ class _AppLockScreenState extends State<AppLockScreen> {
               Padding(
                 padding: const EdgeInsets.all(24),
                 child: SizedBox(
-                   width: double.infinity,
-                   height: 56,
-                   child: ElevatedButton(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
                     onPressed: () {
                       if (_selectedDuration == 0) return;
                       Navigator.pop(context);
@@ -235,10 +236,18 @@ class _AppLockScreenState extends State<AppLockScreen> {
                       backgroundColor: Colors.cyanAccent,
                       foregroundColor: Colors.black,
                       elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                     ),
-                    child: const Text("Start Blocking", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                   ),
+                    child: const Text(
+                      "Start Blocking",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -252,14 +261,13 @@ class _AppLockScreenState extends State<AppLockScreen> {
     DateTime targetTime = DateTime.now().add(Duration(minutes: minutes));
 
     setState(() => lockEndTime = targetTime);
-    
+
     // Sync immediately to start blocking
     await _syncToNative();
 
-    await _firestore
-        .collection('users')
-        .doc(widget.userId)
-        .update({'lockEndTime': Timestamp.fromDate(targetTime)});
+    await _firestore.collection('users').doc(widget.userId).update({
+      'lockEndTime': Timestamp.fromDate(targetTime),
+    });
   }
 
   // Build companion controlled UI
@@ -291,31 +299,41 @@ class _AppLockScreenState extends State<AppLockScreen> {
                   ? "'${_companionName!}' is managing your apps"
                   : "Your companion is managing your apps",
               textAlign: TextAlign.center,
-              style: TextStyle(color: isDark ? Colors.white70 : Colors.black54, fontSize: 16),
+              style: TextStyle(
+                color: isDark ? Colors.white70 : Colors.black54,
+                fontSize: 16,
+              ),
             ),
             const SizedBox(height: 30),
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white70,
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : Colors.white70,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: isDark ? Colors.white10 : Colors.black12),
+                border: Border.all(
+                  color: isDark ? Colors.white10 : Colors.black12,
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                   Text(
+                  Text(
                     "SESSION RULES",
                     style: TextStyle(
                       color: isDark ? Colors.cyanAccent : Colors.blueAccent,
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      letterSpacing: 1.2
+                      letterSpacing: 1.2,
                     ),
                   ),
                   const SizedBox(height: 16),
                   _buildFeatureItem("⛔ You cannot edit locks", isDark),
-                  _buildFeatureItem("👤 Companion controls app blocking", isDark),
+                  _buildFeatureItem(
+                    "👤 Companion controls app blocking",
+                    isDark,
+                  ),
                   _buildFeatureItem("⏰ Companion sets the duration", isDark),
                   _buildFeatureItem("🔓 Emergency unlock available", isDark),
                 ],
@@ -333,12 +351,19 @@ class _AppLockScreenState extends State<AppLockScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.check_circle_outline, size: 16, color: isDark ? Colors.white54 : Colors.black54),
+          Icon(
+            Icons.check_circle_outline,
+            size: 16,
+            color: isDark ? Colors.white54 : Colors.black54,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               text,
-              style: TextStyle(color: isDark ? Colors.white70 : Colors.black87, fontSize: 14),
+              style: TextStyle(
+                color: isDark ? Colors.white70 : Colors.black87,
+                fontSize: 14,
+              ),
             ),
           ),
         ],
@@ -350,7 +375,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
   Widget build(BuildContext context) {
     // 1. Theme Detection
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     // If companion controlled, show different UI (Refactored below)
     if (_isCompanionControlled) {
       return _buildCompanionControlledPage(isDark);
@@ -363,7 +388,10 @@ class _AppLockScreenState extends State<AppLockScreen> {
       extendBodyBehindAppBar: true,
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: const Text("Block Distractions", style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          "Block Distractions",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -376,7 +404,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
             icon: const Icon(Icons.settings_accessibility),
             tooltip: "Accessibility Settings",
             onPressed: _openAccessibilitySettings,
-          )
+          ),
         ],
       ),
 
@@ -386,14 +414,9 @@ class _AppLockScreenState extends State<AppLockScreen> {
           Container(
             height: double.infinity,
             width: double.infinity,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: isDark 
-                  ? [const Color(0xFF1A1F35), const Color(0xFF0B0E17)] 
-                  : [const Color(0xFFF8FAFC), const Color(0xFFE2E8F0)],
-              ),
+            decoration: AppTheme.screenBackground(
+              context,
+              AppColors.roleGradients['user']!,
             ),
           ),
 
@@ -408,7 +431,10 @@ class _AppLockScreenState extends State<AppLockScreen> {
                     // Lock timer display (Floating Glass Card)
                     if (isLockActive && lockEndTime != null)
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 10,
+                        ),
                         child: LockTimerWidget(
                           endTime: lockEndTime!,
                           onTimerFinished: _terminateLock,
@@ -423,101 +449,139 @@ class _AppLockScreenState extends State<AppLockScreen> {
               Expanded(
                 child: loading
                     ? const Center(
-                        child: CircularProgressIndicator(color: Colors.cyanAccent),
+                        child: CircularProgressIndicator(
+                          color: Colors.cyanAccent,
+                        ),
                       )
                     : GridView.builder(
                         padding: EdgeInsets.only(
-                          left: 20, 
-                          right: 20, 
-                          top: 10, 
-                          bottom: MediaQuery.of(context).padding.bottom + 80 // avoid FAB overlap
+                          left: 20,
+                          right: 20,
+                          top: 10,
+                          bottom:
+                              MediaQuery.of(context).padding.bottom +
+                              80, // avoid FAB overlap
                         ),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3, // larger icons
-                          childAspectRatio: 0.8,
-                          crossAxisSpacing: 15,
-                          mainAxisSpacing: 15,
-                        ),
-                          itemCount: installedApps.length,
-                          itemBuilder: (context, index) {
-                            final app = installedApps[index];
-                            final isSelected = lockedPackages.contains(app.packageName);
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 3, // larger icons
+                              childAspectRatio: 0.8,
+                              crossAxisSpacing: 15,
+                              mainAxisSpacing: 15,
+                            ),
+                        itemCount: installedApps.length,
+                        itemBuilder: (context, index) {
+                          final app = installedApps[index];
+                          final isSelected = lockedPackages.contains(
+                            app.packageName,
+                          );
 
-                            // Check if app has icon
-                            Uint8List? iconData;
-                            if (app is ApplicationWithIcon) {
-                              iconData = app.icon;
-                            } else {
-                              debugPrint("App ${app.packageName} is not ApplicationWithIcon, it is ${app.runtimeType}");
-                            }
+                          // Check if app has icon
+                          Uint8List? iconData;
+                          if (app is ApplicationWithIcon) {
+                            iconData = app.icon;
+                          } else {
+                            debugPrint(
+                              "App ${app.packageName} is not ApplicationWithIcon, it is ${app.runtimeType}",
+                            );
+                          }
 
-                            return GestureDetector(
-                              onTap: () => _toggleLock(app.packageName, !isSelected),
-                              child: Container(
-                                decoration: BoxDecoration(
+                          return GestureDetector(
+                            onTap: () =>
+                                _toggleLock(app.packageName, !isSelected),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? Colors.redAccent.withValues(alpha: 0.2)
+                                    : (isDark
+                                          ? Colors.white.withValues(alpha: 0.05)
+                                          : Colors.white70),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
                                   color: isSelected
-                                      ? Colors.redAccent.withValues(alpha: 0.2)
-                                      : (isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white70),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: isSelected
-                                        ? Colors.redAccent
-                                        : Colors.transparent,
-                                    width: 2,
-                                  ),
-                                ),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Container(
-                                      width: 48,
-                                      height: 48,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(12),
-                                        color: Colors.black.withValues(alpha: 0.3),
-                                      ),
-                                      child: iconData != null && iconData.isNotEmpty
-                                          ? _buildIconImage(iconData)
-                                          : FutureBuilder<Application?>(
-                                              future: DeviceApps.getApp(app.packageName, true),
-                                              builder: (context, snapshot) {
-                                                if (snapshot.connectionState == ConnectionState.done && snapshot.data is ApplicationWithIcon) {
-                                                  final lazyIcon = (snapshot.data as ApplicationWithIcon).icon;
-                                                  if (lazyIcon.isNotEmpty) {
-                                                    return _buildIconImage(lazyIcon);
-                                                  }
-                                                }
-                                                return Icon(Icons.apps, color: isDark ? Colors.white54 : Colors.black54, size: 28);
-                                              },
-                                            ),
-                                    ),
-                                    
-                                    Padding(
-                                      padding: const EdgeInsets.all(4),
-                                      child: Text(
-                                        app.appName,
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          color: isDark ? Colors.white : Colors.black87,
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    
-                                    if (isSelected)
-                                      const Icon(Icons.lock, color: Colors.redAccent, size: 12),
-                                  ],
+                                      ? Colors.redAccent
+                                      : Colors.transparent,
+                                  width: 2,
                                 ),
                               ),
-                            );
-                          },
-                        ),
-                ),
-              ],
-            ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    width: 48,
+                                    height: 48,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(12),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.3,
+                                      ),
+                                    ),
+                                    child:
+                                        iconData != null && iconData.isNotEmpty
+                                        ? _buildIconImage(iconData)
+                                        : FutureBuilder<Application?>(
+                                            future: DeviceApps.getApp(
+                                              app.packageName,
+                                              true,
+                                            ),
+                                            builder: (context, snapshot) {
+                                              if (snapshot.connectionState ==
+                                                      ConnectionState.done &&
+                                                  snapshot.data
+                                                      is ApplicationWithIcon) {
+                                                final lazyIcon =
+                                                    (snapshot.data
+                                                            as ApplicationWithIcon)
+                                                        .icon;
+                                                if (lazyIcon.isNotEmpty) {
+                                                  return _buildIconImage(
+                                                    lazyIcon,
+                                                  );
+                                                }
+                                              }
+                                              return Icon(
+                                                Icons.apps,
+                                                color: isDark
+                                                    ? Colors.white54
+                                                    : Colors.black54,
+                                                size: 28,
+                                              );
+                                            },
+                                          ),
+                                  ),
+
+                                  Padding(
+                                    padding: const EdgeInsets.all(4),
+                                    child: Text(
+                                      app.appName,
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        color: isDark
+                                            ? Colors.white
+                                            : Colors.black87,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+
+                                  if (isSelected)
+                                    const Icon(
+                                      Icons.lock,
+                                      color: Colors.redAccent,
+                                      size: 12,
+                                    ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
         ],
       ),
 
@@ -526,50 +590,62 @@ class _AppLockScreenState extends State<AppLockScreen> {
               backgroundColor: Colors.redAccent,
               elevation: 4,
               icon: const Icon(Icons.stop_circle_outlined, color: Colors.white),
-              label: const Text("STOP LOCK", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+              label: const Text(
+                "STOP LOCK",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
               onPressed: _terminateLock,
             )
           : FloatingActionButton.extended(
               backgroundColor: Colors.cyanAccent,
               elevation: 4,
               icon: const Icon(Icons.timer, color: Colors.black),
-              label: const Text("Set Timer", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
+              label: const Text(
+                "Set Timer",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
               onPressed: _showDurationPicker,
             ),
     );
   }
 
   Widget _buildCompanionControlledPage(bool isDark) {
-     return Scaffold(
-        extendBodyBehindAppBar: true,
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        title: const Text(
+          "Companion Mode",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
         backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          title: const Text("Companion Mode", style: TextStyle(fontWeight: FontWeight.bold)),
-          centerTitle: true,
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-            onPressed: () => Navigator.pop(context),
-          ),
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+          onPressed: () => Navigator.pop(context),
         ),
-        body: Stack(
-          children: [
-             Container(
-              height: double.infinity, width: double.infinity,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft, end: Alignment.bottomRight,
-                  colors: isDark 
-                    ? [const Color(0xFF1A1F35), const Color(0xFF0B0E17)] 
-                    : [const Color(0xFFF8FAFC), const Color(0xFFE2E8F0)],
-                ),
-              ),
+      ),
+      body: Stack(
+        children: [
+          Container(
+            height: double.infinity,
+            width: double.infinity,
+            decoration: AppTheme.screenBackground(
+              context,
+              AppColors.roleGradients['companion']!,
             ),
-            _buildCompanionControlledUI(isDark),
-          ],
-        ),
-     );
+          ),
+          _buildCompanionControlledUI(isDark),
+        ],
+      ),
+    );
   }
 
   Widget _buildIconImage(Uint8List iconData) {
@@ -646,9 +722,15 @@ class _LockTimerWidgetState extends State<LockTimerWidget> {
       width: double.infinity,
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: widget.isDark 
-            ? [Colors.blueAccent.withValues(alpha: 0.2), Colors.purpleAccent.withValues(alpha: 0.2)]
-            : [Colors.blue.withValues(alpha: 0.1), Colors.purple.withValues(alpha: 0.1)],
+          colors: widget.isDark
+              ? [
+                  Colors.blueAccent.withValues(alpha: 0.2),
+                  Colors.purpleAccent.withValues(alpha: 0.2),
+                ]
+              : [
+                  Colors.blue.withValues(alpha: 0.1),
+                  Colors.purple.withValues(alpha: 0.1),
+                ],
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.3)),
@@ -662,7 +744,7 @@ class _LockTimerWidgetState extends State<LockTimerWidget> {
               color: Colors.blueAccent,
               fontSize: 12,
               fontWeight: FontWeight.bold,
-              letterSpacing: 1.2
+              letterSpacing: 1.2,
             ),
           ),
           const SizedBox(height: 4),

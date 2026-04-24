@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:focus_mate/theme/app_colors.dart';
+import 'package:focus_mate/theme/app_theme.dart';
+import 'package:focus_mate/core/widgets/custom_button.dart';
 
 class QuizScreen extends StatefulWidget {
   final String userId;
@@ -182,8 +185,17 @@ class _QuizScreenState extends State<QuizScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subTextColor = isDark ? Colors.white70 : Colors.black54;
+    final cardBg = isDark ? Colors.white10 : Colors.white.withValues(alpha: 0.7);
+    final cardBorder = isDark ? Colors.white24 : Colors.black12;
+    final selectedBg = isDark 
+        ? Colors.cyanAccent.withValues(alpha: 0.2) 
+        : Colors.cyanAccent.withValues(alpha: 0.12);
+
     if (_activeQuestions.isEmpty) {
-      return const Scaffold(body: Center(child: Text("No questions generated!")));
+      return Scaffold(body: Center(child: Text("No questions generated!", style: TextStyle(color: textColor))));
     }
 
     if (_quizFinished) {
@@ -191,56 +203,61 @@ class _QuizScreenState extends State<QuizScreen> {
       final bool passed = percentage >= 70.0;
       
       return Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: Colors.transparent,
+        extendBodyBehindAppBar: true,
         appBar: AppBar(
-          title: const Text("Quiz Results"), 
+          title: Text("Quiz Results", style: AppTheme.headerTitle(context).copyWith(fontSize: 22.sp)), 
           backgroundColor: Colors.transparent,
           automaticallyImplyLeading: false,
         ),
-        body: Center(
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(passed ? Icons.check_circle : Icons.error, color: passed ? Colors.green : Colors.red, size: 80),
-                const SizedBox(height: 20),
-                Text(
-                  "You scored $_score / ${_activeQuestions.length}",
-                  style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  "${percentage.toStringAsFixed(1)}%",
-                  style: TextStyle(color: passed ? Colors.greenAccent : Colors.redAccent, fontSize: 24),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  passed ? "Congratulations! Your apps are now unlocked." : "You need 70% to unlock your apps. Keep studying!",
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white70, fontSize: 16),
-                ),
-                const SizedBox(height: 40),
-                passed 
-                  ? ElevatedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.cyanAccent),
-                      child: const Text("Return to Workspace", style: TextStyle(color: Colors.black)),
-                    )
-                  : Column(
-                      children: [
-                        ElevatedButton(
-                          onPressed: _retryQuiz,
-                          style: ElevatedButton.styleFrom(backgroundColor: Colors.orangeAccent),
-                          child: const Text("Retry Quiz", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-                        ),
-                        const SizedBox(height: 12),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text("Return to Workspace (Apps stay locked)", style: TextStyle(color: Colors.white70)),
-                        )
-                      ],
-                    )
-              ],
+        body: Container(
+          decoration: AppTheme.screenBackground(context, AppColors.roleGradients['user']!),
+          child: Center(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.symmetric(horizontal: 24.w),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(passed ? Icons.check_circle : Icons.error, color: passed ? Colors.green : Colors.red, size: 80.sp),
+                  SizedBox(height: 20.h),
+                  Text(
+                    "You scored $_score / ${_activeQuestions.length}",
+                    style: TextStyle(color: textColor, fontSize: 32.sp, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 10.h),
+                  Text(
+                    "${percentage.toStringAsFixed(1)}%",
+                    style: TextStyle(color: passed ? Colors.greenAccent.shade700 : Colors.redAccent, fontSize: 24.sp),
+                  ),
+                  SizedBox(height: 20.h),
+                  Text(
+                    passed ? "Congratulations! Your apps are now unlocked." : "You need 70% to unlock your apps. Keep studying!",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: subTextColor, fontSize: 16.sp),
+                  ),
+                  SizedBox(height: 40.h),
+                  passed 
+                    ? CustomButton(
+                        onPressed: () => Navigator.pop(context),
+                        text: "Return to Workspace",
+                        color: Colors.cyanAccent,
+                      )
+                    : Column(
+                        children: [
+                          CustomButton(
+                            onPressed: _retryQuiz,
+                            text: "Retry Quiz",
+                            color: Colors.orangeAccent,
+                          ),
+                          SizedBox(height: 12.h),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: Text("Return to Workspace (Apps stay locked)", style: TextStyle(color: subTextColor, fontSize: 14.sp)),
+                          )
+                        ],
+                      )
+                ],
+              ),
             ),
           ),
         ),
@@ -251,58 +268,66 @@ class _QuizScreenState extends State<QuizScreen> {
     final List<dynamic> options = currentQuestion['options'];
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text("Question ${_currentIndex + 1} of ${_activeQuestions.length}"),
+        title: Text(
+          "Question ${_currentIndex + 1} of ${_activeQuestions.length}",
+          style: AppTheme.headerTitle(context).copyWith(fontSize: 22.sp),
+        ),
         backgroundColor: Colors.transparent,
+        iconTheme: IconThemeData(color: textColor),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              currentQuestion['question'] ?? "Unknown question?",
-              style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 40),
-            Expanded(
-              child: ListView(
-                children: List.generate(options.length, (index) {
-                   final isSelected = _selectedOption == index;
-                   return Padding(
-                     padding: const EdgeInsets.only(bottom: 16),
-                     child: InkWell(
-                       onTap: () => setState(() => _selectedOption = index),
-                       child: Container(
-                         padding: const EdgeInsets.all(20),
-                         decoration: BoxDecoration(
-                            color: isSelected ? Colors.cyanAccent.withValues(alpha: 0.2) : Colors.white10,
-                            border: Border.all(color: isSelected ? Colors.cyanAccent : Colors.white24),
-                            borderRadius: BorderRadius.circular(16)
+      body: Container(
+        decoration: AppTheme.screenBackground(context, AppColors.roleGradients['user']!),
+        child: SafeArea(
+          child: Padding(
+            padding: EdgeInsets.all(24.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  currentQuestion['question'] ?? "Unknown question?",
+                  style: TextStyle(color: textColor, fontSize: 22.sp, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 40.h),
+                Expanded(
+                  child: ListView(
+                    children: List.generate(options.length, (index) {
+                       final isSelected = _selectedOption == index;
+                       return Padding(
+                         padding: EdgeInsets.only(bottom: 16.h),
+                         child: InkWell(
+                           onTap: () => setState(() => _selectedOption = index),
+                           borderRadius: BorderRadius.circular(16.r),
+                           child: Container(
+                             padding: EdgeInsets.all(20.w),
+                             decoration: BoxDecoration(
+                                color: isSelected ? selectedBg : cardBg,
+                                border: Border.all(
+                                  color: isSelected ? Colors.cyanAccent : cardBorder,
+                                  width: isSelected ? 1.5.w : 1.w,
+                                ),
+                                borderRadius: BorderRadius.circular(16.r),
+                             ),
+                             child: Text(
+                               options[index].toString(),
+                               style: TextStyle(color: textColor, fontSize: 16.sp),
+                             ),
+                           ),
                          ),
-                         child: Text(
-                           options[index].toString(),
-                           style: const TextStyle(color: Colors.white, fontSize: 16),
-                         ),
-                       ),
-                     ),
-                   );
-                }),
-              ),
+                       );
+                    }),
+                  ),
+                ),
+                CustomButton(
+                  onPressed: _nextQuestion,
+                  text: _currentIndex == _activeQuestions.length - 1 ? "Finish Quiz" : "Next Question",
+                  color: Colors.cyanAccent,
+                )
+              ],
             ),
-            ElevatedButton(
-              onPressed: _nextQuestion,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 20),
-                backgroundColor: Colors.cyanAccent
-              ),
-              child: Text(
-                _currentIndex == _activeQuestions.length - 1 ? "Finish Quiz" : "Next Question",
-                style: const TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            )
-          ],
+          ),
         ),
       ),
     );

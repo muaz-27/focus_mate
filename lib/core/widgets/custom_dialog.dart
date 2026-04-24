@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:focus_mate/theme/app_colors.dart';
 import 'package:focus_mate/theme/app_theme.dart';
 
@@ -39,18 +40,28 @@ class CustomDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return AlertDialog(
-      backgroundColor: AppColors.cardOverlay,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20.r),
+        side: BorderSide(
+          color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight,
+        ),
+      ),
       title: Text(
         title,
-        style: AppTheme.headerTitle.copyWith(
-          fontSize: 20,
-          color: titleColor ?? AppColors.white,
+        style: AppTheme.headerTitle(context).copyWith(
+          fontSize: 20.sp,
+          color: titleColor ?? Theme.of(context).colorScheme.onSurface,
         ),
       ),
       content: DefaultTextStyle(
-        style: TextStyle(color: Colors.grey.shade300, fontSize: 16),
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
+          fontSize: 16.sp,
+        ),
         child: content,
       ),
       actions: actions,

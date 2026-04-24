@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'dart:typed_data';
 
 class ScreenCaptureService {
   static const platform = MethodChannel('com.example.focus_mate/blocker');
@@ -8,7 +7,9 @@ class ScreenCaptureService {
   /// Checks if the native SnapshotService is currently running.
   static Future<bool> isServiceRunning() async {
     try {
-      final bool result = await platform.invokeMethod('isSnapshotServiceRunning');
+      final bool result = await platform.invokeMethod(
+        'isSnapshotServiceRunning',
+      );
       return result;
     } on PlatformException catch (e) {
       debugPrint("Failed to check service status: '${e.message}'.");
@@ -18,7 +19,9 @@ class ScreenCaptureService {
 
   static Future<bool> requestPermission() async {
     try {
-      final bool result = await platform.invokeMethod('requestScreenCapturePermission');
+      final bool result = await platform.invokeMethod(
+        'requestScreenCapturePermission',
+      );
       return result;
     } on PlatformException catch (e) {
       debugPrint("Failed to request permission: '${e.message}'.");

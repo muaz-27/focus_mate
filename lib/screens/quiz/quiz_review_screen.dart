@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:focus_mate/theme/app_colors.dart';
+import 'package:focus_mate/theme/app_theme.dart';
 
 class QuizReviewScreen extends StatelessWidget {
   final List<Map<String, dynamic>> questions;
@@ -15,22 +16,40 @@ class QuizReviewScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : const Color(0xFF1A1A2E);
+    final subTextColor = isDark ? Colors.white70 : Colors.grey.shade700;
+    final dividerColor = isDark ? Colors.white24 : Colors.grey.shade300;
+    final optionBg = isDark ? Colors.white10 : Colors.grey.shade100;
+    final accentGreen = isDark ? Colors.greenAccent : Colors.green.shade700;
+
     if (questions.isEmpty) {
       return Scaffold(
-        backgroundColor: AppColors.background,
-        appBar: AppBar(title: const Text("Quiz Review"), backgroundColor: Colors.transparent),
-        body: const Center(child: Text("No questions found.", style: TextStyle(color: Colors.white))),
+        backgroundColor: Colors.transparent,
+        extendBodyBehindAppBar: true,
+        appBar: AppBar(title: Text("Quiz Review", style: TextStyle(color: textColor)), backgroundColor: Colors.transparent, elevation: 0, iconTheme: IconThemeData(color: textColor)),
+        body: Container(
+          decoration: AppTheme.screenBackground(context, AppColors.roleGradients['user']!),
+          child: SafeArea(
+            child: Center(child: Text("No questions found.", style: TextStyle(color: subTextColor))),
+          ),
+        ),
       );
     }
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text("Quiz Review"),
+        title: Text("Quiz Review", style: TextStyle(color: textColor)),
         backgroundColor: Colors.transparent,
-        iconTheme: const IconThemeData(color: Colors.white),
+        elevation: 0,
+        iconTheme: IconThemeData(color: textColor),
       ),
-      body: CustomScrollView(
+      body: Container(
+        decoration: AppTheme.screenBackground(context, AppColors.roleGradients['user']!),
+        child: SafeArea(
+          child: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(
             child: Padding(
@@ -39,14 +58,14 @@ class QuizReviewScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text("Score: $score / ${questions.length}", 
-                    style: const TextStyle(color: Colors.greenAccent, fontSize: 24, fontWeight: FontWeight.bold)
+                    style: TextStyle(color: accentGreen, fontSize: 24, fontWeight: FontWeight.bold)
                   ),
                   const SizedBox(height: 8),
                   Text("Source: $sourceName", 
-                    style: const TextStyle(color: Colors.white70, fontSize: 16)
+                    style: TextStyle(color: subTextColor, fontSize: 16)
                   ),
                   const SizedBox(height: 24),
-                  const Divider(color: Colors.white24),
+                  Divider(color: dividerColor),
                 ],
               ),
             ),
@@ -66,7 +85,7 @@ class QuizReviewScreen extends StatelessWidget {
                     children: [
                       Text(
                         "${index + 1}. $questionText",
-                        style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
+                        style: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.w600),
                       ),
                       const SizedBox(height: 16),
                       ...List.generate(options.length, (optIndex) {
@@ -76,25 +95,25 @@ class QuizReviewScreen extends StatelessWidget {
                           margin: const EdgeInsets.only(bottom: 8),
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                           decoration: BoxDecoration(
-                            color: isCorrect ? Colors.green.withValues(alpha: 0.2) : Colors.white10,
+                            color: isCorrect ? Colors.green.withValues(alpha: 0.2) : optionBg,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: isCorrect ? Colors.greenAccent : Colors.white24,
+                              color: isCorrect ? accentGreen : dividerColor,
                               width: isCorrect ? 2 : 1,
                             ),
                           ),
                           child: Row(
                             children: [
                               if (isCorrect) 
-                                const Padding(
+                                Padding(
                                   padding: EdgeInsets.only(right: 12.0),
-                                  child: Icon(Icons.check_circle, color: Colors.greenAccent, size: 20),
+                                  child: Icon(Icons.check_circle, color: accentGreen, size: 20),
                                 ),
                               Expanded(
                                 child: Text(
                                   options[optIndex].toString(),
                                   style: TextStyle(
-                                    color: isCorrect ? Colors.white : Colors.white70,
+                                    color: isCorrect ? textColor : subTextColor,
                                     fontSize: 16,
                                   ),
                                 ),
@@ -104,7 +123,7 @@ class QuizReviewScreen extends StatelessWidget {
                         );
                       }),
                       const SizedBox(height: 8),
-                      const Divider(color: Colors.white10),
+                      Divider(color: isDark ? Colors.white10 : Colors.grey.shade200),
                     ],
                   ),
                 );
@@ -113,6 +132,8 @@ class QuizReviewScreen extends StatelessWidget {
             ),
           ),
         ],
+        ),
+      ),
       ),
     );
   }

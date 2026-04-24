@@ -2,10 +2,16 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:focus_mate/screens/analytics/analytics_screen.dart';
+import 'package:focus_mate/screens/analytics/snapshots_screen.dart';
 import 'package:focus_mate/screens/companion/companion_control_page.dart';
+import 'package:focus_mate/screens/locks/remote_app_lock_screen.dart';
 import 'package:focus_mate/screens/parent/parent_child_control_page.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:focus_mate/providers/user_provider.dart';
+import 'package:focus_mate/theme/app_colors.dart';
+import 'package:focus_mate/theme/app_theme.dart';
 
 /// Dashboard for parents to manage linked children and enforce restrictions.
 class ParentDashboard extends ConsumerStatefulWidget {
@@ -151,38 +157,28 @@ class _ParentDashboardState extends ConsumerState<ParentDashboard> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : Colors.black87;
 
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: Text(
           "Parent Dashboard",
-          style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 22),
+          style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 22.sp),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
           IconButton(
             onPressed: () => widget.onLogout(),
-            icon: const Icon(Icons.logout, color: Colors.redAccent),
+            icon: Icon(Icons.logout, color: Colors.redAccent, size: 24.sp),
           ),
         ],
       ),
-      body: Stack(
-        children: [
-          // Background Gradient (Parent Theme: Deep Pinks/Reds)
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: isDark 
-                  ? [const Color(0xFF1A1F35), const Color(0xFF0B0E17)] 
-                  : [const Color(0xFFF8FAFC), const Color(0xFFE2E8F0)],
-              ),
-            ),
-          ),
-          
-          SafeArea(
+      body: Container(
+        decoration: AppTheme.screenBackground(context, AppColors.roleGradients['parent']!),
+        child: SafeArea(
             child: CustomScrollView(
               slivers: [
                 // Link Code Section
@@ -318,57 +314,48 @@ class _ParentDashboardState extends ConsumerState<ParentDashboard> {
                   },
                 ),
                 
-                const SliverToBoxAdapter(child: SizedBox(height: 40)),
+                SliverToBoxAdapter(child: SizedBox(height: 40.h)),
               ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildHeaderCard(bool isDark) {
+    final cardTextColor = isDark ? Colors.white : Colors.black87;
+    final cardSubTextColor = isDark ? Colors.white70 : Colors.black54;
+    final iconBtnBg = isDark ? Colors.white.withValues(alpha: 0.2) : Colors.black.withValues(alpha: 0.08);
+    final iconBtnColor = isDark ? Colors.white : Colors.black87;
+
     return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF6366F1), Color(0xFF3B82F6)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF6366F1).withValues(alpha: 0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          )
-        ],
-      ),
+      padding: EdgeInsets.all(24.w),
+      decoration: AppTheme.cardContainer(context, AppColors.roleGradients['parent']!),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             "Parent Link Code",
-            style: TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w500),
+            style: TextStyle(color: cardSubTextColor, fontSize: 14.sp, fontWeight: FontWeight.w500),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12.h),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 linkCode ?? "...",
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 36,
+                style: TextStyle(
+                  color: cardTextColor,
+                  fontSize: 36.sp,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 4,
                 ),
               ),
               Row(
                 children: [
-                  _glassIconButton(Icons.refresh, _refreshCode),
-                  const SizedBox(width: 8),
+                  _glassIconButton(Icons.refresh, _refreshCode, iconBtnBg, iconBtnColor),
+                  SizedBox(width: 8.w),
                   _glassIconButton(Icons.copy, () {
                     if (linkCode != null) {
                       Clipboard.setData(ClipboardData(text: linkCode!));
@@ -376,29 +363,29 @@ class _ParentDashboardState extends ConsumerState<ParentDashboard> {
                         const SnackBar(content: Text("Code copied!")),
                       );
                     }
-                  }),
+                  }, iconBtnBg, iconBtnColor),
                 ],
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12.h),
           Text(
             "Link your child's device by entering this code in their Focus Mate app.",
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 13),
+            style: TextStyle(color: cardSubTextColor, fontSize: 13.sp),
           ),
         ],
       ),
     );
   }
 
-  Widget _glassIconButton(IconData icon, VoidCallback onPressed) {
+  Widget _glassIconButton(IconData icon, VoidCallback onPressed, Color bgColor, Color iconColor) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.2),
+        color: bgColor,
         borderRadius: BorderRadius.circular(12),
       ),
       child: IconButton(
-        icon: Icon(icon, color: Colors.white, size: 20),
+        icon: Icon(icon, color: iconColor, size: 20),
         onPressed: onPressed,
       ),
     );
@@ -419,63 +406,202 @@ class _ParentDashboardState extends ConsumerState<ParentDashboard> {
       future: _firestore.collection('users').doc(studentId).get(),
       builder: (context, snap) {
         if (!snap.hasData) {
-          return Container(height: 80, decoration: BoxDecoration(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white70, borderRadius: BorderRadius.circular(16)));
+          return Container(
+            height: 120.h,
+            decoration: BoxDecoration(
+              color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white70,
+              borderRadius: BorderRadius.circular(20.r),
+            ),
+            child: const Center(
+              child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+            ),
+          );
         }
 
         final student = snap.data!.data() as Map<String, dynamic>;
         final studentName = student['name'] ?? "Unknown";
+        final isOnline = student['isOnline'] ?? false;
+        final studyTime = student['studyTime'] ?? 0;
+        final level = student['level'] ?? 1;
+        final lockedApps = List<String>.from(student['lockedApps'] ?? []);
 
         return Container(
+          padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05)),
-          ),
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            leading: Stack(
-              children: [
-                CircleAvatar(
-                  radius: 24,
-                  backgroundColor: Colors.blueAccent.withValues(alpha: 0.1),
-                  child: Text(studentName[0].toUpperCase(), style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 20)),
+            color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.white,
+            borderRadius: BorderRadius.circular(20.r),
+            border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05)),
+            boxShadow: [
+              if (!isDark)
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
                 ),
-                Positioned(
-                  right: 0,
-                  bottom: 0,
-                  child: Container(
-                    width: 14,
-                    height: 14,
-                    decoration: BoxDecoration(
-                      color: Colors.green, // Placeholder for online status
-                      shape: BoxShape.circle,
-                      border: Border.all(color: isDark ? const Color(0xFF1E293B) : Colors.white, width: 2),
+            ],
+          ),
+          child: Column(
+            children: [
+              // Top row: Avatar + Name + Status
+              Row(
+                children: [
+                  Stack(
+                    children: [
+                      CircleAvatar(
+                        radius: 24.r,
+                        backgroundColor: Colors.pinkAccent.withValues(alpha: 0.1),
+                        child: Text(studentName[0].toUpperCase(), style: TextStyle(color: Colors.pinkAccent, fontWeight: FontWeight.bold, fontSize: 20.sp)),
+                      ),
+                      Positioned(
+                        right: 0, bottom: 0,
+                        child: Container(
+                          width: 14.w, height: 14.h,
+                          decoration: BoxDecoration(
+                            color: isOnline ? Colors.green : Colors.grey,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: isDark ? const Color(0xFF1E293B) : Colors.white, width: 2.w),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(width: 14.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(studentName, style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold, fontSize: 16.sp)),
+                        SizedBox(height: 3.h),
+                        Row(
+                          children: [
+                            Icon(Icons.star_rounded, size: 14.sp, color: Colors.amber.shade600),
+                            SizedBox(width: 3.w),
+                            Text("Level $level", style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600], fontSize: 12.sp)),
+                            SizedBox(width: 10.w),
+                            Icon(Icons.timer_outlined, size: 13.sp, color: Colors.blueAccent.withValues(alpha: 0.7)),
+                            SizedBox(width: 3.w),
+                            Text("${studyTime}m today", style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600], fontSize: 12.sp)),
+                            if (lockedApps.isNotEmpty) ...[
+                              SizedBox(width: 10.w),
+                              Container(
+                                padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                                decoration: BoxDecoration(
+                                  color: Colors.redAccent.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(6.r),
+                                ),
+                                child: Text("${lockedApps.length} locked", style: TextStyle(color: Colors.redAccent.shade100, fontSize: 10.sp, fontWeight: FontWeight.w600)),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ],
                     ),
                   ),
-                ),
-              ],
-            ),
-            title: Text(studentName, style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold, fontSize: 16)),
-            subtitle: Text("Level ${student['level'] ?? 1} • Focus Scholar", style: TextStyle(color: Colors.grey[500], fontSize: 12)),
-            trailing: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(color: Colors.blueAccent.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
-              child: const Icon(Icons.analytics_outlined, color: Colors.blueAccent, size: 20),
-            ),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ParentChildControlPage(
-                    studentId: studentId,
-                    studentName: studentName,
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                    decoration: BoxDecoration(
+                      color: isOnline ? Colors.green.withValues(alpha: 0.1) : Colors.grey.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    child: Text(
+                      isOnline ? "ONLINE" : "OFFLINE",
+                      style: TextStyle(color: isOnline ? Colors.green : Colors.grey, fontSize: 10.sp, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                    ),
                   ),
-                ),
-              );
-            },
+                ],
+              ),
+              SizedBox(height: 14.h),
+              Container(height: 1, color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.grey.shade200),
+              SizedBox(height: 12.h),
+              // Bottom row: Quick action buttons
+              Row(
+                children: [
+                  _buildStudentAction(
+                    icon: Icons.dashboard_outlined,
+                    label: "Control",
+                    color: Colors.pinkAccent,
+                    isDark: isDark,
+                    onTap: () {
+                      Navigator.push(context, MaterialPageRoute(
+                        builder: (_) => ParentChildControlPage(studentId: studentId, studentName: studentName),
+                      ));
+                    },
+                  ),
+                  SizedBox(width: 8.w),
+                  _buildStudentAction(
+                    icon: Icons.analytics_outlined,
+                    label: "Analytics",
+                    color: Colors.blueAccent,
+                    isDark: isDark,
+                    onTap: () {
+                      Navigator.push(context, MaterialPageRoute(
+                        builder: (_) => AnalyticsScreen(userId: studentId, userName: studentName),
+                      ));
+                    },
+                  ),
+                  SizedBox(width: 8.w),
+                  _buildStudentAction(
+                    icon: Icons.lock_outline,
+                    label: "Locks",
+                    color: Colors.orangeAccent,
+                    isDark: isDark,
+                    onTap: () {
+                      Navigator.push(context, MaterialPageRoute(
+                        builder: (_) => RemoteAppLockScreen(studentId: studentId, studentName: studentName),
+                      ));
+                    },
+                  ),
+                  SizedBox(width: 8.w),
+                  _buildStudentAction(
+                    icon: Icons.camera_alt_outlined,
+                    label: "Snaps",
+                    color: Colors.indigoAccent,
+                    isDark: isDark,
+                    onTap: () {
+                      Navigator.push(context, MaterialPageRoute(
+                        builder: (_) => SnapshotsScreen(studentId: studentId, studentName: studentName),
+                      ));
+                    },
+                  ),
+                ],
+              ),
+            ],
           ),
         );
       },
+    );
+  }
+
+  Widget _buildStudentAction({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    return Expanded(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12.r),
+          onTap: onTap,
+          child: Container(
+            padding: EdgeInsets.symmetric(vertical: 10.h),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: isDark ? 0.1 : 0.08),
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(color: color.withValues(alpha: isDark ? 0.15 : 0.12)),
+            ),
+            child: Column(
+              children: [
+                Icon(icon, color: color, size: 20.sp),
+                SizedBox(height: 4.h),
+                Text(label, style: TextStyle(color: isDark ? Colors.grey[300] : Colors.grey[700], fontSize: 11.sp, fontWeight: FontWeight.w600)),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 

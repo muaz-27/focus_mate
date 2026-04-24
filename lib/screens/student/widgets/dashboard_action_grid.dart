@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:focus_mate/screens/study/study_workspace_screen.dart';
 import 'package:focus_mate/screens/locks/parental_locks_screen.dart';
 import 'package:focus_mate/screens/analytics/analytics_screen.dart';
@@ -29,8 +30,8 @@ class GlassTile extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        constraints: const BoxConstraints(minHeight: 110), 
-        padding: const EdgeInsets.all(20),
+        constraints: BoxConstraints(minHeight: 110.h), 
+        padding: EdgeInsets.all(20.w),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
@@ -39,12 +40,12 @@ class GlassTile extends StatelessWidget {
                ? [Colors.white.withValues(alpha: 0.07), Colors.white.withValues(alpha: 0.03)]
                : [Colors.white, Colors.grey.shade50],
           ),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.white, width: 1),
+          borderRadius: BorderRadius.circular(24.r),
+          border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.white, width: 1.w),
           boxShadow: [
              BoxShadow(
                color: isDark ? Colors.black.withValues(alpha: 0.2) : Colors.grey.withValues(alpha: 0.1), 
-               blurRadius: 16, 
+               blurRadius: 16.r, 
                offset: const Offset(0, 8)
              )
           ],
@@ -54,14 +55,14 @@ class GlassTile extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: EdgeInsets.all(10.w),
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(14.r),
               ),
-              child: Icon(icon, color: color, size: 26),
+              child: Icon(icon, color: color, size: 26.sp),
             ),
-            const SizedBox(height: 16), 
+            SizedBox(height: 16.h), 
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -69,15 +70,15 @@ class GlassTile extends StatelessWidget {
                   style: TextStyle(
                     color: isDark ? Colors.white.withValues(alpha: 0.9) : Colors.black87, 
                     fontWeight: FontWeight.bold, 
-                    fontSize: 16
+                    fontSize: 16.sp
                   )
                 ),
                 if (subtitle != null) ...[
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4.h),
                   Text(subtitle!, 
                     style: TextStyle(
-                      color: isDark ? Colors.white54 : Colors.black54, 
-                      fontSize: 12,
+                      color: isDark ? Colors.white70 : Colors.grey.shade600, 
+                      fontSize: 12.sp,
                       fontWeight: FontWeight.w500,
                     )
                   ),
@@ -139,7 +140,7 @@ class DashboardActionGrid extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16.h),
         _buildManagementGrid(context),
       ],
     );
@@ -198,10 +199,10 @@ class DashboardActionGrid extends StatelessWidget {
                  ),
                ),
                if (companionId != null) ...[
-                 const SizedBox(width: 16),
+                 SizedBox(width: 16.w),
                  Expanded(child: parentalLocksTile),
                ] else ...[
-                 const SizedBox(width: 16),
+                 SizedBox(width: 16.w),
                  const Expanded(child: SizedBox.shrink()),
                ]
              ],
@@ -236,7 +237,7 @@ class DashboardActionGrid extends StatelessWidget {
                 },
               ),
             ),
-            const SizedBox(width: 16),
+            SizedBox(width: 16.w),
             Expanded(
               child: GlassTile(
                 isDark: isDark,
@@ -263,7 +264,7 @@ class DashboardActionGrid extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16.h),
         Row(
           children: [
             Expanded(
@@ -288,7 +289,7 @@ class DashboardActionGrid extends StatelessWidget {
                 },
               ),
             ),
-            const SizedBox(width: 16),
+            SizedBox(width: 16.w),
             if (companionId != null)
               Expanded(
                 child: GlassTile(

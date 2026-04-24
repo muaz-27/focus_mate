@@ -4,6 +4,8 @@ import 'package:focus_mate/core/schedule_service.dart';
 import 'package:focus_mate/providers/schedule_provider.dart';
 import 'package:focus_mate/screens/schedule/schedule_lock_form.dart';
 import 'package:focus_mate/screens/locks/unlock_request_screen.dart';
+import 'package:focus_mate/theme/app_colors.dart';
+import 'package:focus_mate/theme/app_theme.dart';
 
 class ScheduleListScreen extends ConsumerWidget {
   final String userId;
@@ -88,14 +90,9 @@ class ScheduleListScreen extends ConsumerWidget {
           Container(
             height: double.infinity,
             width: double.infinity,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: isDark 
-                  ? [const Color(0xFF1A1F35), const Color(0xFF0B0E17)] 
-                  : [const Color(0xFFF8FAFC), const Color(0xFFE2E8F0)],
-              ),
+            decoration: AppTheme.screenBackground(
+              context,
+              AppColors.roleGradients['user']!,
             ),
           ),
           SafeArea(
@@ -110,7 +107,7 @@ class ScheduleListScreen extends ConsumerWidget {
                       children: [
                         Icon(Icons.schedule, size: 60, color: Colors.grey.withValues(alpha: 0.5)),
                         const SizedBox(height: 16),
-                        const Text("No schedules set", style: TextStyle(fontSize: 16, color: Colors.grey)),
+                        Text("No schedules set", style: TextStyle(fontSize: 16, color: isDark ? Colors.white70 : Colors.grey.shade700)),
                       ],
                     ),
                   );

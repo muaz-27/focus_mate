@@ -2,23 +2,21 @@ import 'dart:math';
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:focus_mate/screens/analytics/analytics_screen.dart'; 
 import 'package:focus_mate/screens/companion/companion_control_page.dart';
 import 'package:focus_mate/screens/schedule/schedule_approval_screen.dart';
 import 'package:focus_mate/screens/companion/widgets/companion_header.dart';
 import 'package:focus_mate/screens/companion/widgets/student_tile.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:focus_mate/providers/user_provider.dart';
+import 'package:focus_mate/theme/app_colors.dart';
+import 'package:focus_mate/theme/app_theme.dart';
 
 /// Dashboard for companions (parents/partners) to manage linked students and sessions.
 class CompanionDashboard extends ConsumerStatefulWidget {
   final Function onLogout;
 
-  const CompanionDashboard({
-    super.key,
-    required this.onLogout,
-  });
+  const CompanionDashboard({super.key, required this.onLogout});
 
   @override
   ConsumerState<CompanionDashboard> createState() => _CompanionDashboardState();
@@ -66,30 +64,32 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
         .doc(_userId)
         .snapshots()
         .listen((doc) {
-      if (!mounted || !doc.exists) return;
-      final data = doc.data() as Map<String, dynamic>;
-      
-      final linkedSet = <String>{
-        ...List<String>.from(data['linkedStudents'] ?? []),
-        ...List<String>.from(data['linkedUsers'] ?? []),
-      };
-      
-      final currentStudentIds = linkedSet.toList();
-      
-      // Remove stale listeners
-      final staleIds = _studentScheduleSubscriptions.keys.where((id) => !currentStudentIds.contains(id)).toList();
-      for (var id in staleIds) {
-        _studentScheduleSubscriptions.remove(id)?.cancel();
-        _studentUnlockSubscriptions.remove(id)?.cancel();
-      }
+          if (!mounted || !doc.exists) return;
+          final data = doc.data() as Map<String, dynamic>;
 
-      // Add new listeners
-      for (var studentId in currentStudentIds) {
-        if (!_studentScheduleSubscriptions.containsKey(studentId)) {
-          _startStudentListeners(studentId);
-        }
-      }
-    });
+          final linkedSet = <String>{
+            ...List<String>.from(data['linkedStudents'] ?? []),
+            ...List<String>.from(data['linkedUsers'] ?? []),
+          };
+
+          final currentStudentIds = linkedSet.toList();
+
+          // Remove stale listeners
+          final staleIds = _studentScheduleSubscriptions.keys
+              .where((id) => !currentStudentIds.contains(id))
+              .toList();
+          for (var id in staleIds) {
+            _studentScheduleSubscriptions.remove(id)?.cancel();
+            _studentUnlockSubscriptions.remove(id)?.cancel();
+          }
+
+          // Add new listeners
+          for (var studentId in currentStudentIds) {
+            if (!_studentScheduleSubscriptions.containsKey(studentId)) {
+              _startStudentListeners(studentId);
+            }
+          }
+        });
   }
 
   void _startStudentListeners(String studentId) {
@@ -100,8 +100,8 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
         .collection('schedules')
         .snapshots()
         .listen((snapshot) async {
-       _updateSchedules(studentId, snapshot.docs);
-    });
+          _updateSchedules(studentId, snapshot.docs);
+        });
 
     // 2. Listen for Unlock Requests (top-level collection, unified with Parent flow)
     _studentUnlockSubscriptions[studentId] = _firestore
@@ -111,16 +111,20 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
         .where('status', isEqualTo: 'pending')
         .snapshots()
         .listen((snapshot) async {
-       _updatePendingUnlockRequests(studentId, snapshot.docs);
-    });
+          _updatePendingUnlockRequests(studentId, snapshot.docs);
+        });
   }
 
   // Intermediate storage per student to simplify merging
-  final Map<String, List<Map<String, dynamic>>> _perStudentPendingSchedules = {};
+  final Map<String, List<Map<String, dynamic>>> _perStudentPendingSchedules =
+      {};
   final Map<String, List<Map<String, dynamic>>> _perStudentActiveSchedules = {};
   final Map<String, List<Map<String, dynamic>>> _perStudentUnlocks = {};
 
-  Future<void> _updateSchedules(String studentId, List<QueryDocumentSnapshot> docs) async {
+  Future<void> _updateSchedules(
+    String studentId,
+    List<QueryDocumentSnapshot> docs,
+  ) async {
     if (!mounted) return;
     String userName = "Student";
     try {
@@ -133,19 +137,30 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
         'id': doc.id,
         'userId': studentId,
         'userName': userName,
-        ...(doc.data() as Map<String, dynamic>)
+        ...(doc.data() as Map<String, dynamic>),
       };
     }).toList();
 
     setState(() {
-      _perStudentPendingSchedules[studentId] = allSchedules.where((s) => s['status'] == 'requested').toList();
-      _perStudentActiveSchedules[studentId] = allSchedules.where((s) => s['status'] == 'active').toList();
-      _pendingSchedules = _perStudentPendingSchedules.values.expand((x) => x).toList();
-      _activeSchedules = _perStudentActiveSchedules.values.expand((x) => x).toList();
+      _perStudentPendingSchedules[studentId] = allSchedules
+          .where((s) => s['status'] == 'requested')
+          .toList();
+      _perStudentActiveSchedules[studentId] = allSchedules
+          .where((s) => s['status'] == 'active')
+          .toList();
+      _pendingSchedules = _perStudentPendingSchedules.values
+          .expand((x) => x)
+          .toList();
+      _activeSchedules = _perStudentActiveSchedules.values
+          .expand((x) => x)
+          .toList();
     });
   }
 
-  Future<void> _updatePendingUnlockRequests(String studentId, List<QueryDocumentSnapshot> docs) async {
+  Future<void> _updatePendingUnlockRequests(
+    String studentId,
+    List<QueryDocumentSnapshot> docs,
+  ) async {
     if (!mounted) return;
     String userName = "Student";
     try {
@@ -165,7 +180,9 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
 
     setState(() {
       _perStudentUnlocks[studentId] = requests;
-      _pendingUnlockRequests = _perStudentUnlocks.values.expand((x) => x).toList();
+      _pendingUnlockRequests = _perStudentUnlocks.values
+          .expand((x) => x)
+          .toList();
     });
   }
 
@@ -176,53 +193,51 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
         .where('companionId', isEqualTo: _userId)
         .where('status', isEqualTo: 'REQUESTED')
         .snapshots()
-        .listen((snapshot) {
-      if (mounted) {
-        // Deduplicate requests: keep latest per user
-        final Map<String, Map<String, dynamic>> latestRequests = {};
-        
-        for (final doc in snapshot.docs) {
-          final data = doc.data();
-          final userId = data['userId'];
-          
-          if (!latestRequests.containsKey(userId)) {
-             latestRequests[userId] = {
-              'id': doc.id,
-              ...data,
-            };
-          } else {
-             // Keep the newer one if duplicate exists
-             final existing = latestRequests[userId]!;
-             final Timestamp? newTime = data['requestedAt'];
-             final Timestamp? oldTime = existing['requestedAt'];
-             
-             if (newTime != null && (oldTime == null || newTime.compareTo(oldTime) > 0)) {
-                latestRequests[userId] = {
-                  'id': doc.id,
-                  ...data,
-                };
-             }
-          }
-        }
-        
-        final requests = latestRequests.values.toList();
-        
-        // Sort by time descending
-        requests.sort((a, b) {
-           Timestamp? tA = a['requestedAt'];
-           Timestamp? tB = b['requestedAt'];
-           if (tA == null) return 1;
-           if (tB == null) return -1;
-           return tB.compareTo(tA);
-        });
-        
-        setState(() {
-          _pendingSessions = requests;
-        });
-      }
-    }, onError: (e) {
-      debugPrint("Error listening for requests: $e");
-    });
+        .listen(
+          (snapshot) {
+            if (mounted) {
+              // Deduplicate requests: keep latest per user
+              final Map<String, Map<String, dynamic>> latestRequests = {};
+
+              for (final doc in snapshot.docs) {
+                final data = doc.data();
+                final userId = data['userId'];
+
+                if (!latestRequests.containsKey(userId)) {
+                  latestRequests[userId] = {'id': doc.id, ...data};
+                } else {
+                  // Keep the newer one if duplicate exists
+                  final existing = latestRequests[userId]!;
+                  final Timestamp? newTime = data['requestedAt'];
+                  final Timestamp? oldTime = existing['requestedAt'];
+
+                  if (newTime != null &&
+                      (oldTime == null || newTime.compareTo(oldTime) > 0)) {
+                    latestRequests[userId] = {'id': doc.id, ...data};
+                  }
+                }
+              }
+
+              final requests = latestRequests.values.toList();
+
+              // Sort by time descending
+              requests.sort((a, b) {
+                Timestamp? tA = a['requestedAt'];
+                Timestamp? tB = b['requestedAt'];
+                if (tA == null) return 1;
+                if (tB == null) return -1;
+                return tB.compareTo(tA);
+              });
+
+              setState(() {
+                _pendingSessions = requests;
+              });
+            }
+          },
+          onError: (e) {
+            debugPrint("Error listening for requests: $e");
+          },
+        );
   }
 
   /// Listens for currently active sessions managed by this companion.
@@ -233,21 +248,16 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
         .where('status', isEqualTo: 'ACTIVE')
         .snapshots()
         .listen((snapshot) {
-      if (mounted) {
-        setState(() {
-          _activeSessions = snapshot.docs.map((doc) {
-            final data = doc.data();
-            return {
-              'id': doc.id,
-              ...data,
-            };
-          }).toList();
+          if (mounted) {
+            setState(() {
+              _activeSessions = snapshot.docs.map((doc) {
+                final data = doc.data();
+                return {'id': doc.id, ...data};
+              }).toList();
+            });
+          }
         });
-      }
-    });
   }
-
-
 
   /// Loads the companion's unique link code from Firestore.
   Future<void> _loadLinkCode() async {
@@ -265,10 +275,7 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
       return;
     }
 
-    final doc = await _firestore
-        .collection('users')
-        .doc(_userId)
-        .get();
+    final doc = await _firestore.collection('users').doc(_userId).get();
     setState(() {
       linkCode = doc.data()?['linkCode'];
     });
@@ -278,10 +285,7 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
   String _generateCode() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     final rng = Random.secure();
-    return List.generate(
-      8,
-      (index) => chars[rng.nextInt(chars.length)],
-    ).join();
+    return List.generate(8, (index) => chars[rng.nextInt(chars.length)]).join();
   }
 
   /// Generates a new link code and updates it in Firestore with a 24-hour expiration.
@@ -289,7 +293,9 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
     final code = _generateCode();
     await _firestore.collection('users').doc(_userId).update({
       'linkCode': code,
-      'linkCodeExpiresAt': Timestamp.fromDate(DateTime.now().add(const Duration(hours: 24))),
+      'linkCodeExpiresAt': Timestamp.fromDate(
+        DateTime.now().add(const Duration(hours: 24)),
+      ),
     });
     setState(() {
       linkCode = code;
@@ -301,195 +307,204 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : Colors.black87;
 
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: Text(
           "Companion Dashboard",
-          style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 22),
+          style: TextStyle(
+            color: textColor,
+            fontWeight: FontWeight.bold,
+            fontSize: 22.sp,
+          ),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
           IconButton(
             onPressed: () => widget.onLogout(),
-            icon: const Icon(Icons.logout, color: Colors.redAccent),
+            icon: Icon(Icons.logout, color: Colors.redAccent, size: 24.sp),
           ),
         ],
       ),
-      body: Stack(
-        children: [
-          // Background Gradient
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: isDark 
-                  ? [const Color(0xFF0F172A), const Color(0xFF1E293B)] 
-                  : [const Color(0xFFF1F5F9), const Color(0xFFE2E8F0)],
+      body: Container(
+        decoration: AppTheme.screenBackground(
+          context,
+          AppColors.roleGradients['companion']!,
+        ),
+        child: SafeArea(
+          child: CustomScrollView(
+            slivers: [
+              // Link Code Section
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: CompanionHeader(
+                    linkCode: linkCode,
+                    onRefreshCode: _refreshCode,
+                  ),
+                ),
               ),
-            ),
-          ),
-          
-          SafeArea(
-            child: CustomScrollView(
-              slivers: [
-                // Link Code Section
+
+              // Session Requests
+              if (_pendingSessions.isNotEmpty)
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
-                    child: CompanionHeader(
-                      linkCode: linkCode,
-                      onRefreshCode: _refreshCode,
-                    ),
+                    child: _buildSessionRequestsSection(),
                   ),
                 ),
 
-                // Session Requests
-                if (_pendingSessions.isNotEmpty)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: _buildSessionRequestsSection(),
-                    ),
-                  ),
-
-                // Schedule Requests
-                if (_pendingSchedules.isNotEmpty)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: _buildScheduleRequestsSection(),
-                    ),
-                  ),
-
-                // Active Sessions (Manual)
-                if (_activeSessions.isNotEmpty)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: _buildActiveSessionsSection(),
-                    ),
-                  ),
-
-                // Active App Lock Schedules
-                if (_activeSchedules.isNotEmpty)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: _buildActiveSchedulesSection(),
-                    ),
-                  ),
-
-                // Unlock Requests
-                if (_pendingUnlockRequests.isNotEmpty)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: _buildUnlockRequestsSection(),
-                    ),
-                  ),
-
-                // Connected Students Header
+              // Schedule Requests
+              if (_pendingSchedules.isNotEmpty)
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
-                    child: Row(
-                      children: [
-                        Text(
-                          "Monitored Children",
-                          style: TextStyle(
-                            color: textColor,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const Spacer(),
-                        const Icon(Icons.sync, size: 16, color: Colors.blueAccent),
-                      ],
-                    ),
+                    padding: const EdgeInsets.all(16.0),
+                    child: _buildScheduleRequestsSection(),
                   ),
                 ),
 
-                // Connected Students List
-                StreamBuilder<DocumentSnapshot>(
-                  stream: _firestore
-                      .collection('users')
-                      .doc(_userId)
-                      .snapshots(),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const SliverToBoxAdapter(child: Center(child: CircularProgressIndicator()));
-                    }
+              // Active Sessions (Manual)
+              if (_activeSessions.isNotEmpty)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: _buildActiveSessionsSection(),
+                  ),
+                ),
 
-                    if (!snapshot.hasData || !snapshot.data!.exists) {
-                      return const SliverToBoxAdapter(child: Center(child: Text("No connection data found.")));
-                    }
+              // Active App Lock Schedules
+              if (_activeSchedules.isNotEmpty)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: _buildActiveSchedulesSection(),
+                  ),
+                ),
 
-                    final data = snapshot.data!.data() as Map<String, dynamic>;
-                    
-                    // FIX: Standardize syncing by merging linkedUsers and linkedStudents
-                    final linkedSet = <String>{
-                      ...List<String>.from(data['linkedStudents'] ?? []),
-                      ...List<String>.from(data['linkedUsers'] ?? []),
-                    };
-                    final linked = linkedSet.toList();
+              // Unlock Requests
+              if (_pendingUnlockRequests.isNotEmpty)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: _buildUnlockRequestsSection(),
+                  ),
+                ),
 
-                    if (linked.isEmpty) {
-                      return SliverToBoxAdapter(
-                        child: Container(
-                          padding: const EdgeInsets.all(40),
-                          child: Column(
-                            children: [
-                              Icon(Icons.child_care_rounded, size: 64, color: Colors.grey.withValues(alpha: 0.3)),
-                              const SizedBox(height: 16),
-                              Text(
-                                "No children linked yet.\nShare your code to get started!",
-                                textAlign: TextAlign.center,
-                                style: TextStyle(color: Colors.grey[500], fontSize: 16),
-                              ),
-                            ],
-                          ),
+              // Connected Students Header
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+                  child: Row(
+                    children: [
+                      Text(
+                        "Monitored Children",
+                        style: TextStyle(
+                          color: textColor,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
                         ),
-                      );
-                    }
+                      ),
+                      const Spacer(),
+                      const Icon(
+                        Icons.sync,
+                        size: 16,
+                        color: Colors.blueAccent,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
 
-                    return SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final studentId = linked[index];
-                          return Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                            child: StudentTile(
-                              studentId: studentId,
-                              isDark: isDark,
+              // Connected Students List
+              StreamBuilder<DocumentSnapshot>(
+                stream: _firestore.collection('users').doc(_userId).snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const SliverToBoxAdapter(
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  }
+
+                  if (!snapshot.hasData || !snapshot.data!.exists) {
+                    return const SliverToBoxAdapter(
+                      child: Center(child: Text("No connection data found.")),
+                    );
+                  }
+
+                  final data = snapshot.data!.data() as Map<String, dynamic>;
+
+                  // FIX: Standardize syncing by merging linkedUsers and linkedStudents
+                  final linkedSet = <String>{
+                    ...List<String>.from(data['linkedStudents'] ?? []),
+                    ...List<String>.from(data['linkedUsers'] ?? []),
+                  };
+                  final linked = linkedSet.toList();
+
+                  if (linked.isEmpty) {
+                    return SliverToBoxAdapter(
+                      child: Container(
+                        padding: const EdgeInsets.all(40),
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.child_care_rounded,
+                              size: 64,
+                              color: Colors.grey.withValues(alpha: 0.3),
                             ),
-                          );
-                        },
-                        childCount: linked.length,
+                            const SizedBox(height: 16),
+                            Text(
+                              "No children linked yet.\nShare your code to get started!",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.grey[500],
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     );
-                  },
-                ),
-                
-                const SliverToBoxAdapter(child: SizedBox(height: 40)),
-              ],
-            ),
+                  }
+
+                  return SliverList(
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final studentId = linked[index];
+                      return Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                        child: StudentTile(
+                          studentId: studentId,
+                          isDark: isDark,
+                        ),
+                      );
+                    }, childCount: linked.length),
+                  );
+                },
+              ),
+
+              SliverToBoxAdapter(child: SizedBox(height: 40.h)),
+            ],
           ),
-        ],
+        ),
+      ),
       ),
     );
   }
-
-
 
   Widget _buildSessionRequestsSection() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle("Session Requests", Icons.notifications_active, Colors.orange, isDark),
+        _buildSectionTitle(
+          "Session Requests",
+          Icons.notifications_active,
+          Colors.orange,
+          isDark,
+        ),
         const SizedBox(height: 12),
         ..._pendingSessions.map((session) => _buildSessionRequestCard(session)),
       ],
@@ -501,7 +516,12 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle("Active Sessions", Icons.play_circle_outline, Colors.green, isDark),
+        _buildSectionTitle(
+          "Active Sessions",
+          Icons.play_circle_outline,
+          Colors.green,
+          isDark,
+        ),
         const SizedBox(height: 12),
         ..._activeSessions.map((session) => _buildActiveSessionCard(session)),
       ],
@@ -513,9 +533,16 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle("Active App Lock Schedules", Icons.lock, Colors.amber, isDark),
+        _buildSectionTitle(
+          "Active App Lock Schedules",
+          Icons.lock,
+          Colors.amber,
+          isDark,
+        ),
         const SizedBox(height: 12),
-        ..._activeSchedules.map((schedule) => _buildActiveScheduleCard(schedule)),
+        ..._activeSchedules.map(
+          (schedule) => _buildActiveScheduleCard(schedule),
+        ),
       ],
     );
   }
@@ -523,7 +550,7 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
   Widget _buildActiveScheduleCard(Map<String, dynamic> schedule) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final studentName = schedule['userName'] ?? 'Student';
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
@@ -536,15 +563,27 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
         children: [
           CircleAvatar(
             backgroundColor: Colors.amber.withValues(alpha: 0.1),
-            child: Text(studentName[0].toUpperCase(), style: const TextStyle(color: Colors.amber)),
+            child: Text(
+              studentName[0].toUpperCase(),
+              style: const TextStyle(color: Colors.amber),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("$studentName - ${schedule['name']}", style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold)),
-                Text("${(schedule['lockedApps'] as List?)?.length ?? 0} apps locked", style: TextStyle(color: Colors.grey[500], fontSize: 12)),
+                Text(
+                  "$studentName - ${schedule['name']}",
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black87,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  "${(schedule['lockedApps'] as List?)?.length ?? 0} apps locked",
+                  style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                ),
               ],
             ),
           ),
@@ -560,12 +599,21 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
 
   Future<void> _stopSchedule(String studentId, String scheduleId) async {
     try {
-      await _firestore.collection('users').doc(studentId).collection('schedules').doc(scheduleId).update({
-        'status': 'inactive',
-      });
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Schedule stopped")));
+      await _firestore
+          .collection('users')
+          .doc(studentId)
+          .collection('schedules')
+          .doc(scheduleId)
+          .update({'status': 'inactive'});
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Schedule stopped")));
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Error: $e")));
     }
   }
 
@@ -574,9 +622,16 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle("Schedule Requests", Icons.schedule, Colors.amber, isDark),
+        _buildSectionTitle(
+          "Schedule Requests",
+          Icons.schedule,
+          Colors.amber,
+          isDark,
+        ),
         const SizedBox(height: 12),
-        ..._pendingSchedules.map((schedule) => _buildScheduleRequestCard(schedule)),
+        ..._pendingSchedules.map(
+          (schedule) => _buildScheduleRequestCard(schedule),
+        ),
       ],
     );
   }
@@ -586,19 +641,36 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle("App Unlock Requests", Icons.lock_open, Colors.purpleAccent, isDark),
+        _buildSectionTitle(
+          "App Unlock Requests",
+          Icons.lock_open,
+          Colors.purpleAccent,
+          isDark,
+        ),
         const SizedBox(height: 12),
         ..._pendingUnlockRequests.map((req) => _buildUnlockRequestCard(req)),
       ],
     );
   }
 
-  Widget _buildSectionTitle(String title, IconData icon, Color color, bool isDark) {
+  Widget _buildSectionTitle(
+    String title,
+    IconData icon,
+    Color color,
+    bool isDark,
+  ) {
     return Row(
       children: [
         Icon(icon, color: color, size: 22),
         const SizedBox(width: 8),
-        Text(title, style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 18, fontWeight: FontWeight.bold)),
+        Text(
+          title,
+          style: TextStyle(
+            color: isDark ? Colors.white : Colors.black87,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ],
     );
   }
@@ -606,7 +678,7 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
   Widget _buildSessionRequestCard(Map<String, dynamic> session) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final studentName = session['userName'] ?? 'Student';
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
@@ -619,15 +691,27 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
         children: [
           CircleAvatar(
             backgroundColor: Colors.orange.withValues(alpha: 0.1),
-            child: Text(studentName[0].toUpperCase(), style: const TextStyle(color: Colors.orange)),
+            child: Text(
+              studentName[0].toUpperCase(),
+              style: const TextStyle(color: Colors.orange),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(studentName, style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold)),
-                Text('${session['duration'] ?? 60}m study request', style: TextStyle(color: Colors.grey[500], fontSize: 12)),
+                Text(
+                  studentName,
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black87,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  '${session['duration'] ?? 60}m study request',
+                  style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                ),
               ],
             ),
           ),
@@ -641,7 +725,9 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
               backgroundColor: Colors.orange,
               foregroundColor: Colors.white,
               elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               padding: const EdgeInsets.symmetric(horizontal: 16),
             ),
             child: const Text("Approve"),
@@ -655,7 +741,7 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final studentName = schedule['userName'] ?? 'Student';
     final scheduleName = schedule['name'] ?? 'Schedule';
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
@@ -668,15 +754,31 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
         children: [
           CircleAvatar(
             backgroundColor: Colors.amber.withValues(alpha: 0.1),
-            child: Text(studentName[0].toUpperCase(), style: const TextStyle(color: Colors.amber)),
+            child: Text(
+              studentName[0].toUpperCase(),
+              style: const TextStyle(color: Colors.amber),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(studentName, style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold)),
-                Text('New Schedule: $scheduleName', style: TextStyle(color: Colors.amber, fontSize: 12, fontWeight: FontWeight.bold)),
+                Text(
+                  studentName,
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black87,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  'New Schedule: $scheduleName',
+                  style: TextStyle(
+                    color: Colors.amber,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
           ),
@@ -685,11 +787,11 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
             icon: const Icon(Icons.close_rounded, color: Colors.grey),
             onPressed: () async {
               await _firestore
-                 .collection('users')
-                 .doc(schedule['userId'])
-                 .collection('schedules')
-                 .doc(schedule['id'])
-                 .delete();
+                  .collection('users')
+                  .doc(schedule['userId'])
+                  .collection('schedules')
+                  .doc(schedule['id'])
+                  .delete();
             },
           ),
           ElevatedButton(
@@ -708,7 +810,9 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
               backgroundColor: Colors.amber,
               foregroundColor: Colors.black,
               elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               padding: const EdgeInsets.symmetric(horizontal: 16),
             ),
             child: const Text("Review"),
@@ -734,15 +838,31 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
         children: [
           CircleAvatar(
             backgroundColor: Colors.green.withValues(alpha: 0.1),
-            child: Text(studentName[0].toUpperCase(), style: const TextStyle(color: Colors.green)),
+            child: Text(
+              studentName[0].toUpperCase(),
+              style: const TextStyle(color: Colors.green),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(studentName, style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold)),
-                const Text('Session In-Progress', style: TextStyle(color: Colors.green, fontSize: 12, fontWeight: FontWeight.w500)),
+                Text(
+                  studentName,
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black87,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Text(
+                  'Session In-Progress',
+                  style: TextStyle(
+                    color: Colors.green,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ],
             ),
           ),
@@ -762,7 +882,9 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
               backgroundColor: Colors.green,
               foregroundColor: Colors.white,
               elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
             child: const Text("Manage"),
           ),
@@ -776,10 +898,8 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => CompanionControlPage(
-            sessionId: sessionId,
-            companionId: _userId,
-          ),
+          builder: (context) =>
+              CompanionControlPage(sessionId: sessionId, companionId: _userId),
         ),
       );
     } else {
@@ -788,7 +908,9 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
         'updatedAt': FieldValue.serverTimestamp(),
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Session request rejected')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Session request rejected')),
+        );
       }
     }
   }
@@ -799,20 +921,16 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
     final packageName = req['packageName'];
 
     // Update request status (top-level collection)
-    await _firestore
-        .collection('unlock_requests')
-        .doc(reqId)
-        .update({'status': 'approved'});
+    await _firestore.collection('unlock_requests').doc(reqId).update({
+      'status': 'approved',
+    });
 
     if (packageName == 'all') {
       // Suspend all locks: Quick locks, active schedules, and companion sessions
       final batch = _firestore.batch();
-      
+
       final userRef = _firestore.collection('users').doc(userId);
-      batch.update(userRef, {
-        'lockedApps': [],
-        'lockEndTime': null,
-      });
+      batch.update(userRef, {'lockedApps': [], 'lockEndTime': null});
 
       final sessionsSnap = await _firestore
           .collection('companion_sessions')
@@ -820,7 +938,7 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
           .where('status', isEqualTo: 'ACTIVE')
           .get();
       for (var doc in sessionsSnap.docs) {
-         batch.update(doc.reference, {'status': 'ENDED'});
+        batch.update(doc.reference, {'status': 'ENDED'});
       }
 
       final schedulesSnap = await _firestore
@@ -832,7 +950,7 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
       for (var doc in schedulesSnap.docs) {
         batch.update(doc.reference, {'status': 'inactive'});
       }
-      
+
       await batch.commit();
     } else if (packageName.toString().startsWith('schedule_')) {
       final scheduleId = packageName.toString().substring('schedule_'.length);
@@ -849,12 +967,12 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
           .where('userId', isEqualTo: userId)
           .where('status', isEqualTo: 'ACTIVE')
           .get();
-          
+
       for (var doc in sessionsSnap.docs) {
-         await doc.reference.update({
-           'lockedApps': FieldValue.arrayRemove([packageName]),
-           'manuallyUnlockedApps': FieldValue.arrayUnion([packageName]),
-         });
+        await doc.reference.update({
+          'lockedApps': FieldValue.arrayRemove([packageName]),
+          'manuallyUnlockedApps': FieldValue.arrayUnion([packageName]),
+        });
       }
 
       await _firestore.collection('users').doc(userId).update({
@@ -875,23 +993,24 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
     }
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("App unlocked successfully")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("App unlocked successfully")),
+      );
     }
   }
 
   Future<void> _denyUnlockRequest(Map<String, dynamic> req) async {
     final reqId = req['id'];
-    await _firestore
-        .collection('unlock_requests')
-        .doc(reqId)
-        .update({'status': 'denied'});
+    await _firestore.collection('unlock_requests').doc(reqId).update({
+      'status': 'denied',
+    });
   }
 
   Widget _buildUnlockRequestCard(Map<String, dynamic> req) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final studentName = req['userName'] ?? 'Student';
     final appName = req['appName'] ?? 'Unknown App';
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
@@ -904,15 +1023,31 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
         children: [
           CircleAvatar(
             backgroundColor: Colors.purple.withValues(alpha: 0.1),
-            child: Text(studentName[0].toUpperCase(), style: const TextStyle(color: Colors.purple)),
+            child: Text(
+              studentName[0].toUpperCase(),
+              style: const TextStyle(color: Colors.purple),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(studentName, style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold)),
-                Text('Unlock: $appName', style: const TextStyle(color: Colors.purpleAccent, fontSize: 12, fontWeight: FontWeight.bold)),
+                Text(
+                  studentName,
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black87,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  'Unlock: $appName',
+                  style: const TextStyle(
+                    color: Colors.purpleAccent,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
           ),
@@ -926,7 +1061,9 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
               backgroundColor: Colors.purpleAccent,
               foregroundColor: Colors.white,
               elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               padding: const EdgeInsets.symmetric(horizontal: 16),
             ),
             child: const Text("Unlock"),

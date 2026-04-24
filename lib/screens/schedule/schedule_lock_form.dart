@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:device_apps/device_apps.dart';
 import 'package:focus_mate/core/schedule_service.dart';
 import 'package:focus_mate/core/usage_service.dart';
+import 'package:focus_mate/theme/app_colors.dart';
+import 'package:focus_mate/theme/app_theme.dart';
 
 class ScheduleLockForm extends StatefulWidget {
   final String userId;
@@ -111,14 +113,9 @@ class _ScheduleLockFormState extends State<ScheduleLockForm> {
           Container(
             height: double.infinity,
             width: double.infinity,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: isDark 
-                  ? [const Color(0xFF1A1F35), const Color(0xFF0B0E17)] 
-                  : [const Color(0xFFF8FAFC), const Color(0xFFE2E8F0)],
-              ),
+            decoration: AppTheme.screenBackground(
+              context,
+              AppColors.roleGradients['user']!,
             ),
           ),
           SafeArea(
@@ -224,7 +221,7 @@ class _ScheduleLockFormState extends State<ScheduleLockForm> {
                            final isSelected = _selectedApps.contains(app.packageName);
                            return CheckboxListTile(
                              title: Text(app.appName, style: TextStyle(color: isDark ? Colors.white : Colors.black87)),
-                             subtitle: Text(app.packageName, style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                             subtitle: Text(app.packageName, style: TextStyle(fontSize: 10, color: isDark ? Colors.grey[400] : Colors.grey.shade600)),
                              value: isSelected,
                              onChanged: (val) {
                                setState(() {

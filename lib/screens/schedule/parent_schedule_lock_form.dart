@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:focus_mate/core/schedule_service.dart';
+import 'package:focus_mate/theme/app_colors.dart';
+import 'package:focus_mate/theme/app_theme.dart';
 import '../../core/widgets/app_icon_widget.dart';
 
 class ParentScheduleLockForm extends StatefulWidget {
@@ -31,7 +32,7 @@ class _ParentScheduleLockFormState extends State<ParentScheduleLockForm> {
   List<int> _selectedDays = [];
   TimeOfDay _startTime = const TimeOfDay(hour: 9, minute: 0);
   TimeOfDay _endTime = const TimeOfDay(hour: 17, minute: 0);
-  
+
   List<Map<String, dynamic>> _installedApps = [];
   List<String> _selectedApps = [];
   bool _loadingApps = true;
@@ -51,28 +52,40 @@ class _ParentScheduleLockFormState extends State<ParentScheduleLockForm> {
 
   Future<void> _loadApps() async {
     try {
-      final appsCollection = _firestore.collection('users').doc(widget.studentId).collection('data_v2');
+      final appsCollection = _firestore
+          .collection('users')
+          .doc(widget.studentId)
+          .collection('data_v2');
       final shardsSnapshot = await appsCollection.get();
       List<Map<String, dynamic>> allApps = [];
 
       if (shardsSnapshot.docs.isNotEmpty) {
         for (var doc in shardsSnapshot.docs) {
           if (doc.data().containsKey('installedApps')) {
-            final shardApps = List<Map<String, dynamic>>.from(doc.data()['installedApps']);
+            final shardApps = List<Map<String, dynamic>>.from(
+              doc.data()['installedApps'],
+            );
             allApps.addAll(shardApps);
           }
         }
       }
-      
-      allApps.sort((a, b) => (a['appName'] as String).toLowerCase().compareTo((b['appName'] as String).toLowerCase()));
 
-      final iconCollection = _firestore.collection('users').doc(widget.studentId).collection('app_icons');
+      allApps.sort(
+        (a, b) => (a['appName'] as String).toLowerCase().compareTo(
+          (b['appName'] as String).toLowerCase(),
+        ),
+      );
+
+      final iconCollection = _firestore
+          .collection('users')
+          .doc(widget.studentId)
+          .collection('app_icons');
       final iconsSnapshot = await iconCollection.get();
       Map<String, String> iconMap = {};
       for (var doc in iconsSnapshot.docs) {
-         if (doc.data().containsKey('icon')) {
-             iconMap[doc.id] = doc.data()['icon'];
-         }
+        if (doc.data().containsKey('icon')) {
+          iconMap[doc.id] = doc.data()['icon'];
+        }
       }
 
       if (mounted) {
@@ -89,7 +102,8 @@ class _ParentScheduleLockFormState extends State<ParentScheduleLockForm> {
                   } catch (e) {}
                 }
                 return newApp;
-              }).toList();
+              })
+              .toList();
           _loadingApps = false;
         });
       }
@@ -100,15 +114,21 @@ class _ParentScheduleLockFormState extends State<ParentScheduleLockForm> {
 
   void _saveSchedule() async {
     if (_nameController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Name cannot be empty")));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Name cannot be empty")));
       return;
     }
     if (_selectedDays.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Select at least one day")));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Select at least one day")));
       return;
     }
     if (_selectedApps.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Select at least one app to block")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Select at least one app to block")),
+      );
       return;
     }
 
@@ -132,8 +152,6 @@ class _ParentScheduleLockFormState extends State<ParentScheduleLockForm> {
     }
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -142,7 +160,10 @@ class _ParentScheduleLockFormState extends State<ParentScheduleLockForm> {
       extendBodyBehindAppBar: true,
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: Text(widget.existingSchedule != null ? "Edit Schedule" : "New Schedule", style: const TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(
+          widget.existingSchedule != null ? "Edit Schedule" : "New Schedule",
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -152,14 +173,9 @@ class _ParentScheduleLockFormState extends State<ParentScheduleLockForm> {
           Container(
             height: double.infinity,
             width: double.infinity,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: isDark 
-                  ? [const Color(0xFF3D1E00), const Color(0xFF0B0E17)] 
-                  : [const Color(0xFFFFF7ED), const Color(0xFFE2E8F0)],
-              ),
+            decoration: AppTheme.screenBackground(
+              context,
+              AppColors.roleGradients['parent']!,
             ),
           ),
           SafeArea(
@@ -170,37 +186,66 @@ class _ParentScheduleLockFormState extends State<ParentScheduleLockForm> {
                 children: [
                   TextField(
                     controller: _nameController,
-                    style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
                     decoration: InputDecoration(
                       labelText: "Schedule Name (e.g., School Time)",
-                      labelStyle: TextStyle(color: isDark ? Colors.white54 : Colors.black54),
+                      labelStyle: TextStyle(
+                        color: isDark ? Colors.white54 : Colors.black54,
+                      ),
                       filled: true,
-                      fillColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                      fillColor: isDark
+                          ? Colors.white.withValues(alpha: 0.05)
+                          : Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 24),
-                  
-                  Text("Select Days", style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold)),
+
+                  Text(
+                    "Select Days",
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black87,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const SizedBox(height: 12),
                   Wrap(
                     spacing: 8,
                     children: List.generate(7, (index) {
                       final dayNum = index + 1;
                       final isSelected = _selectedDays.contains(dayNum);
-                      const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-                      
+                      const dayLabels = [
+                        'Mon',
+                        'Tue',
+                        'Wed',
+                        'Thu',
+                        'Fri',
+                        'Sat',
+                        'Sun',
+                      ];
+
                       return FilterChip(
                         label: Text(dayLabels[index]),
                         selected: isSelected,
                         onSelected: (selected) {
                           setState(() {
-                            selected ? _selectedDays.add(dayNum) : _selectedDays.remove(dayNum);
+                            selected
+                                ? _selectedDays.add(dayNum)
+                                : _selectedDays.remove(dayNum);
                           });
                         },
-                        selectedColor: Colors.orangeAccent.withValues(alpha: 0.3),
+                        selectedColor: Colors.orangeAccent.withValues(
+                          alpha: 0.3,
+                        ),
                         checkmarkColor: Colors.orangeAccent,
-                        backgroundColor: isDark ? Colors.white10 : Colors.black12,
+                        backgroundColor: isDark
+                            ? Colors.white10
+                            : Colors.black12,
                       );
                     }),
                   ),
@@ -214,19 +259,25 @@ class _ParentScheduleLockFormState extends State<ParentScheduleLockForm> {
                           time: _startTime,
                           isDark: isDark,
                           onTap: () async {
-                            final time = await showTimePicker(context: context, initialTime: _startTime);
+                            final time = await showTimePicker(
+                              context: context,
+                              initialTime: _startTime,
+                            );
                             if (time != null) setState(() => _startTime = time);
                           },
                         ),
                       ),
                       const SizedBox(width: 16),
-                       Expanded(
+                      Expanded(
                         child: _TimePickerCard(
                           title: "End Time",
                           time: _endTime,
                           isDark: isDark,
                           onTap: () async {
-                            final time = await showTimePicker(context: context, initialTime: _endTime);
+                            final time = await showTimePicker(
+                              context: context,
+                              initialTime: _endTime,
+                            );
                             if (time != null) setState(() => _endTime = time);
                           },
                         ),
@@ -235,44 +286,73 @@ class _ParentScheduleLockFormState extends State<ParentScheduleLockForm> {
                   ),
                   const SizedBox(height: 32),
 
-                   Text("Select Apps to Block", style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold)),
-                   const SizedBox(height: 12),
-                   if (_loadingApps) 
-                     const Center(child: CircularProgressIndicator(color: Colors.orangeAccent,))
-                   else
-                     ListView.builder(
-                       shrinkWrap: true,
-                       physics: const NeverScrollableScrollPhysics(),
-                       itemCount: _installedApps.length,
-                       itemBuilder: (context, index) {
-                         final app = _installedApps[index];
-                         final isSelected = _selectedApps.contains(app['packageName']);
-                         return CheckboxListTile(
-                           title: Row(
-                             children: [
-                               AppIconWidget(
-                                 packageName: app['packageName'],
-                                 appName: app['appName'],
-                                 iconBytes: app['decodedIcon'],
-                                 size: 32,
-                               ),
-                               const SizedBox(width: 12),
-                               Expanded(child: Text(app['appName'], style: TextStyle(color: isDark ? Colors.white : Colors.black87))),
-                             ],
-                           ),
-                           subtitle: Text(app['packageName'], style: const TextStyle(fontSize: 10, color: Colors.grey)),
-                           value: isSelected,
-                           onChanged: (val) {
-                             setState(() {
-                               if (val == true) _selectedApps.add(app['packageName']);
-                               else _selectedApps.remove(app['packageName']);
-                             });
-                           },
-                           activeColor: Colors.orangeAccent,
-                           checkColor: Colors.white,
-                         );
-                       },
-                     ),
+                  Text(
+                    "Select Apps to Block",
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black87,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  if (_loadingApps)
+                    const Center(
+                      child: CircularProgressIndicator(
+                        color: Colors.orangeAccent,
+                      ),
+                    )
+                  else
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: _installedApps.length,
+                      itemBuilder: (context, index) {
+                        final app = _installedApps[index];
+                        final isSelected = _selectedApps.contains(
+                          app['packageName'],
+                        );
+                        return CheckboxListTile(
+                          title: Row(
+                            children: [
+                              AppIconWidget(
+                                packageName: app['packageName'],
+                                appName: app['appName'],
+                                iconBytes: app['decodedIcon'],
+                                size: 32,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  app['appName'],
+                                  style: TextStyle(
+                                    color: isDark
+                                        ? Colors.white
+                                        : Colors.black87,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          subtitle: Text(
+                            app['packageName'],
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: isDark ? Colors.grey[400] : Colors.grey.shade600,
+                            ),
+                          ),
+                          value: isSelected,
+                          onChanged: (val) {
+                            setState(() {
+                              if (val == true)
+                                _selectedApps.add(app['packageName']);
+                              else
+                                _selectedApps.remove(app['packageName']);
+                            });
+                          },
+                          activeColor: Colors.orangeAccent,
+                          checkColor: Colors.white,
+                        );
+                      },
+                    ),
 
                   const SizedBox(height: 50),
                   SizedBox(
@@ -283,9 +363,19 @@ class _ParentScheduleLockFormState extends State<ParentScheduleLockForm> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.orangeAccent,
                         foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                       ),
-                      child: Text(widget.existingSchedule != null ? "Update Schedule" : "Save Schedule", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      child: Text(
+                        widget.existingSchedule != null
+                            ? "Update Schedule"
+                            : "Save Schedule",
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -325,9 +415,22 @@ class _TimePickerCard extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Text(title, style: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontSize: 12)),
+            Text(
+              title,
+              style: TextStyle(
+                color: isDark ? Colors.white54 : Colors.black54,
+                fontSize: 12,
+              ),
+            ),
             const SizedBox(height: 8),
-            Text(time.format(context), style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 24, fontWeight: FontWeight.bold)),
+            Text(
+              time.format(context),
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.black,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ],
         ),
       ),

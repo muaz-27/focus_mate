@@ -48,9 +48,12 @@ class FocusAccessibilityService : AccessibilityService() {
 
         private fun savePreferences(context: Context) {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            // IMPORTANT: SharedPreferences.putStringSet() compares set REFERENCES,
+            // not values. If the same Set object is passed, the write is silently
+            // skipped even if contents changed. Always pass a NEW copy.
             prefs.edit()
-                .putStringSet(KEY_USER_BLOCKED, userBlockedApps)
-                .putStringSet(KEY_COMPANION_BLOCKED, companionBlockedApps)
+                .putStringSet(KEY_USER_BLOCKED, HashSet(userBlockedApps))
+                .putStringSet(KEY_COMPANION_BLOCKED, HashSet(companionBlockedApps))
                 .putString(KEY_SCHEDULES, activeSchedulesJson)
                 .apply()
         }

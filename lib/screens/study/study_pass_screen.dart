@@ -68,19 +68,28 @@ class StudyPassScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final userAsync = ref.watch(userProvider);
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : const Color(0xFF1A1A2E);
+    final subTextColor = isDark ? Colors.white70 : Colors.grey.shade700;
+    final accentCyan = isDark ? Colors.cyanAccent : Colors.cyan.shade700;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text("Study Pass", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Text("Study Pass", style: TextStyle(color: textColor, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: IconThemeData(color: textColor),
       ),
-      body: userAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator(color: Colors.cyanAccent)),
-        error: (e, _) => Center(child: Text("Error: $e", style: const TextStyle(color: Colors.white))),
+      body: Container(
+        decoration: AppTheme.screenBackground(context, AppColors.roleGradients['user']!),
+        child: SafeArea(
+          child: userAsync.when(
+        loading: () => Center(child: CircularProgressIndicator(color: accentCyan)),
+        error: (e, _) => Center(child: Text("Error: $e", style: TextStyle(color: textColor))),
         data: (user) {
-          if (user == null) return const Center(child: Text("User not found", style: TextStyle(color: Colors.white)));
+          if (user == null) return Center(child: Text("User not found", style: TextStyle(color: textColor)));
 
           return Padding(
             padding: const EdgeInsets.all(16.0),
@@ -90,15 +99,15 @@ class StudyPassScreen extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.all(24),
                   width: double.infinity,
-                  decoration: AppTheme.cardContainer(AppColors.roleGradients['user']!),
+                  decoration: AppTheme.cardContainer(context, AppColors.roleGradients['user']!),
                   child: Column(
                     children: [
-                      const Icon(Icons.confirmation_number, size: 48, color: Colors.white),
+                      Icon(Icons.confirmation_number, size: 48, color: textColor),
                       const SizedBox(height: 16),
-                      const Text(
+                      Text(
                         "Available Passes",
                         style: TextStyle(
-                          color: Colors.white,
+                          color: textColor,
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                         ),
@@ -106,8 +115,8 @@ class StudyPassScreen extends ConsumerWidget {
                       const SizedBox(height: 8),
                       Text(
                         "${user.passes}",
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: textColor,
                           fontSize: 48,
                           fontWeight: FontWeight.bold,
                         ),
@@ -115,7 +124,7 @@ class StudyPassScreen extends ConsumerWidget {
                       const SizedBox(height: 8),
                       Text(
                         "Earn 1 pass for every 30 mins of focus",
-                        style: TextStyle(color: Colors.white.withValues(alpha: 0.8)),
+                        style: TextStyle(color: subTextColor),
                       ),
                       if (user.minutesTowardsNextPass > 0) ...[
                         const SizedBox(height: 16),
@@ -123,25 +132,25 @@ class StudyPassScreen extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(10),
                           child: LinearProgressIndicator(
                             value: user.minutesTowardsNextPass / 30,
-                            backgroundColor: Colors.white24,
-                            valueColor: const AlwaysStoppedAnimation<Color>(Colors.cyanAccent),
+                            backgroundColor: isDark ? Colors.white24 : Colors.grey.shade300,
+                            valueColor: AlwaysStoppedAnimation<Color>(accentCyan),
                             minHeight: 8,
                           ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           "${30 - user.minutesTowardsNextPass} mins remaining for next pass",
-                          style: const TextStyle(color: Colors.white70, fontSize: 12),
+                          style: TextStyle(color: subTextColor, fontSize: 12),
                         ),
                       ],
                     ],
                   ),
                 ),
                 const SizedBox(height: 32),
-                const Text(
+                Text(
                   "Redeem Passes",
                   style: TextStyle(
-                    color: Colors.white,
+                    color: textColor,
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
@@ -185,6 +194,8 @@ class StudyPassScreen extends ConsumerWidget {
           );
         },
       ),
+    ),
+      ),
     );
   }
 
@@ -197,34 +208,40 @@ class StudyPassScreen extends ConsumerWidget {
     IconData icon,
     String activity,
   ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : const Color(0xFF1A1A2E);
+    final mutedColor = isDark ? Colors.grey[400]! : Colors.grey.shade600;
+    final cardBg = isDark ? AppColors.cardOverlay : Colors.white.withValues(alpha: 0.85);
+    final accentCyan = isDark ? Colors.cyanAccent : Colors.cyan.shade700;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: AppColors.cardOverlay,
+        color: cardBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.cardBorder),
+        border: Border.all(color: isDark ? AppColors.cardBorderDark : AppColors.cardBorderLight),
       ),
       child: ListTile(
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.1),
+            color: accentCyan.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(icon, color: Colors.cyanAccent),
+          child: Icon(icon, color: accentCyan),
         ),
-        title: Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-        subtitle: Text(subtitle, style: const TextStyle(color: Colors.grey)),
+        title: Text(title, style: TextStyle(color: textColor, fontWeight: FontWeight.w600)),
+        subtitle: Text(subtitle, style: TextStyle(color: mutedColor)),
         trailing: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: Colors.cyanAccent.withValues(alpha: 0.2),
+            color: accentCyan.withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(
             "$cost Pass",
-            style: const TextStyle(
-              color: Colors.cyanAccent,
+            style: TextStyle(
+              color: accentCyan,
               fontWeight: FontWeight.bold,
             ),
           ),

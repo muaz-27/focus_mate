@@ -5,13 +5,13 @@ import 'package:focus_mate/theme/app_colors.dart';
 ThemeData darkTheme = ThemeData(
   brightness: Brightness.dark,
   useMaterial3: true,
-  scaffoldBackgroundColor: AppColors.background,
+  scaffoldBackgroundColor: Colors.transparent, // Transparent to allow gradient backgrounds
   colorScheme: ColorScheme.dark(
-    primary: Colors.cyanAccent,
-    secondary: Colors.blueAccent,
-    surface: AppColors.cardOverlay,
+    primary: AppColors.buttonAccent,
+    secondary: const Color(0xFF3B6BCA),
+    surface: AppColors.cardOverlayDark,
     onSurface: Colors.white,
-    error: Colors.redAccent,
+    error: const Color(0xFFE57373),
   ),
   appBarTheme: AppBarTheme(
     backgroundColor: AppColors.cardOverlay,
@@ -24,7 +24,7 @@ ThemeData darkTheme = ThemeData(
     ),
   ),
   cardTheme: CardThemeData(
-    color: AppColors.cardOverlay,
+    color: AppColors.cardOverlayDark,
     elevation: 0,
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
   ),

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:focus_mate/theme/app_colors.dart';
+import 'package:focus_mate/theme/app_theme.dart';
 import 'package:focus_mate/core/native_blocker.dart';
 // 👇 IMPORTANT: Ensure this import points to your dashboard file
 import 'package:focus_mate/screens/student/student_dashboard.dart'; 
@@ -162,9 +163,9 @@ class _CompanionControlledPageState extends ConsumerState<CompanionControlledPag
             maxLines: 2,
             decoration: InputDecoration(
               hintText: "Why do you need this?",
-              hintStyle: const TextStyle(color: Colors.grey),
+              hintStyle: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[400] : Colors.grey.shade600),
               enabledBorder: OutlineInputBorder(
-                borderSide: const BorderSide(color: Colors.grey),
+                borderSide: BorderSide(color: Colors.grey.shade600),
                 borderRadius: BorderRadius.circular(8),
               ),
               focusedBorder: OutlineInputBorder(
@@ -183,7 +184,7 @@ class _CompanionControlledPageState extends ConsumerState<CompanionControlledPag
             setState(() => _emergencyApp = null);
             _reasonController.clear();
           },
-          child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+          child: Text("Cancel", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[400] : Colors.grey.shade600)),
         ),
         ElevatedButton(
           onPressed: () async {
@@ -220,14 +221,14 @@ class _CompanionControlledPageState extends ConsumerState<CompanionControlledPag
     final confirm = await showCustomDialog<bool>(
       context: context,
       title: "End Session?",
-      content: const Text(
+      content: Text(
         "Are you sure you want to terminate this session?",
-        style: TextStyle(color: Colors.grey),
+        style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[400] : Colors.grey.shade600),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, false),
-          child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+          child: Text("Cancel", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[400] : Colors.grey.shade600)),
         ),
         ElevatedButton(
           onPressed: () => Navigator.pop(context, true),
@@ -267,13 +268,19 @@ class _CompanionControlledPageState extends ConsumerState<CompanionControlledPag
     final sessionAsync = ref.watch(activeCompanionSessionProvider);
 
     return sessionAsync.when(
-      loading: () => const Scaffold(
-        backgroundColor: AppColors.background,
-        body: Center(child: CircularProgressIndicator(color: Colors.cyanAccent)),
+      loading: () => Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Container(
+          decoration: AppTheme.screenBackground(context, AppColors.roleGradients['user']!),
+          child: const Center(child: CircularProgressIndicator(color: Colors.cyanAccent)),
+        ),
       ),
       error: (e, _) => Scaffold(
-        backgroundColor: AppColors.background,
-        body: Center(child: Text("Error: $e", style: const TextStyle(color: Colors.white))),
+        backgroundColor: Colors.transparent,
+        body: Container(
+          decoration: AppTheme.screenBackground(context, AppColors.roleGradients['user']!),
+          child: Center(child: Text("Error: $e", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1A1A2E)))),
+        ),
       ),
       data: (sessionData) {
         if (sessionData == null) {
@@ -282,7 +289,12 @@ class _CompanionControlledPageState extends ConsumerState<CompanionControlledPag
             NativeBlocker.setCompanionBlockedApps([]);
             _handleSessionEnded();
           });
-          return const Scaffold(backgroundColor: AppColors.background);
+          return Scaffold(
+            backgroundColor: Colors.transparent,
+            body: Container(
+              decoration: AppTheme.screenBackground(context, AppColors.roleGradients['user']!),
+            ),
+          );
         }
 
         _sessionData = sessionData;
@@ -300,31 +312,44 @@ class _CompanionControlledPageState extends ConsumerState<CompanionControlledPag
         }
 
         final companionName = _sessionData['companionName'] ?? 'Companion';
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        final textColor = isDark ? Colors.white : const Color(0xFF1A1A2E);
+        final subTextColor = isDark ? Colors.white70 : Colors.grey.shade700;
+        final cardBg = isDark ? AppColors.cardOverlay : Colors.white.withValues(alpha: 0.85);
+        final accentBlue = isDark ? Colors.blueAccent : Colors.blue.shade700;
+        final accentGreen = isDark ? Colors.greenAccent : Colors.green.shade700;
     
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text("Session Active", style: TextStyle(color: Colors.white)),
-        backgroundColor: AppColors.cardOverlay,
+        title: Text("Session Active", style: TextStyle(color: textColor)),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         centerTitle: true,
         automaticallyImplyLeading: false, 
       ),
-      body: Column(
+      body: Container(
+        decoration: AppTheme.screenBackground(context, AppColors.roleGradients['user']!),
+        child: SafeArea(
+          child: Column(
         children: [
           // 1. Timer & Info
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 24),
             decoration: BoxDecoration(
-              color: Colors.blueAccent.withValues(alpha: 0.1),
-              border: Border(bottom: BorderSide(color: Colors.blueAccent.withValues(alpha: 0.2))),
+              color: accentBlue.withValues(alpha: 0.1),
+              border: Border(bottom: BorderSide(color: accentBlue.withValues(alpha: 0.2))),
             ),
             child: Column(
               children: [
                 Text(
                   _timeLeft,
-                  style: const TextStyle(
-                    color: Colors.greenAccent,
+                  style: TextStyle(
+                    color: accentGreen,
                     fontSize: 40,
                     fontWeight: FontWeight.bold,
                     fontFamily: 'monospace',
@@ -334,11 +359,11 @@ class _CompanionControlledPageState extends ConsumerState<CompanionControlledPag
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.security, size: 16, color: Colors.blueAccent),
+                    Icon(Icons.security, size: 16, color: accentBlue),
                     const SizedBox(width: 8),
                     Text(
                       "Controlled by $companionName",
-                      style: const TextStyle(color: Colors.white70, fontSize: 16),
+                      style: TextStyle(color: subTextColor, fontSize: 16),
                     ),
                   ],
                 ),
@@ -364,10 +389,10 @@ class _CompanionControlledPageState extends ConsumerState<CompanionControlledPag
           // 3. Locked Apps List
           Expanded(
             child: _lockedApps.isEmpty
-                ? const Center(
+                ? Center(
                     child: Text(
                       "No apps currently locked",
-                      style: TextStyle(color: Colors.grey),
+                      style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[400] : Colors.grey.shade600),
                     ),
                   )
                 : ListView.builder(
@@ -378,15 +403,15 @@ class _CompanionControlledPageState extends ConsumerState<CompanionControlledPag
                       final isThisAppLoading = _emergencyRequestPending && _emergencyApp == app;
                       
                       return Card(
-                        color: AppColors.cardOverlay,
+                        color: cardBg,
                         margin: const EdgeInsets.only(bottom: 12),
                         child: ListTile(
-                          leading: const Icon(Icons.lock, color: Colors.redAccent),
-                          title: Text(_getDisplayName(app), style: const TextStyle(color: Colors.white)),
+                          leading: Icon(Icons.lock, color: isDark ? Colors.redAccent : Colors.red.shade700),
+                          title: Text(_getDisplayName(app), style: TextStyle(color: textColor)),
                           trailing: _emergencyRequestPending
                               ? (isThisAppLoading 
                                   ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.orange, strokeWidth: 2))
-                                  : const Icon(Icons.lock_clock, color: Colors.grey))
+                                  : Icon(Icons.lock_clock, color: isDark ? Colors.grey : Colors.grey.shade600))
                               : IconButton(
                                   icon: const Icon(Icons.key, color: Colors.orange),
                                   onPressed: () => _requestEmergencyUnlock(app),
@@ -401,15 +426,15 @@ class _CompanionControlledPageState extends ConsumerState<CompanionControlledPag
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.cardOverlay,
-              border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.1))),
+              color: cardBg,
+              border: Border(top: BorderSide(color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.grey.shade300)),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Row(
                   children: [
-                    // BUTTON 1: Redirect to Dashboard (Leaves session running in background)
+                    // BUTTON 1: Redirect to Dashboard
                     Expanded(
                       child: ElevatedButton.icon(
                         onPressed: () {
@@ -421,7 +446,7 @@ class _CompanionControlledPageState extends ConsumerState<CompanionControlledPag
                         icon: const Icon(Icons.dashboard, color: Colors.white),
                         label: const Text("Dashboard", style: TextStyle(color: Colors.white)),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blueAccent,
+                          backgroundColor: accentBlue,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                         ),
                       ),
@@ -449,13 +474,16 @@ class _CompanionControlledPageState extends ConsumerState<CompanionControlledPag
                 Text(
                   "Your companion controls this session. Use Emergency Exit if needed.",
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
+                  style: TextStyle(color: isDark ? Colors.grey.shade600 : Colors.grey.shade700, fontSize: 11),
                 ),
               ],
             ),
           ),
         ],
       ),
+    ),
+    ),
+    ),
     );
     },
    );

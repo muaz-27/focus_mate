@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:focus_mate/providers/auth_provider.dart';
 import 'package:focus_mate/providers/user_provider.dart';
 import 'package:focus_mate/auth/auth_screen.dart';
-import 'package:focus_mate/auth/email_verification_screen.dart';
 import 'package:focus_mate/core/dashboard_router.dart';
 
 /// Root authentication gate.
@@ -18,9 +17,8 @@ class AuthGate extends ConsumerWidget {
     final authState = ref.watch(authStateProvider);
 
     return authState.when(
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (_, __) => AuthScreen(onAuthComplete: (_, __) {}),
       data: (user) {
         // Not logged in
@@ -39,9 +37,8 @@ class AuthGate extends ConsumerWidget {
         final userState = ref.watch(userProvider);
 
         return userState.when(
-          loading: () => const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          ),
+          loading: () =>
+              const Scaffold(body: Center(child: CircularProgressIndicator())),
           error: (_, __) {
             // Auth exists but profile missing — sign out
             ref.read(authServiceProvider).signOut();

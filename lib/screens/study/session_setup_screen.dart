@@ -19,25 +19,51 @@ class _SessionSetupScreenState extends State<SessionSetupScreen> {
   String? _selectedMaterial;
 
   final List<String> _modes = ['Focused', 'Pomodoro', 'Deep Work'];
-  final List<String> _materials = ['Math Notes.pdf', 'History Chapter 4', 'Physics Formula Sheet'];
+  final List<String> _materials = [
+    'Math Notes.pdf',
+    'History Chapter 4',
+    'Physics Formula Sheet',
+  ];
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : const Color(0xFF1A1A2E);
+    final mutedColor = isDark ? Colors.grey[400]! : Colors.grey.shade600;
+    final cardBg = isDark ? AppColors.cardOverlay : Colors.white.withValues(alpha: 0.85);
+    final accentBlue = isDark ? Colors.blueAccent : Colors.blue.shade700;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text("New Session"),
+        title: Text("New Session", style: TextStyle(color: textColor)),
         backgroundColor: Colors.transparent,
-        iconTheme: const IconThemeData(color: Colors.white),
-        titleTextStyle: AppTheme.headerTitle,
+        elevation: 0,
+        iconTheme: IconThemeData(color: textColor),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
+      body: Container(
+        height: double.infinity,
+        width: double.infinity,
+        decoration: AppTheme.screenBackground(
+          context,
+          AppColors.roleGradients['user']!,
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Choose what kind of study session you want
-            const Text("Session Type", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(
+              "Session Type",
+              style: TextStyle(
+                color: textColor,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             const SizedBox(height: 12),
             SizedBox(
               height: 50,
@@ -51,10 +77,13 @@ class _SessionSetupScreenState extends State<SessionSetupScreen> {
                   return ChoiceChip(
                     label: Text(mode),
                     selected: isSelected,
-                    onSelected: (selected) => setState(() => _selectedMode = mode),
-                    selectedColor: Colors.blueAccent,
-                    backgroundColor: AppColors.cardOverlay,
-                    labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.grey),
+                    onSelected: (selected) =>
+                        setState(() => _selectedMode = mode),
+                    selectedColor: accentBlue,
+                    backgroundColor: cardBg,
+                    labelStyle: TextStyle(
+                      color: isSelected ? Colors.white : mutedColor,
+                    ),
                     side: BorderSide.none,
                   );
                 },
@@ -63,20 +92,34 @@ class _SessionSetupScreenState extends State<SessionSetupScreen> {
             const SizedBox(height: 24),
 
             // Set how long you want to study for
-            const Text("Duration (minutes)", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(
+              "Duration (minutes)",
+              style: TextStyle(
+                color: textColor,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("${_duration.toInt()} min", style: const TextStyle(color: Colors.blueAccent, fontSize: 24, fontWeight: FontWeight.bold)),
+                Text(
+                  "${_duration.toInt()} min",
+                  style: TextStyle(
+                    color: accentBlue,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 Expanded(
                   child: Slider(
                     value: _duration,
                     min: 5,
                     max: 120,
                     divisions: 23,
-                    activeColor: Colors.blueAccent,
-                    inactiveColor: Colors.grey[800],
+                    activeColor: accentBlue,
+                    inactiveColor: isDark ? Colors.grey[800] : Colors.grey.shade300,
                     onChanged: (val) => setState(() => _duration = val),
                   ),
                 ),
@@ -84,22 +127,33 @@ class _SessionSetupScreenState extends State<SessionSetupScreen> {
             ),
             const SizedBox(height: 24),
 
-
-
             // Decide if your companion can control this session
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.cardOverlay,
+                color: cardBg,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _companionControl ? Colors.greenAccent.withValues(alpha: 0.3) : Colors.white10),
+                border: Border.all(
+                  color: _companionControl
+                      ? Colors.greenAccent.withValues(alpha: 0.3)
+                      : (isDark ? Colors.white10 : Colors.grey.shade300),
+                ),
               ),
               child: SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text("Companion Control", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                subtitle: const Text("Allow companion to pause/stop session", style: TextStyle(color: Colors.grey)),
+                title: Text(
+                  "Companion Control",
+                  style: TextStyle(
+                    color: textColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                subtitle: Text(
+                  "Allow companion to pause/stop session",
+                  style: TextStyle(color: mutedColor),
+                ),
                 value: _companionControl,
-                activeColor: Colors.greenAccent,
+                activeThumbColor: Colors.greenAccent,
                 onChanged: (val) => setState(() => _companionControl = val),
               ),
             ),
@@ -111,8 +165,10 @@ class _SessionSetupScreenState extends State<SessionSetupScreen> {
               height: 55,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blueAccent,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  backgroundColor: accentBlue,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                 ),
                 onPressed: () {
                   Navigator.pushReplacement(
@@ -126,10 +182,19 @@ class _SessionSetupScreenState extends State<SessionSetupScreen> {
                     ),
                   );
                 },
-                child: const Text("START SESSION", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                child: const Text(
+                  "START SESSION",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ),
           ],
+            ),
+          ),
         ),
       ),
     );

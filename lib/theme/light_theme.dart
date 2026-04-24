@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:focus_mate/theme/app_colors.dart';
 
 /// Defines the global light theme configuration for the application.
 ThemeData lightTheme = ThemeData(
   brightness: Brightness.light,
   useMaterial3: true,
-  scaffoldBackgroundColor: const Color(0xFFF1F5F9), // Slate 100
-  colorScheme: const ColorScheme.light(
-    primary: Colors.cyan,
-    secondary: Colors.blueAccent,
-    surface: Colors.white,
+  scaffoldBackgroundColor:
+      Colors.transparent, // Transparent to allow gradient backgrounds
+  colorScheme: ColorScheme.light(
+    primary: AppColors.buttonAccent,
+    secondary: const Color(0xFF3B6BCA),
+    surface: AppColors.cardOverlayLight,
     onSurface: Colors.black87,
-    error: Colors.redAccent,
+    error: const Color(0xFFD32F2F),
   ),
   appBarTheme: const AppBarTheme(
     backgroundColor: Colors.white,

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import 'package:focus_mate/theme/app_colors.dart';
+import 'package:focus_mate/theme/app_theme.dart';
 import 'package:focus_mate/core/gemini_service.dart';
 import 'package:focus_mate/screens/quiz/quiz_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -18,6 +19,12 @@ class PdfViewerScreen extends StatefulWidget {
 
 class _PdfViewerScreenState extends State<PdfViewerScreen> {
   bool _isGenerating = false;
+  final PdfViewerController _pdfController = PdfViewerController();
+  int _currentPage = 1;
+  int _totalPages = 0;
+
+  String get _pdfName =>
+      widget.pdfFile.path.split('/').last.split('\\').last.replaceAll('.pdf', '');
 
   Future<void> _generateQuiz() async {
     setState(() => _isGenerating = true);
@@ -53,14 +60,13 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
         return;
       }
 
-      final pdfName = widget.pdfFile.path.split('/').last.split('\\').last.replaceAll('.pdf', '');
       final docRef = await FirebaseFirestore.instance
           .collection('users')
           .doc(userId)
           .collection('saved_quizzes')
           .add({
-        'title': pdfName,
-        'sourceName': pdfName,
+        'title': _pdfName,
+        'sourceName': _pdfName,
         'questions': questions,
         'createdAt': FieldValue.serverTimestamp(),
         'status': 'active',
@@ -94,68 +100,184 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
   }
 
   @override
+  void dispose() {
+    _pdfController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : const Color(0xFF1A1A2E);
+    final cardBg = isDark ? AppColors.cardOverlay : Colors.white.withValues(alpha: 0.95);
+    final subtextColor = isDark ? Colors.grey[400] : Colors.grey[600];
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text("Study Material", style: TextStyle(color: Colors.white)),
-        backgroundColor: AppColors.background,
-        iconTheme: const IconThemeData(color: Colors.white),
-        elevation: 0,
-      ),
-      body: SfPdfViewer.file(
-        widget.pdfFile,
-        canShowScrollHead: false,
-        canShowScrollStatus: true,
-      ),
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.all(16.0),
-        decoration: BoxDecoration(
-          color: AppColors.cardOverlay,
-          border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.1))),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              "Study Material",
+              style: TextStyle(color: textColor, fontSize: 17, fontWeight: FontWeight.bold),
+            ),
+            Text(
+              _pdfName,
+              style: TextStyle(color: subtextColor, fontSize: 12),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
         ),
-        child: SafeArea(
-          child: ElevatedButton(
-            onPressed: _isGenerating ? null : _generateQuiz,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.purpleAccent,
-              disabledBackgroundColor: Colors.purpleAccent.withValues(alpha: 0.5),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+        backgroundColor: Colors.transparent,
+        iconTheme: IconThemeData(color: textColor),
+        elevation: 0,
+        actions: [
+          if (_totalPages > 0)
+            Container(
+              margin: const EdgeInsets.only(right: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                "$_currentPage / $_totalPages",
+                style: TextStyle(
+                  color: isDark ? Colors.grey[300] : Colors.grey[700],
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
-            child: _isGenerating
-                ? const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+        ],
+      ),
+      body: Container(
+        decoration: AppTheme.screenBackground(context, AppColors.roleGradients['user']!),
+        child: SafeArea(
+          bottom: false,
+          child: Column(
+            children: [
+              // PDF Viewer
+              Expanded(
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.black.withValues(alpha: 0.3) : Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.grey.shade200,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.08),
+                        blurRadius: 16,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: SfPdfViewer.file(
+                    widget.pdfFile,
+                    controller: _pdfController,
+                    canShowScrollHead: true,
+                    canShowScrollStatus: true,
+                    onDocumentLoaded: (details) {
+                      setState(() => _totalPages = details.document.pages.count);
+                    },
+                    onPageChanged: (details) {
+                      setState(() => _currentPage = details.newPageNumber);
+                    },
+                  ),
+                ),
+              ),
+              // Bottom action bar
+              Container(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                decoration: BoxDecoration(
+                  color: cardBg,
+                  border: Border(
+                    top: BorderSide(
+                      color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.grey.shade200,
+                    ),
+                  ),
+                ),
+                child: SafeArea(
+                  top: false,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
+                      // Quiz generation button
                       SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
+                        width: double.infinity,
+                        height: 52,
+                        child: ElevatedButton(
+                          onPressed: _isGenerating ? null : _generateQuiz,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.purpleAccent,
+                            disabledBackgroundColor: Colors.purpleAccent.withValues(alpha: 0.5),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: _isGenerating
+                              ? Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    const Text(
+                                      "Generating Quiz...",
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(Icons.auto_awesome, color: Colors.white, size: 20),
+                                    const SizedBox(width: 10),
+                                    const Text(
+                                      "Generate Quiz with AI",
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                         ),
                       ),
-                      SizedBox(width: 12),
+                      const SizedBox(height: 8),
+                      // Helper text
                       Text(
-                        "Generating Quiz...",
+                        "AI will analyze this document and create a quiz",
                         style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: isDark ? Colors.grey[500] : Colors.grey[500],
+                          fontSize: 12,
                         ),
                       ),
                     ],
-                  )
-                : const Text(
-                    "I'm Ready to Take the Quiz",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
                   ),
+                ),
+              ),
+            ],
           ),
         ),
       ),

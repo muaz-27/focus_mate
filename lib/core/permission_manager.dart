@@ -125,17 +125,18 @@ class PermissionManager {
     String content,
     VoidCallback onRedirect,
   ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E1E),
+        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(title, style: const TextStyle(color: Colors.white)),
-        content: Text(content, style: const TextStyle(color: Colors.white70)),
+        title: Text(title, style: TextStyle(color: isDark ? Colors.white : Colors.black87)),
+        content: Text(content, style: TextStyle(color: isDark ? Colors.white70 : Colors.black54)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text("Cancel"),
+            child: Text("Cancel", style: TextStyle(color: isDark ? Colors.grey : Colors.grey.shade600)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -161,17 +162,18 @@ class PermissionManager {
     String content,
     VoidCallback onRedirect,
   ) async {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     await showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E1E),
+        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(title, style: const TextStyle(color: Colors.white)),
-        content: Text(content, style: const TextStyle(color: Colors.white70)),
+        title: Text(title, style: TextStyle(color: isDark ? Colors.white : Colors.black87)),
+        content: Text(content, style: TextStyle(color: isDark ? Colors.white70 : Colors.black54)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text("Cancel"),
+            child: Text("Cancel", style: TextStyle(color: isDark ? Colors.grey : Colors.grey.shade600)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
