@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:focus_mate/screens/analytics/analytics_screen.dart';
-import 'package:focus_mate/screens/analytics/snapshots_screen.dart';
-import 'package:focus_mate/screens/locks/remote_app_lock_screen.dart';
 
 class StudentTile extends StatelessWidget {
   final String studentId;
@@ -102,6 +100,8 @@ class StudentTile extends StatelessWidget {
                       children: [
                         Text(
                           studentName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             color: isDark ? Colors.white : Colors.black87,
                             fontWeight: FontWeight.bold,
@@ -114,24 +114,27 @@ class StudentTile extends StatelessWidget {
                             Icon(Icons.star_rounded, size: 14, color: Colors.amber.shade600),
                             const SizedBox(width: 3),
                             Text(
-                              "Level $level",
+                              "Lvl $level",
                               style: TextStyle(
                                 color: isDark ? Colors.grey[400] : Colors.grey[600],
                                 fontSize: 12,
                               ),
                             ),
-                            const SizedBox(width: 10),
+                            const SizedBox(width: 8),
                             Icon(Icons.timer_outlined, size: 13, color: Colors.blueAccent.withValues(alpha: 0.7)),
                             const SizedBox(width: 3),
-                            Text(
-                              "${studyTime}m today",
-                              style: TextStyle(
-                                color: isDark ? Colors.grey[400] : Colors.grey[600],
-                                fontSize: 12,
+                            Flexible(
+                              child: Text(
+                                "${studyTime}m today",
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             if (lockedApps.isNotEmpty) ...[
-                              const SizedBox(width: 10),
+                              const SizedBox(width: 8),
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
@@ -139,7 +142,7 @@ class StudentTile extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
-                                  "${lockedApps.length} locked",
+                                  "${lockedApps.length}🔒",
                                   style: TextStyle(
                                     color: Colors.redAccent.shade100,
                                     fontSize: 10,
@@ -207,17 +210,11 @@ class StudentTile extends StatelessWidget {
                     context,
                     icon: Icons.lock_outline,
                     label: "Locks",
-                    color: Colors.orangeAccent,
+                    color: Colors.grey, // Disabled look
                     isDark: isDark,
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => RemoteAppLockScreen(
-                            studentId: studentId,
-                            studentName: studentName,
-                          ),
-                        ),
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("App Locks are restricted to Parent accounts.")),
                       );
                     },
                   ),
@@ -226,17 +223,11 @@ class StudentTile extends StatelessWidget {
                     context,
                     icon: Icons.camera_alt_outlined,
                     label: "Snapshots",
-                    color: Colors.indigoAccent,
+                    color: Colors.grey, // Disabled look
                     isDark: isDark,
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => SnapshotsScreen(
-                            studentId: studentId,
-                            studentName: studentName,
-                          ),
-                        ),
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Snapshots are restricted to Parent accounts.")),
                       );
                     },
                   ),

@@ -27,6 +27,8 @@ class DashboardRouter extends ConsumerWidget {
       error: (_, __) => null,
     );
 
+    // Temporarily disabled for testing:
+    /*
     // Block logout for students with active locks or sessions
     if (user != null && user.role == UserRole.user) {
       try {
@@ -99,6 +101,7 @@ class DashboardRouter extends ConsumerWidget {
         // On error, fall through to allow logout
       }
     }
+    */
 
     final confirm = await showDialog<bool>(
       context: context,
@@ -145,26 +148,9 @@ class DashboardRouter extends ConsumerWidget {
           );
         }
 
-        // Student role — check for active companion session
+        // Student role
         if (user.role == UserRole.user) {
-          final sessionAsync = ref.watch(activeCompanionSessionProvider);
-
-          return sessionAsync.when(
-            loading: () => const Scaffold(
-              backgroundColor: Color(0xFF121212),
-              body: Center(child: CircularProgressIndicator(color: Colors.cyanAccent)),
-            ),
-            error: (_, __) => _buildStudentDashboard(context, ref, user),
-            data: (session) {
-              if (session != null) {
-                return CompanionControlledPage(
-                  sessionId: session['id'],
-                  userId: user.id,
-                );
-              }
-              return _buildStudentDashboard(context, ref, user);
-            },
-          );
+          return _buildStudentDashboard(context, ref, user);
         }
 
         // Non-student roles

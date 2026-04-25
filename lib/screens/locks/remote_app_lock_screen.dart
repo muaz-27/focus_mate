@@ -305,7 +305,7 @@ class _RemoteAppLockScreenState extends State<RemoteAppLockScreen> {
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: 4,
-                              childAspectRatio: 0.8,
+                              childAspectRatio: 0.72,
                               crossAxisSpacing: 10,
                               mainAxisSpacing: 10,
                             ),
@@ -333,48 +333,48 @@ class _RemoteAppLockScreenState extends State<RemoteAppLockScreen> {
                                   width: 2,
                                 ),
                               ),
+                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   Container(
-                                    width: 40,
-                                    height: 40,
+                                    width: 38,
+                                    height: 38,
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(8),
-                                      color: Colors.black.withValues(
-                                        alpha: 0.3,
-                                      ),
+                                      color: Colors.black.withValues(alpha: 0.1),
                                     ),
                                     child: AppIconWidget(
                                       packageName: app['packageName'],
                                       appName: app['appName'],
                                       iconBytes: app['decodedIcon'],
-                                      size: 40,
+                                      size: 38,
                                     ),
                                   ),
-
-                                  Padding(
-                                    padding: const EdgeInsets.all(4),
-                                    child: Text(
-                                      name,
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        color: isDark
-                                            ? Colors.white
-                                            : Colors.black87,
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    name,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: isDark
+                                          ? Colors.white
+                                          : Colors.black87,
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w500,
+                                      height: 1.2,
                                     ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-
                                   if (isSelected)
-                                    const Icon(
-                                      Icons.check_circle,
-                                      color: Colors.orangeAccent,
-                                      size: 12,
+                                    const Padding(
+                                      padding: EdgeInsets.only(top: 2),
+                                      child: Icon(
+                                        Icons.check_circle,
+                                        color: Colors.orangeAccent,
+                                        size: 11,
+                                      ),
                                     ),
                                 ],
                               ),

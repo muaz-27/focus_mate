@@ -7,6 +7,7 @@ import 'package:focus_mate/core/native_blocker.dart';
 // 👇 IMPORTANT: Ensure this import points to your dashboard file
 import 'package:focus_mate/screens/student/student_dashboard.dart'; 
 import 'package:focus_mate/core/widgets/custom_dialog.dart'; 
+import 'package:focus_mate/core/widgets/app_icon_widget.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:focus_mate/providers/companion_session_provider.dart';
 
@@ -319,9 +320,7 @@ class _CompanionControlledPageState extends ConsumerState<CompanionControlledPag
         final accentBlue = isDark ? Colors.blueAccent : Colors.blue.shade700;
         final accentGreen = isDark ? Colors.greenAccent : Colors.green.shade700;
     
-    return PopScope(
-      canPop: false,
-      child: Scaffold(
+    return Scaffold(
         backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
@@ -406,7 +405,35 @@ class _CompanionControlledPageState extends ConsumerState<CompanionControlledPag
                         color: cardBg,
                         margin: const EdgeInsets.only(bottom: 12),
                         child: ListTile(
-                          leading: Icon(Icons.lock, color: isDark ? Colors.redAccent : Colors.red.shade700),
+                          leading: SizedBox(
+                            width: 40,
+                            height: 40,
+                            child: Stack(
+                              children: [
+                                AppIconWidget(
+                                  packageName: app,
+                                  appName: _getDisplayName(app),
+                                  size: 40,
+                                  fallbackFontSize: 20,
+                                ),
+                                Positioned(
+                                  bottom: -2,
+                                  right: -2,
+                                  child: Container(
+                                    decoration: const BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      Icons.lock,
+                                      color: isDark ? Colors.redAccent : Colors.red.shade700,
+                                      size: 16,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                           title: Text(_getDisplayName(app), style: TextStyle(color: textColor)),
                           trailing: _emergencyRequestPending
                               ? (isThisAppLoading 
@@ -438,10 +465,7 @@ class _CompanionControlledPageState extends ConsumerState<CompanionControlledPag
                     Expanded(
                       child: ElevatedButton.icon(
                         onPressed: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(builder: (context) => const StudentDashboardLoader()),
-                          );
+                          Navigator.pop(context);
                         },
                         icon: const Icon(Icons.dashboard, color: Colors.white),
                         label: const Text("Dashboard", style: TextStyle(color: Colors.white)),
@@ -481,7 +505,6 @@ class _CompanionControlledPageState extends ConsumerState<CompanionControlledPag
           ),
         ],
       ),
-    ),
     ),
     ),
     );

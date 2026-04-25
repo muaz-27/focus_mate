@@ -438,16 +438,21 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                                             mainAxisAlignment:
                                                 MainAxisAlignment.spaceBetween,
                                             children: [
-                                              Text(
-                                                appName,
-                                                style: TextStyle(
-                                                  color: isDark
-                                                      ? Colors.white
-                                                      : Colors.black87,
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 15,
+                                              Flexible(
+                                                child: Text(
+                                                  appName,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  maxLines: 1,
+                                                  style: TextStyle(
+                                                    color: isDark
+                                                        ? Colors.white
+                                                        : Colors.black87,
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 15,
+                                                  ),
                                                 ),
                                               ),
+                                              const SizedBox(width: 8),
                                               Text(
                                                 formatTime(minutes),
                                                 style: TextStyle(

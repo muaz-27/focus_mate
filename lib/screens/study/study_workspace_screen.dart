@@ -730,10 +730,22 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
               ),
             );
           }
-          final geminiService = GeminiService();
-          final generatedQuestions = await geminiService.generateQuizFromPdf(
-            bytes,
-          );
+          List<Map<String, dynamic>>? generatedQuestions;
+          try {
+            final geminiService = GeminiService();
+            generatedQuestions = await geminiService.generateQuizFromPdf(
+              bytes,
+            );
+          } catch (e) {
+            print("Error generating quiz: $e");
+            if (mounted) {
+              Navigator.pop(context); // Close dialog
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text("Quiz generation error: $e")),
+              );
+            }
+            return;
+          }
           if (mounted) Navigator.pop(context); // Close dialog
 
           if (generatedQuestions != null && generatedQuestions.isNotEmpty) {
@@ -884,33 +896,77 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
     );
   }
 
+  Widget _buildNoActiveSessionUI() {
+    final statusIsDark = Theme.of(context).brightness == Brightness.dark;
+    final statusTextColor = statusIsDark ? Colors.white : Colors.black87;
+    final indicator = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Status",
+          style: TextStyle(
+            color: statusTextColor,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.greenAccent.withValues(alpha: statusIsDark ? 0.1 : 0.08),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Colors.greenAccent.withValues(alpha: 0.3),
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.check_circle_outline, color: Colors.green.shade600),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  "No active study session. Apps are unlocked.",
+                  style: TextStyle(color: Colors.green.shade700),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+    return QuizzesGrid(
+      hasActiveSession: false,
+      isWaitingForCompanion: false,
+      canTakeQuiz: false,
+      loadingApps: loadingApps,
+      companionActive: companionActive,
+      userId: widget.userId,
+      indicator: indicator,
+      onReadPdf: () => _pickPdfFile(context),
+      onStartStudySession: () {
+        if (companionActive) {
+          _showDurationPickerPrompt("Next: Pick Material", (
+            duration,
+          ) async {
+            await _startStudyModeFlowWithDuration(duration);
+          });
+        } else {
+          _showAppLockPrompt("Next: Pick Material", () async {
+            await _startStudyModeFlowWithDuration(null);
+          });
+        }
+      },
+      onOpenCurrentQuiz: _openCurrentQuiz,
+    );
+  }
+
   Widget _buildWorkspaceBody() {
     final quizzesAsync = ref.watch(quizzesProvider(widget.userId));
 
     return quizzesAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, __) => QuizzesGrid(
-        hasActiveSession: false,
-        isWaitingForCompanion: false,
-        canTakeQuiz: false,
-        loadingApps: loadingApps,
-        companionActive: companionActive,
-        userId: widget.userId,
-        indicator: const SizedBox(),
-        onReadPdf: () => _pickPdfFile(context),
-        onStartStudySession: () {
-          if (companionActive) {
-            _showDurationPickerPrompt("Next: Pick Material", (duration) async {
-              await _startStudyModeFlowWithDuration(duration);
-            });
-          } else {
-            _showAppLockPrompt("Next: Pick Material", () async {
-              await _startStudyModeFlowWithDuration(null);
-            });
-          }
-        },
-        onOpenCurrentQuiz: _openCurrentQuiz,
-      ),
+      error: (_, __) => _buildNoActiveSessionUI(),
       data: (docs) {
         List<QueryDocumentSnapshot> activeQuizzes = docs.where((doc) {
           final data = doc.data() as Map<String, dynamic>;
@@ -918,76 +974,24 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
         }).toList();
 
         if (activeQuizzes.isEmpty) {
-          final statusIsDark = Theme.of(context).brightness == Brightness.dark;
-          final statusTextColor = statusIsDark ? Colors.white : Colors.black87;
-          final indicator = Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Status",
-                style: TextStyle(
-                  color: statusTextColor,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.greenAccent.withValues(alpha: statusIsDark ? 0.1 : 0.08),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: Colors.greenAccent.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.check_circle_outline, color: Colors.green.shade600),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        "No active study session. Apps are unlocked.",
-                        style: TextStyle(color: Colors.green.shade700),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          );
-          return QuizzesGrid(
-            hasActiveSession: false,
-            isWaitingForCompanion: false,
-            canTakeQuiz: false,
-            loadingApps: loadingApps,
-            companionActive: companionActive,
-            userId: widget.userId,
-            indicator: indicator,
-            onReadPdf: () => _pickPdfFile(context),
-            onStartStudySession: () {
-              if (companionActive) {
-                _showDurationPickerPrompt("Next: Pick Material", (
-                  duration,
-                ) async {
-                  await _startStudyModeFlowWithDuration(duration);
-                });
-              } else {
-                _showAppLockPrompt("Next: Pick Material", () async {
-                  await _startStudyModeFlowWithDuration(null);
-                });
-              }
-            },
-            onOpenCurrentQuiz: _openCurrentQuiz,
-          );
+          return _buildNoActiveSessionUI();
         }
 
-        final data = activeQuizzes.first.data() as Map<String, dynamic>;
+        final doc = activeQuizzes.first;
+        final data = doc.data() as Map<String, dynamic>;
         final String sourceName = data['sourceName'] ?? 'Unknown Material';
         final String? companionSessionId = data['companionSessionId'];
 
         if (companionSessionId != null) {
           return _buildCompanionSessionContent(companionSessionId, sourceName);
+        }
+
+        if (lockedPackages.isEmpty) {
+          // Self control session is over (apps were unlocked)
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+             doc.reference.update({'status': 'abandoned'});
+          });
+          return _buildNoActiveSessionUI();
         }
 
         return QuizzesGrid(
@@ -1031,10 +1035,23 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
       error: (_, __) => const Center(child: CircularProgressIndicator()),
       data: (sessionSnapshot) {
         if (!sessionSnapshot.exists) {
-          return const Center(child: CircularProgressIndicator());
+          return _buildNoActiveSessionUI();
         }
         final sessionData = sessionSnapshot.data() as Map<String, dynamic>;
         final status = sessionData['status'];
+
+        if (status != 'REQUESTED' && status != 'ACTIVE') {
+          // The companion session is ended, rejected, cancelled, etc.
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _firestore.collection('users').doc(widget.userId).collection('saved_quizzes')
+              .where('companionSessionId', isEqualTo: companionSessionId)
+              .where('status', isEqualTo: 'active')
+              .get().then((snap) {
+                for (var doc in snap.docs) doc.reference.update({'status': 'abandoned'});
+              });
+          });
+          return _buildNoActiveSessionUI();
+        }
 
         bool isWaiting = status == 'REQUESTED';
         bool isActive = status == 'ACTIVE';
@@ -1043,7 +1060,7 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
 
         if (isWaiting) {
           sessionIndicator = _buildWaitingBanner(sourceName);
-        } else if (isActive) {
+        } else {
           final startedAt = sessionData['startedAt']?.toDate();
           final duration = sessionData['duration'] ?? 60;
           final earlyApproved = sessionData['earlyAttemptApproved'] == true;
@@ -1059,8 +1076,6 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
             sessionData,
             sessionSnapshot.id,
           );
-        } else {
-          sessionIndicator = _buildSelfControlActiveCard(sourceName);
         }
 
         return QuizzesGrid(
@@ -1260,12 +1275,61 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
               Center(
                 child: Text(
                   timeLeftStr,
+                  textAlign: TextAlign.center,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                "Currently Locked Apps:",
+                style: TextStyle(color: Colors.white70, fontSize: 12),
+              ),
+              const SizedBox(height: 8),
+              Builder(
+                builder: (context) {
+                  final List<dynamic> sessionLockedApps = sessionData['lockedApps'] ?? [];
+                  if (sessionLockedApps.isEmpty) {
+                    return const Text(
+                      "No specific apps selected.",
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    );
+                  }
+                  return Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: sessionLockedApps.map((pkgDynamic) {
+                      final pkg = pkgDynamic.toString();
+                      final matches = installedApps.where((a) => a.packageName == pkg);
+                      final app = matches.isNotEmpty ? matches.first : null;
+                      String appNameStr = app != null ? app.appName : pkg;
+
+                      return Tooltip(
+                        message: appNameStr,
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            color: Colors.black26,
+                          ),
+                          child: AppIconWidget(
+                            packageName: pkg,
+                            appName: appNameStr,
+                            size: 36,
+                            fallbackFontSize: 20,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  );
+                }
               ),
               const SizedBox(height: 16),
 
@@ -1275,11 +1339,14 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
                   child: ElevatedButton.icon(
                     onPressed: _openCurrentQuiz,
                     icon: const Icon(Icons.play_arrow, color: Colors.black),
-                    label: const Text(
-                      "Take Quiz to Unlock Apps",
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold,
+                    label: const FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        "Take Quiz to Unlock",
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     style: ElevatedButton.styleFrom(

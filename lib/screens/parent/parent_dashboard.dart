@@ -402,8 +402,9 @@ class _ParentDashboardState extends ConsumerState<ParentDashboard> {
   }
 
   Widget _buildStudentTile(String studentId, bool isDark) {
-    return FutureBuilder<DocumentSnapshot>(
-      future: _firestore.collection('users').doc(studentId).get(),
+    // Use StreamBuilder so isOnline updates live without manual refresh.
+    return StreamBuilder<DocumentSnapshot>(
+      stream: _firestore.collection('users').doc(studentId).snapshots(),
       builder: (context, snap) {
         if (!snap.hasData) {
           return Container(
@@ -418,9 +419,15 @@ class _ParentDashboardState extends ConsumerState<ParentDashboard> {
           );
         }
 
-        final student = snap.data!.data() as Map<String, dynamic>;
-        final studentName = student['name'] ?? "Unknown";
-        final isOnline = student['isOnline'] ?? false;
+        final student = snap.data!.data() as Map<String, dynamic>? ?? {};
+        final studentName = (student['name'] as String?) ?? "Unknown";
+        // deviceOnline is set by the child's heartbeat. Also validate lastSeen
+        // freshness (< 3 min) so the badge goes Offline after the device goes dark.
+        final bool rawOnline = (student['deviceOnline'] as bool?) ?? false;
+        final Timestamp? lastSeenTs = student['lastSeen'] as Timestamp?;
+        final bool recentHeartbeat = lastSeenTs != null &&
+            DateTime.now().difference(lastSeenTs.toDate()).inMinutes < 3;
+        final isOnline = rawOnline && recentHeartbeat;
         final studyTime = student['studyTime'] ?? 0;
         final level = student['level'] ?? 1;
         final lockedApps = List<String>.from(student['lockedApps'] ?? []);
@@ -442,54 +449,84 @@ class _ParentDashboardState extends ConsumerState<ParentDashboard> {
           ),
           child: Column(
             children: [
-              // Top row: Avatar + Name + Status
+              // Top row: Avatar + Name + Status badge
               Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  // --- Avatar with online dot ---
                   Stack(
                     children: [
                       CircleAvatar(
                         radius: 24.r,
                         backgroundColor: Colors.pinkAccent.withValues(alpha: 0.1),
-                        child: Text(studentName[0].toUpperCase(), style: TextStyle(color: Colors.pinkAccent, fontWeight: FontWeight.bold, fontSize: 20.sp)),
+                        child: Text(
+                          studentName[0].toUpperCase(),
+                          style: TextStyle(color: Colors.pinkAccent, fontWeight: FontWeight.bold, fontSize: 20.sp),
+                        ),
                       ),
                       Positioned(
                         right: 0, bottom: 0,
                         child: Container(
-                          width: 14.w, height: 14.h,
+                          width: 13.w, height: 13.h,
                           decoration: BoxDecoration(
                             color: isOnline ? Colors.green : Colors.grey,
                             shape: BoxShape.circle,
-                            border: Border.all(color: isDark ? const Color(0xFF1E293B) : Colors.white, width: 2.w),
+                            border: Border.all(
+                              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                              width: 2.w,
+                            ),
                           ),
                         ),
                       ),
                     ],
                   ),
-                  SizedBox(width: 14.w),
+                  SizedBox(width: 12.w),
+                  // --- Name + stats (takes remaining space) ---
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(studentName, style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold, fontSize: 16.sp)),
+                        Text(
+                          studentName,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: isDark ? Colors.white : Colors.black87,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15.sp,
+                          ),
+                        ),
                         SizedBox(height: 3.h),
+                        // Stats row — clipped so it never overflows
                         Row(
                           children: [
-                            Icon(Icons.star_rounded, size: 14.sp, color: Colors.amber.shade600),
+                            Icon(Icons.star_rounded, size: 13.sp, color: Colors.amber.shade600),
                             SizedBox(width: 3.w),
-                            Text("Level $level", style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600], fontSize: 12.sp)),
-                            SizedBox(width: 10.w),
-                            Icon(Icons.timer_outlined, size: 13.sp, color: Colors.blueAccent.withValues(alpha: 0.7)),
+                            Text(
+                              "Lv $level",
+                              style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600], fontSize: 11.sp),
+                            ),
+                            SizedBox(width: 8.w),
+                            Icon(Icons.timer_outlined, size: 12.sp, color: Colors.blueAccent.withValues(alpha: 0.7)),
                             SizedBox(width: 3.w),
-                            Text("${studyTime}m today", style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600], fontSize: 12.sp)),
+                            Flexible(
+                              child: Text(
+                                "${studyTime}m today",
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600], fontSize: 11.sp),
+                              ),
+                            ),
                             if (lockedApps.isNotEmpty) ...[
-                              SizedBox(width: 10.w),
+                              SizedBox(width: 6.w),
                               Container(
-                                padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                                padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 2.h),
                                 decoration: BoxDecoration(
                                   color: Colors.redAccent.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(6.r),
+                                  borderRadius: BorderRadius.circular(5.r),
                                 ),
-                                child: Text("${lockedApps.length} locked", style: TextStyle(color: Colors.redAccent.shade100, fontSize: 10.sp, fontWeight: FontWeight.w600)),
+                                child: Text(
+                                  "${lockedApps.length}🔒",
+                                  style: TextStyle(color: Colors.redAccent.shade100, fontSize: 10.sp, fontWeight: FontWeight.w600),
+                                ),
                               ),
                             ],
                           ],
@@ -497,15 +534,24 @@ class _ParentDashboardState extends ConsumerState<ParentDashboard> {
                       ],
                     ),
                   ),
+                  SizedBox(width: 8.w),
+                  // --- ONLINE / OFFLINE badge (fixed width to prevent push) ---
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                    padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 4.h),
                     decoration: BoxDecoration(
-                      color: isOnline ? Colors.green.withValues(alpha: 0.1) : Colors.grey.withValues(alpha: 0.1),
+                      color: isOnline
+                          ? Colors.green.withValues(alpha: 0.12)
+                          : Colors.grey.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(8.r),
                     ),
                     child: Text(
                       isOnline ? "ONLINE" : "OFFLINE",
-                      style: TextStyle(color: isOnline ? Colors.green : Colors.grey, fontSize: 10.sp, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                      style: TextStyle(
+                        color: isOnline ? Colors.green : Colors.grey,
+                        fontSize: 9.sp,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.4,
+                      ),
                     ),
                   ),
                 ],

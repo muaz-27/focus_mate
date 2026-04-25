@@ -362,6 +362,9 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
         } else {
           _companionId = widget.userData['linkedCompanion'];
           _companionRole = widget.userData['linkedCompanionRole'];
+          if (widget.userData['companionName'] != null) {
+            _companionName = widget.userData['companionName'];
+          }
         }
       });
       _getCompanionDetails();
@@ -841,6 +844,9 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
           _companionRole = null;
           _activeSessionData = null;
         });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Companion unlinked successfully")),
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -857,6 +863,7 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
 
   /// Links a companion using the provided link code.
   Future<void> _linkCompanion() async {
+    FocusScope.of(context).unfocus();
     final code = _companionCodeController.text.trim().toUpperCase();
     if (code.isEmpty) return;
 
@@ -938,6 +945,7 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
       batch.update(userRef, {
         'linkedCompanion': companionDoc.id,
         'linkedCompanionRole': companionRole,
+        'companionName': companionDoc.data()['name'],
       });
 
       final companionRef = _firestore.collection('users').doc(companionDoc.id);
@@ -955,6 +963,9 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
           _companionId = companionDoc.id;
           _companionRole = companionDoc.data()['role'] ?? 'companion';
         });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Successfully linked to $_companionName!")),
+        );
       }
     } catch (e) {
       if (mounted) {
