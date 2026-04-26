@@ -429,193 +429,249 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
     );
   }
 
+  // --- Non-companion flow: pick PDF first, then show app lock sheet ---
+  Future<void> _pickMaterialThenLockApps() async {
+    // Step 1: Pick the PDF file first so the user isn't confused
+    FilePickerResult? result;
+    try {
+      result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf'],
+        withData: true,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Error picking file: $e')));
+      }
+      return;
+    }
+
+    if (result == null || result.files.single.bytes == null) return;
+
+    final bytes = result.files.single.bytes!;
+    final fileName = result.files.single.name;
+
+    // Step 2: Now show the app-lock selection sheet
+    if (mounted) {
+      _showAppLockPrompt('Start Study Mode', () async {
+        await _generateAndLockApps(bytes, fileName);
+      });
+    }
+  }
+
+  // Generates quiz from already-picked bytes, then locks selected apps.
+  Future<void> _generateAndLockApps(
+    List<int> bytes,
+    String fileName,
+  ) async {
+    ValueNotifier<String>? quizStatusNotifier;
+    try {
+      quizStatusNotifier = ValueNotifier<String>('Extracting PDF...');
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => ValueListenableBuilder<String>(
+            valueListenable: quizStatusNotifier!,
+            builder: (_, statusText, __) => AlertDialog(
+              backgroundColor: AppColors.background,
+              content: Row(
+                children: [
+                  const CircularProgressIndicator(color: Colors.cyanAccent),
+                  const SizedBox(width: 20),
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          statusText,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          fileName,
+                          style: const TextStyle(
+                            color: Colors.white54,
+                            fontSize: 12,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }
+
+      final geminiService = GeminiService();
+      quizStatusNotifier.value = 'Generating quiz with AI...';
+      final quizQuestions = await geminiService.generateQuizFromPdf(bytes);
+
+      // Safe dispose and close dialog
+      quizStatusNotifier.dispose();
+      quizStatusNotifier = null;
+      if (mounted && Navigator.canPop(context)) Navigator.pop(context);
+
+      if (quizQuestions == null || quizQuestions.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to generate quiz. No questions were produced.'),
+            ),
+          );
+        }
+        return;
+      }
+
+      // Clean up old active quizzes
+      final activeQ = await _firestore
+          .collection('users')
+          .doc(widget.userId)
+          .collection('saved_quizzes')
+          .where('status', isEqualTo: 'active')
+          .get();
+      final batch = _firestore.batch();
+      for (var doc in activeQ.docs) {
+        batch.update(doc.reference, {'status': 'abandoned'});
+      }
+      await batch.commit();
+
+      // Lock selected apps (if any were chosen)
+      if (lockedPackages.isNotEmpty) {
+        await platform.invokeMethod('setBlockedApps', {'apps': lockedPackages});
+        await _firestore.collection('users').doc(widget.userId).update({
+          'lockedApps': lockedPackages,
+          'lockEndTime': null,
+        });
+      }
+
+      // Save quiz to Firestore — include lockedApps so the session check
+      // doesn't need to rely on the in-memory lockedPackages list.
+      final quizRef = await _firestore
+          .collection('users')
+          .doc(widget.userId)
+          .collection('saved_quizzes')
+          .add({
+            'sourceName': fileName,
+            'questions': quizQuestions,
+            'status': 'active',
+            'lastScore': 0,
+            'lockedApps': lockedPackages,
+            'timestamp': FieldValue.serverTimestamp(),
+          });
+
+      // Navigate directly to the quiz — don't wait for the Firestore listener
+      // to rebuild the UI, which can race and immediately mark the quiz abandoned.
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => QuizScreen(
+              userId: widget.userId,
+              quizDocId: quizRef.id,
+              questions: quizQuestions,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      quizStatusNotifier?.dispose();
+      if (mounted) {
+        if (Navigator.canPop(context)) Navigator.pop(context);
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    }
+  }
+
+  // Companion flow: pick PDF first, then pick duration.
   Future<void> _startStudyModeFlowWithDuration(int? duration) async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['pdf'],
-        withData: true, // Crucial: gets bytes directly for Gemini
+        withData: true,
       );
 
-      if (result != null && result.files.single.path != null) {
-        final bytes = result.files.single.bytes;
-        if (bytes == null) {
-          throw Exception(
-            "Failed to read file bytes. Make sure the file exists.",
-          );
-        }
+      if (result == null || result.files.single.bytes == null) return;
 
-        final fileName = result.files.single.name;
+      final bytes = result.files.single.bytes!;
+      final fileName = result.files.single.name;
 
-        if (companionActive && companionId != null) {
-          // **NEW**: Clean up old active quizzes
-          final activeQ = await _firestore
-              .collection('users')
-              .doc(widget.userId)
-              .collection('saved_quizzes')
-              .where('status', isEqualTo: 'active')
-              .get();
-          final batch = _firestore.batch();
-          for (var doc in activeQ.docs) {
-            batch.update(doc.reference, {'status': 'abandoned'});
-          }
-          await batch.commit();
+      // Clean up old active quizzes
+      final activeQ = await _firestore
+          .collection('users')
+          .doc(widget.userId)
+          .collection('saved_quizzes')
+          .where('status', isEqualTo: 'active')
+          .get();
+      final batch = _firestore.batch();
+      for (var doc in activeQ.docs) {
+        batch.update(doc.reference, {'status': 'abandoned'});
+      }
+      await batch.commit();
 
-          // 1. Save PDF locally to defer generation
-          final tempDir = await getApplicationDocumentsDirectory();
-          final sanitizedName = fileName.replaceAll(
-            RegExp(r'[^a-zA-Z0-9_\.]'),
-            '_',
-          );
-          final localFile = File('${tempDir.path}/$sanitizedName');
-          await localFile.writeAsBytes(bytes);
+      // Save PDF locally to defer generation until quiz time
+      final tempDir = await getApplicationDocumentsDirectory();
+      final sanitizedName =
+          fileName.replaceAll(RegExp(r'[^a-zA-Z0-9_\.]'), '_');
+      final localFile = File('${tempDir.path}/$sanitizedName');
+      await localFile.writeAsBytes(bytes);
 
-          // 2. Send request to companion instead of locking apps
-          final newSessionRef = _firestore
-              .collection('companion_sessions')
-              .doc();
-          await newSessionRef.set({
-            'userId': widget.userId,
-            'userName': userName ?? 'Student',
-            'companionId': companionId,
-            'status': 'REQUESTED',
-            'type': 'study_session',
-            'duration': duration ?? 60,
-            'lockedApps': [],
-            'quizDocId': null, // Will update next
-            'requestedAt': FieldValue.serverTimestamp(),
-            'updatedAt': FieldValue.serverTimestamp(),
+      // Create companion session request
+      final newSessionRef =
+          _firestore.collection('companion_sessions').doc();
+      await newSessionRef.set({
+        'userId': widget.userId,
+        'userName': userName ?? 'Student',
+        'companionId': companionId,
+        'status': 'REQUESTED',
+        'type': 'study_session',
+        'duration': duration ?? 60,
+        'lockedApps': [],
+        'quizDocId': null,
+        'requestedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      final quizRef = await _firestore
+          .collection('users')
+          .doc(widget.userId)
+          .collection('saved_quizzes')
+          .add({
+            'sourceName': fileName,
+            'questions': [],
+            'status': 'active',
+            'lastScore': 0,
+            'timestamp': FieldValue.serverTimestamp(),
+            'companionSessionId': newSessionRef.id,
+            'localPdfPath': localFile.path,
           });
 
-          final quizRef = await _firestore
-              .collection('users')
-              .doc(widget.userId)
-              .collection('saved_quizzes')
-              .add({
-                'sourceName': fileName,
-                'questions': [], // empty questions to defer generation
-                'status': 'active', // Important for filtering
-                'lastScore': 0,
-                'timestamp': FieldValue.serverTimestamp(),
-                'companionSessionId': newSessionRef.id,
-                'localPdfPath': localFile.path,
-              });
+      await newSessionRef.update({'quizDocId': quizRef.id});
 
-          await newSessionRef.update({'quizDocId': quizRef.id});
-
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text(
-                  "Study session requested! Waiting for companion approval.",
-                ),
-              ),
-            );
-          }
-        } else {
-          // 1. Extract text and prompt Gemini locally for Non-Companion mode
-          if (mounted) {
-            showDialog(
-              context: context,
-              barrierDismissible: false,
-              builder: (_) => AlertDialog(
-                backgroundColor: AppColors.background,
-                content: Row(
-                  children: [
-                    const CircularProgressIndicator(color: Colors.cyanAccent),
-                    const SizedBox(width: 20),
-                    Expanded(
-                      child: Text(
-                        "Generating quiz from $fileName...",
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }
-
-          final geminiService = GeminiService();
-          final quizQuestions = await geminiService.generateQuizFromPdf(bytes);
-
-          if (mounted) {
-            Navigator.pop(context); // Close loading indicator
-          }
-
-          if (quizQuestions != null && quizQuestions.isNotEmpty) {
-            // **NEW**: Clean up old active quizzes
-            final activeQ = await _firestore
-                .collection('users')
-                .doc(widget.userId)
-                .collection('saved_quizzes')
-                .where('status', isEqualTo: 'active')
-                .get();
-            final batch = _firestore.batch();
-            for (var doc in activeQ.docs) {
-              batch.update(doc.reference, {'status': 'abandoned'});
-            }
-            await batch.commit();
-
-            // 2. Lock apps now that quiz is ready (Self-Control)
-            if (lockedPackages.isNotEmpty) {
-              await platform.invokeMethod('setBlockedApps', {
-                'apps': lockedPackages,
-              });
-              await _firestore.collection('users').doc(widget.userId).update({
-                'lockedApps': lockedPackages,
-                'lockEndTime': null, // Clear any previous expiration timer
-              });
-
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Apps locked for Study Mode!")),
-                );
-              }
-            }
-
-            // 3. Save JSON to Firestore with active tracker fields
-            await _firestore
-                .collection('users')
-                .doc(widget.userId)
-                .collection('saved_quizzes')
-                .add({
-                  'sourceName': fileName,
-                  'questions': quizQuestions,
-                  'status': 'active', // Important for filtering
-                  'lastScore': 0,
-                  'timestamp': FieldValue.serverTimestamp(),
-                });
-
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text(
-                    "Quiz generated and apps locked! You can start the quiz later from 'Take Saved Quiz'.",
-                  ),
-                ),
-              );
-            }
-          } else {
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text(
-                    "Failed to generate quiz. No questions produced.",
-                  ),
-                ),
-              );
-            }
-          }
-        }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content:
+                Text('Study session requested! Waiting for companion approval.'),
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
-        if (Navigator.canPop(context))
-          Navigator.pop(context); // Close loading indicator safely
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Error: $e")));
+        if (Navigator.canPop(context)) Navigator.pop(context);
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }
@@ -709,23 +765,31 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
         final localFile = File(localPdfPath);
         if (await localFile.exists()) {
           final bytes = await localFile.readAsBytes();
+          final deferredStatusNotifier =
+              ValueNotifier<String>('Extracting PDF...');
           if (mounted) {
             showDialog(
               context: context,
               barrierDismissible: false,
-              builder: (_) => AlertDialog(
-                backgroundColor: AppColors.background,
-                content: Row(
-                  children: [
-                    const CircularProgressIndicator(color: Colors.cyanAccent),
-                    const SizedBox(width: 20),
-                    Expanded(
-                      child: Text(
-                        "Generating quiz from study material...",
-                        style: const TextStyle(color: Colors.white),
+              builder: (_) => ValueListenableBuilder<String>(
+                valueListenable: deferredStatusNotifier,
+                builder: (_, statusText, __) => AlertDialog(
+                  backgroundColor: AppColors.background,
+                  content: Row(
+                    children: [
+                      const CircularProgressIndicator(color: Colors.cyanAccent),
+                      const SizedBox(width: 20),
+                      Expanded(
+                        child: Text(
+                          statusText,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             );
@@ -733,15 +797,17 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
           List<Map<String, dynamic>>? generatedQuestions;
           try {
             final geminiService = GeminiService();
+            deferredStatusNotifier.value = 'Generating quiz with AI...';
             generatedQuestions = await geminiService.generateQuizFromPdf(
               bytes,
             );
+            deferredStatusNotifier.dispose();
           } catch (e) {
-            print("Error generating quiz: $e");
+            deferredStatusNotifier.dispose();
             if (mounted) {
               Navigator.pop(context); // Close dialog
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text("Quiz generation error: $e")),
+                SnackBar(content: Text('Quiz generation error: $e')),
               );
             }
             return;
@@ -946,15 +1012,12 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
       onReadPdf: () => _pickPdfFile(context),
       onStartStudySession: () {
         if (companionActive) {
-          _showDurationPickerPrompt("Next: Pick Material", (
-            duration,
-          ) async {
+          _showDurationPickerPrompt('Next: Pick Material', (duration) async {
             await _startStudyModeFlowWithDuration(duration);
           });
         } else {
-          _showAppLockPrompt("Next: Pick Material", () async {
-            await _startStudyModeFlowWithDuration(null);
-          });
+          // Non-companion: pick material first, then select apps to lock
+          _pickMaterialThenLockApps();
         }
       },
       onOpenCurrentQuiz: _openCurrentQuiz,
@@ -986,10 +1049,39 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
           return _buildCompanionSessionContent(companionSessionId, sourceName);
         }
 
+        // For self-control sessions, check the saved lockedApps field in
+        // Firestore (NOT the in-memory lockedPackages list, which may not
+        // be populated yet on first render or after a restart).
+        final List<dynamic> savedLockedApps = data['lockedApps'] ?? [];
+        if (savedLockedApps.isEmpty && lockedPackages.isEmpty) {
+          // No apps were ever locked — treat quiz as completeable immediately
+          // (session still active; user can take quiz without unlocking anything)
+          return QuizzesGrid(
+            hasActiveSession: true,
+            isWaitingForCompanion: false,
+            canTakeQuiz: true,
+            loadingApps: loadingApps,
+            companionActive: companionActive,
+            userId: widget.userId,
+            indicator: _buildSelfControlActiveCard(sourceName),
+            onReadPdf: () => _pickPdfFile(context),
+            onStartStudySession: () {
+              if (companionActive) {
+                _showDurationPickerPrompt('Next: Pick Material', (duration) async {
+                  await _startStudyModeFlowWithDuration(duration);
+                });
+              } else {
+                _pickMaterialThenLockApps();
+              }
+            },
+            onOpenCurrentQuiz: _openCurrentQuiz,
+          );
+        }
+
         if (lockedPackages.isEmpty) {
-          // Self control session is over (apps were unlocked)
+          // Apps were locked before but have since been cleared — session over
           WidgetsBinding.instance.addPostFrameCallback((_) {
-             doc.reference.update({'status': 'abandoned'});
+            doc.reference.update({'status': 'abandoned'});
           });
           return _buildNoActiveSessionUI();
         }
@@ -1005,15 +1097,11 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
           onReadPdf: () => _pickPdfFile(context),
           onStartStudySession: () {
             if (companionActive) {
-              _showDurationPickerPrompt("Next: Pick Material", (
-                duration,
-              ) async {
+              _showDurationPickerPrompt('Next: Pick Material', (duration) async {
                 await _startStudyModeFlowWithDuration(duration);
               });
             } else {
-              _showAppLockPrompt("Next: Pick Material", () async {
-                await _startStudyModeFlowWithDuration(null);
-              });
+              _pickMaterialThenLockApps();
             }
           },
           onOpenCurrentQuiz: _openCurrentQuiz,
@@ -1089,15 +1177,11 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
           onReadPdf: () => _pickPdfFile(context),
           onStartStudySession: () {
             if (companionActive) {
-              _showDurationPickerPrompt("Next: Pick Material", (
-                duration,
-              ) async {
+              _showDurationPickerPrompt('Next: Pick Material', (duration) async {
                 await _startStudyModeFlowWithDuration(duration);
               });
             } else {
-              _showAppLockPrompt("Next: Pick Material", () async {
-                await _startStudyModeFlowWithDuration(null);
-              });
+              _pickMaterialThenLockApps();
             }
           },
           onOpenCurrentQuiz: _openCurrentQuiz,
@@ -1339,19 +1423,16 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
                   child: ElevatedButton.icon(
                     onPressed: _openCurrentQuiz,
                     icon: const Icon(Icons.play_arrow, color: Colors.black),
-                    label: const FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        "Take Quiz to Unlock",
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
-                        ),
+                    label: const Text(
+                      'Take Quiz to Unlock',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
                       ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.cardOverlay,
-                      textStyle: AppTheme.headerTitle(context),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
