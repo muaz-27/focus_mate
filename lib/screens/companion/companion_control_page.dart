@@ -293,7 +293,10 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
               );
             }
           },
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.blueAccent,
+            foregroundColor: Colors.white,
+          ),
           child: const Text("Approve"),
         ),
       ],
@@ -346,6 +349,7 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
           onPressed: () => _respondToEmergency(true),
           style: ElevatedButton.styleFrom(
             backgroundColor: isGlobalExit ? Colors.red : Colors.blueAccent,
+            foregroundColor: Colors.white,
           ),
           child: Text(isGlobalExit ? "End Session" : "Allow"),
         ),
@@ -795,6 +799,7 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
                                     ),
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.red,
+                                      foregroundColor: Colors.white,
                                       padding: const EdgeInsets.symmetric(
                                         vertical: 15,
                                       ),
@@ -823,6 +828,7 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
                                 ),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.blueAccent,
+                                  foregroundColor: Colors.white,
                                   padding: const EdgeInsets.symmetric(
                                     vertical: 16,
                                   ),

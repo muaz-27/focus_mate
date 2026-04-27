@@ -80,69 +80,71 @@ class _UnlockRequestScreenState extends State<UnlockRequestScreen> {
         ),
         child: SafeArea(
           child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: Colors.purpleAccent.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.lock_open_rounded, size: 80, color: Colors.purpleAccent),
-                  ),
-                  const SizedBox(height: 32),
-                  Text(
-                    "Need a break from your app locks?",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    "Send a request to your companion to temporarily suspend all app locks.",
-                    style: TextStyle(fontSize: 16, color: Colors.grey[500]),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
-                  TextField(
-                    controller: _reasonController,
-                    style: TextStyle(color: textColor),
-                    decoration: InputDecoration(
-                      hintText: "Why do you need a break?",
-                      hintStyle: TextStyle(color: Colors.grey[600]),
-                      filled: true,
-                      fillColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.purpleAccent.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
                       ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.purpleAccent, width: 2),
-                      ),
+                      child: const Icon(Icons.lock_open_rounded, size: 80, color: Colors.purpleAccent),
                     ),
-                    maxLines: 2,
-                  ),
-                  const SizedBox(height: 48),
-                  _isLoading
-                      ? const CircularProgressIndicator(color: Colors.purpleAccent)
-                      : SizedBox(
-                          width: double.infinity,
-                          height: 56,
-                          child: ElevatedButton.icon(
-                            onPressed: _sendSuspendRequest,
-                            icon: const Icon(Icons.send),
-                            label: const Text('Request Unlock', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.purpleAccent,
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    const SizedBox(height: 32),
+                    Text(
+                      "Need a break from your app locks?",
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      "Send a request to your companion to temporarily suspend all app locks.",
+                      style: TextStyle(fontSize: 16, color: Colors.grey[500]),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    TextField(
+                      controller: _reasonController,
+                      style: TextStyle(color: textColor),
+                      decoration: InputDecoration(
+                        hintText: "Why do you need a break?",
+                        hintStyle: TextStyle(color: Colors.grey[600]),
+                        filled: true,
+                        fillColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.purpleAccent, width: 2),
+                        ),
+                      ),
+                      maxLines: 2,
+                    ),
+                    const SizedBox(height: 48),
+                    _isLoading
+                        ? const CircularProgressIndicator(color: Colors.purpleAccent)
+                        : SizedBox(
+                            width: double.infinity,
+                            height: 56,
+                            child: ElevatedButton.icon(
+                              onPressed: _sendSuspendRequest,
+                              icon: const Icon(Icons.send),
+                              label: const Text('Request Unlock', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.purpleAccent,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              ),
                             ),
                           ),
-                        ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

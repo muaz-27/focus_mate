@@ -343,13 +343,19 @@ class _ParentDashboardState extends ConsumerState<ParentDashboard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                linkCode ?? "...",
-                style: TextStyle(
-                  color: cardTextColor,
-                  fontSize: 36.sp,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 4,
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    linkCode ?? "...",
+                    style: TextStyle(
+                      color: cardTextColor,
+                      fontSize: 36.sp,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 4,
+                    ),
+                  ),
                 ),
               ),
               Row(

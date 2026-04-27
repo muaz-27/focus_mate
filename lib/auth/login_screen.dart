@@ -59,10 +59,42 @@ class _LoginScreenState extends State<LoginScreen>
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
         backgroundColor: Theme.of(context).colorScheme.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        margin: const EdgeInsets.all(16),
       ),
     );
+  }
+
+  String _getFriendlyErrorMessage(String code) {
+    switch (code) {
+      case 'invalid-email':
+        return 'The email address is badly formatted.';
+      case 'user-disabled':
+        return 'This account has been disabled.';
+      case 'user-not-found':
+        return 'No account found with this email.';
+      case 'wrong-password':
+        return 'Incorrect password.';
+      case 'invalid-credential':
+        return 'Incorrect email or password.';
+      case 'network-request-failed':
+        return 'Network error. Please check your connection.';
+      case 'too-many-requests':
+        return 'Too many attempts. Please try again later.';
+      case 'channel-error':
+        return 'Please fill in both email and password.';
+      default:
+        return 'Login failed. Please check your credentials.';
+    }
   }
 
   void _handleLogin() async {
@@ -88,9 +120,13 @@ class _LoginScreenState extends State<LoginScreen>
       widget.onLogin(widget.role, userModel.toMap());
 
     } on FirebaseAuthException catch (e) {
-      _showError(e.message ?? 'Login failed.');
+      _showError(_getFriendlyErrorMessage(e.code));
     } catch (e) {
-      _showError(e.toString());
+      String msg = e.toString();
+      if (msg.startsWith('Exception: ')) {
+        msg = msg.substring(11);
+      }
+      _showError(msg);
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);

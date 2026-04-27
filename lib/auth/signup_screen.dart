@@ -61,10 +61,34 @@ class _SignupScreenState extends State<SignupScreen>
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
         backgroundColor: Theme.of(context).colorScheme.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        margin: const EdgeInsets.all(16),
       ),
     );
+  }
+
+  String _getFriendlyErrorMessage(String code) {
+    switch (code) {
+      case 'invalid-email':
+        return 'The email address is badly formatted.';
+      case 'email-already-in-use':
+        return 'This email is already registered. Try logging in.';
+      case 'weak-password':
+        return 'The password is too weak. Please use a stronger one.';
+      case 'network-request-failed':
+        return 'Network error. Please check your connection.';
+      default:
+        return 'Signup failed. Please try again.';
+    }
   }
 
   void _handleSignup() async {
@@ -89,9 +113,13 @@ class _SignupScreenState extends State<SignupScreen>
       if (!mounted) return;
       widget.onSignup(widget.role, userModel.toMap());
     } on FirebaseAuthException catch (e) {
-      _showError(e.message ?? 'Signup failed.');
+      _showError(_getFriendlyErrorMessage(e.code));
     } catch (e) {
-      _showError('An unexpected error occurred.');
+      String msg = e.toString();
+      if (msg.startsWith('Exception: ')) {
+        msg = msg.substring(11);
+      }
+      _showError(msg);
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);

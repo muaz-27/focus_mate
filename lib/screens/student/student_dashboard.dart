@@ -990,45 +990,35 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
       builder: (context) {
         final isDark = Theme.of(context).brightness == Brightness.dark;
         final textColor = isDark ? Colors.white : const Color(0xFF1A1A2E);
-        return Container(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 24),
-            Text("Settings", style: AppTheme.headerTitle(context)),
-            const SizedBox(height: 24),
-            ListTile(
-              leading: const Icon(Icons.battery_std, color: Colors.cyanAccent),
-              title: Text(
-                "Battery Optimization",
-                style: TextStyle(color: textColor),
-              ),
-              subtitle: const Text(
-                "Prevent app from being killed",
-                style: TextStyle(color: Colors.white70),
-              ),
-              onTap: () async {
-                Navigator.pop(context);
-                await PermissionManager.checkBatteryOptimizations(context);
-              },
+        return SafeArea(
+          child: Container(
+            padding: const EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: 20,
+              bottom: 20,
             ),
-            Divider(color: isDark ? Colors.white12 : Colors.black12),
-            ListTile(
-              leading: const Icon(Icons.logout, color: Colors.redAccent),
-              title: Text(
-                "Log Out",
-                style: TextStyle(color: textColor),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                widget.onLogout();
-              },
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("Settings", style: AppTheme.headerTitle(context)),
+                const SizedBox(height: 24),
+                ListTile(
+                  leading: const Icon(Icons.logout, color: Colors.redAccent),
+                  title: Text(
+                    "Log Out",
+                    style: TextStyle(color: textColor),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    widget.onLogout();
+                  },
+                ),
+              ],
             ),
-          ],
-        ),
-      );
+          ),
+        );
       },
     );
   }
