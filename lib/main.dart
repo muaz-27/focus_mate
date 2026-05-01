@@ -8,6 +8,7 @@ import 'package:focus_mate/firebase_options.dart';
 import 'package:focus_mate/theme/light_theme.dart';
 import 'package:focus_mate/theme/dark_theme.dart';
 import 'package:focus_mate/core/auth_gate.dart';
+import 'package:focus_mate/core/notification_service.dart';
 
 Future<void> main() async {
   // Ensure Flutter is initialized
@@ -28,6 +29,12 @@ Future<void> main() async {
     }
   } catch (e, stacktrace) {
     debugPrint("Initialization failed: $e\n$stacktrace");
+  }
+
+  try {
+    await NotificationService().initialize();
+  } catch (e) {
+    debugPrint("Notification initialization failed: $e");
   }
 
   // Run app with Riverpod ProviderScope

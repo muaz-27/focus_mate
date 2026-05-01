@@ -11,6 +11,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:focus_mate/providers/user_provider.dart';
 import 'package:focus_mate/theme/app_colors.dart';
 import 'package:focus_mate/theme/app_theme.dart';
+import 'package:focus_mate/core/notification_service.dart';
 
 /// Dashboard for companions (parents/partners) to manage linked students and sessions.
 class CompanionDashboard extends ConsumerStatefulWidget {
@@ -36,9 +37,13 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
   final Map<String, StreamSubscription> _studentUnlockSubscriptions = {};
   StreamSubscription? _userDocSubscription;
 
+  bool _initialSessionLoaded = false;
+  final Set<String> _initialUnlockLoaded = {};
+
   @override
   void initState() {
     super.initState();
+    NotificationService().requestPermissions();
     _loadLinkCode();
     _listenForSessionRequests();
     _listenForActiveSessions();
@@ -111,6 +116,20 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
         .where('status', isEqualTo: 'pending')
         .snapshots()
         .listen((snapshot) async {
+          if (!_initialUnlockLoaded.contains(studentId)) {
+            _initialUnlockLoaded.add(studentId);
+          } else {
+            for (var change in snapshot.docChanges) {
+              if (change.type == DocumentChangeType.added) {
+                final studentName = change.doc.data()?['studentName'] ?? 'A student';
+                NotificationService().showInstantNotification(
+                  id: change.doc.id.hashCode,
+                  title: 'New Unlock Request',
+                  body: '$studentName has requested to unlock an app.',
+                );
+              }
+            }
+          }
           _updatePendingUnlockRequests(studentId, snapshot.docs);
         });
   }
@@ -214,6 +233,21 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
                   if (newTime != null &&
                       (oldTime == null || newTime.compareTo(oldTime) > 0)) {
                     latestRequests[userId] = {'id': doc.id, ...data};
+                  }
+                }
+              }
+
+              if (!_initialSessionLoaded) {
+                _initialSessionLoaded = true;
+              } else {
+                for (var change in snapshot.docChanges) {
+                  if (change.type == DocumentChangeType.added) {
+                    final studentName = change.doc.data()?['userName'] ?? 'A student';
+                    NotificationService().showInstantNotification(
+                      id: change.doc.id.hashCode,
+                      title: 'New Study Session Request',
+                      body: '$studentName has requested a new study session.',
+                    );
                   }
                 }
               }

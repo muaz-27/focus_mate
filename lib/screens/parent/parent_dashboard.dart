@@ -12,6 +12,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:focus_mate/providers/user_provider.dart';
 import 'package:focus_mate/theme/app_colors.dart';
 import 'package:focus_mate/theme/app_theme.dart';
+import 'package:focus_mate/core/notification_service.dart';
 
 /// Dashboard for parents to manage linked children and enforce restrictions.
 class ParentDashboard extends ConsumerStatefulWidget {
@@ -34,9 +35,13 @@ class _ParentDashboardState extends ConsumerState<ParentDashboard> {
   List<Map<String, dynamic>> _activeSessions = [];
   List<Map<String, dynamic>> _unlockRequests = [];
   
+  bool _initialUnlockLoaded = false;
+  bool _initialSessionLoaded = false;
+
   @override
   void initState() {
     super.initState();
+    NotificationService().requestPermissions();
     _loadLinkCode();
     _listenForSessionRequests();
     _listenForActiveSessions();
@@ -52,6 +57,21 @@ class _ParentDashboardState extends ConsumerState<ParentDashboard> {
         .snapshots()
         .listen((snapshot) {
       if (mounted) {
+        if (!_initialUnlockLoaded) {
+          _initialUnlockLoaded = true;
+        } else {
+          for (var change in snapshot.docChanges) {
+            if (change.type == DocumentChangeType.added) {
+              final studentName = change.doc.data()?['studentName'] ?? 'Your child';
+              NotificationService().showInstantNotification(
+                id: change.doc.id.hashCode,
+                title: 'New Unlock Request',
+                body: '$studentName has requested to unlock an app.',
+              );
+            }
+          }
+        }
+
         final reqs = snapshot.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList();
         reqs.sort((a, b) {
            Timestamp? tA = a['requestedAt'];
@@ -91,6 +111,21 @@ class _ParentDashboardState extends ConsumerState<ParentDashboard> {
              }
           }
         }
+        if (!_initialSessionLoaded) {
+          _initialSessionLoaded = true;
+        } else {
+          for (var change in snapshot.docChanges) {
+            if (change.type == DocumentChangeType.added) {
+              final studentName = change.doc.data()?['userName'] ?? 'Your child';
+              NotificationService().showInstantNotification(
+                id: change.doc.id.hashCode,
+                title: 'New Study Session Request',
+                body: '$studentName has requested a new study session.',
+              );
+            }
+          }
+        }
+
         final requests = latestRequests.values.toList();
         requests.sort((a, b) {
            Timestamp? tA = a['requestedAt'];

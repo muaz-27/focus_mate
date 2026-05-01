@@ -10,6 +10,7 @@ import 'package:focus_mate/core/permission_manager.dart';
 import 'package:focus_mate/core/usage_service.dart';
 import 'package:focus_mate/theme/app_colors.dart';
 import 'package:focus_mate/theme/app_theme.dart';
+import 'package:focus_mate/core/notification_service.dart';
 import 'package:focus_mate/screens/analytics/analytics_screen.dart';
 import 'package:focus_mate/screens/locks/app_lock_screen.dart';
 import 'package:focus_mate/screens/companion/companion_request_page.dart';
@@ -89,6 +90,7 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
   Timer? _ruleSyncTimer;
   Timer? _usageSyncTimer;
   Timer? _heartbeatTimer;
+  Timer? _scheduleWarningTimer;
   DateTime? _lockEndTime;
   List<String> _blockedList = [];
   bool companionActive = false;
@@ -116,9 +118,14 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
   StreamSubscription<DocumentSnapshot>? _userDocSubscription;
   List<AppSchedule> _schedules = [];
 
+  bool _limitExceededNotified = false;
+  String? _lastSessionId;
+  String? _lastSessionStatus;
+
   @override
   void initState() {
     super.initState();
+    NotificationService().requestPermissions();
     WidgetsBinding.instance.addObserver(this);
 
     // Initialize companion state from passed user data
@@ -166,6 +173,8 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
         ScheduleService().syncSchedulesToNative(widget.userData['id']);
       });
     }, fireImmediately: true);
+
+    _startScheduleWarningChecker();
 
     _getCompanionDetails();
     _checkActiveSession();
@@ -281,6 +290,7 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
     _ruleSyncTimer?.cancel();
     _usageSyncTimer?.cancel();
     _heartbeatTimer?.cancel();
+    _scheduleWarningTimer?.cancel();
     _activeSessionSubscription?.cancel();
     _userDocSubscription?.cancel();
     _companionCodeController.dispose();
@@ -291,6 +301,30 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
         .update({'deviceOnline': false})
         .catchError((_) {});
     super.dispose();
+  }
+
+  void _startScheduleWarningChecker() {
+    _scheduleWarningTimer?.cancel();
+    _scheduleWarningTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      if (!mounted) return;
+      final now = DateTime.now();
+      final nowMinutes = now.hour * 60 + now.minute;
+      final today = now.weekday; // 1=Mon, 7=Sun
+      for (var schedule in _schedules) {
+        if (schedule.status == 'active' && schedule.days.contains(today)) {
+          final startMinutes = schedule.startTime.hour * 60 + schedule.startTime.minute;
+          final diff = startMinutes - nowMinutes;
+          // Check if exactly 5 minutes away
+          if (diff == 5) {
+            NotificationService().showInstantNotification(
+              id: schedule.id.hashCode,
+              title: "Upcoming Session",
+              body: "Your scheduled session '${schedule.name}' starts in 5 minutes.",
+            );
+          }
+        }
+      }
+    });
   }
 
   @override
@@ -634,16 +668,42 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
               }
 
               if (validDoc != null) {
+                final newStatus = (validDoc.data() as Map)['status'];
+                final newId = validDoc.id;
+
+                if (_lastSessionId == newId && _lastSessionStatus != newStatus) {
+                  if (newStatus == 'ACTIVE') {
+                    NotificationService().showInstantNotification(
+                      id: validDoc.id.hashCode,
+                      title: 'Session Approved',
+                      body: 'Your companion approved your study session.',
+                    );
+                  }
+                } else if (_lastSessionId != newId && newStatus == 'ACTIVE') {
+                  NotificationService().showInstantNotification(
+                    id: validDoc.id.hashCode,
+                    title: 'Session Initiated',
+                    body: 'A study session was started for your device.',
+                  );
+                }
+
+                _lastSessionId = newId;
+                _lastSessionStatus = newStatus;
+
                 setState(() {
                   _activeSessionData = validDoc!.data() as Map<String, dynamic>;
-                  _activeSessionData!['id'] = validDoc.id;
+                  _activeSessionData!['id'] = validDoc!.id;
                 });
               } else {
+                _lastSessionId = null;
+                _lastSessionStatus = null;
                 setState(() {
                   _activeSessionData = null;
                 });
               }
             } else {
+              _lastSessionId = null;
+              _lastSessionStatus = null;
               setState(() {
                 _activeSessionData = null;
               });
@@ -1353,6 +1413,17 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
         setState(() {
           _localStudyTime = minutes;
         });
+        
+        if (_dailyGoal != null && minutes >= _dailyGoal! && !_limitExceededNotified) {
+          _limitExceededNotified = true;
+          NotificationService().showInstantNotification(
+            id: 999, // Specific ID for goal alert
+            title: "Time Limit Exceeded",
+            body: "You've exceeded your usage goal. Time to focus or take a rest!",
+          );
+        } else if (_dailyGoal != null && minutes < _dailyGoal!) {
+          _limitExceededNotified = false; // Reset if they are somehow under again (e.g. next day)
+        }
       }
 
       // Sync to cloud
