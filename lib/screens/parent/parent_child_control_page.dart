@@ -250,7 +250,7 @@ class _ParentChildControlPageState extends State<ParentChildControlPage> {
                   context,
                   title: "Study Analytics (Quizzes)",
                   subtitle: "View quiz history and performance",
-                  icon: Icons.history_edu,
+                  icon: Icons.quiz_outlined,
                   color: Colors.purpleAccent,
                   onTap: () {
                     Navigator.push(

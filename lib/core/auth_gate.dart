@@ -16,41 +16,50 @@ class AuthGate extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authStateProvider);
 
-    return authState.when(
-      loading: () =>
-          const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (_, __) => AuthScreen(onAuthComplete: (_, __) {}),
-      data: (user) {
-        // Not logged in
-        if (user == null) {
-          return AuthScreen(onAuthComplete: (_, __) {});
+    return ValueListenableBuilder<bool>(
+      valueListenable: ref.read(authServiceProvider).isAuthenticating,
+      builder: (context, isAuthenticating, child) {
+        if (isAuthenticating) {
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
         }
 
-        // Temporarily bypassing email verification entirely as requested for testing
-        /*
-        if (!user.emailVerified) {
-          return const EmailVerificationScreen();
-        }
-        */
-
-        // Logged in + verified — watch user profile
-        final userState = ref.watch(userProvider);
-
-        return userState.when(
+        return authState.when(
           loading: () =>
               const Scaffold(body: Center(child: CircularProgressIndicator())),
-          error: (_, __) {
-            // Auth exists but profile missing — sign out
-            ref.read(authServiceProvider).signOut();
-            return AuthScreen(onAuthComplete: (_, __) {});
-          },
-          data: (userModel) {
-            if (userModel == null) {
-              ref.read(authServiceProvider).signOut();
+          error: (_, __) => AuthScreen(onAuthComplete: (_, __) {}),
+          data: (user) {
+            // Not logged in
+            if (user == null) {
               return AuthScreen(onAuthComplete: (_, __) {});
             }
 
-            return const DashboardRouter();
+            // Temporarily bypassing email verification entirely as requested for testing
+            /*
+            if (!user.emailVerified) {
+              return const EmailVerificationScreen();
+            }
+            */
+
+            // Logged in + verified — watch user profile
+            final userState = ref.watch(userProvider);
+
+            return userState.when(
+              loading: () =>
+                  const Scaffold(body: Center(child: CircularProgressIndicator())),
+              error: (_, __) {
+                // Auth exists but profile missing — sign out
+                ref.read(authServiceProvider).signOut();
+                return AuthScreen(onAuthComplete: (_, __) {});
+              },
+              data: (userModel) {
+                if (userModel == null) {
+                  ref.read(authServiceProvider).signOut();
+                  return AuthScreen(onAuthComplete: (_, __) {});
+                }
+
+                return const DashboardRouter();
+              },
+            );
           },
         );
       },

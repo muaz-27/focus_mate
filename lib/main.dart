@@ -8,6 +8,7 @@ import 'package:focus_mate/firebase_options.dart';
 import 'package:focus_mate/theme/light_theme.dart';
 import 'package:focus_mate/theme/dark_theme.dart';
 import 'package:focus_mate/core/auth_gate.dart';
+import 'package:focus_mate/screens/splash/splash_screen.dart';
 import 'package:focus_mate/core/notification_service.dart';
 
 Future<void> main() async {
@@ -57,7 +58,7 @@ class FocusMateApp extends StatelessWidget {
           theme: lightTheme,
           darkTheme: darkTheme,
           themeMode: ThemeMode.system,
-          home: const AuthGate(),
+          home: const SplashScreen(),
         );
       },
     );

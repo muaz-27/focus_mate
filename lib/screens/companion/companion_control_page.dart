@@ -649,7 +649,7 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
                                         MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text(
-                                        "Study Duration",
+                                        "Requested Duration",
                                         style: TextStyle(
                                           color: textColor,
                                           fontWeight: FontWeight.bold,
@@ -663,22 +663,6 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
                                         ),
                                       ),
                                     ],
-                                  ),
-                                  Slider(
-                                    value: (_sessionData['duration'] ?? 60)
-                                        .toDouble(),
-                                    min: 15,
-                                    max: 240,
-                                    divisions: 15,
-                                    activeColor: Colors.blueAccent,
-                                    inactiveColor: isDark
-                                        ? Colors.white10
-                                        : Colors.black12,
-                                    onChanged: (val) {
-                                      setState(() {
-                                        _sessionData['duration'] = val.toInt();
-                                      });
-                                    },
                                   ),
                                 ],
                               ),

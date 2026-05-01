@@ -35,6 +35,7 @@ class _ScheduleLockFormState extends State<ScheduleLockForm> {
   List<Application> _installedApps = [];
   List<String> _selectedApps = [];
   bool _loadingApps = true;
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -71,7 +72,10 @@ class _ScheduleLockFormState extends State<ScheduleLockForm> {
       return;
     }
 
-    final schedule = AppSchedule(
+    setState(() => _isSaving = true);
+
+    try {
+      final schedule = AppSchedule(
       id: '',
       type: widget.companionActive ? 'companion' : 'self',
       name: _nameController.text.trim(),
@@ -85,13 +89,32 @@ class _ScheduleLockFormState extends State<ScheduleLockForm> {
     );
 
     await _scheduleService.saveSchedule(widget.userId, schedule);
-    
+
     if (!widget.companionActive) {
       await _scheduleService.syncSchedulesToNative(widget.userId);
     }
 
     if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            widget.companionActive
+                ? 'Schedule request sent to your companion!'
+                : 'Schedule saved and activated!',
+          ),
+          backgroundColor: Colors.amberAccent.withValues(alpha: 0.9),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
       Navigator.pop(context);
+    }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSaving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
     }
   }
 
@@ -201,7 +224,7 @@ class _ScheduleLockFormState extends State<ScheduleLockForm> {
                           const SizedBox(height: 12),
                           Text("Schedule Request", style: TextStyle(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.bold, fontSize: 18)),
                           const SizedBox(height: 8),
-                          Text("Your companion '\${widget.companionName}' will choose which apps are blocked during this time.",
+                          Text("Your companion '${widget.companionName ?? 'your companion'}' will choose which apps are blocked during this time.",
                               textAlign: TextAlign.center, style: TextStyle(color: isDark ? Colors.white70 : Colors.black54)),
                         ],
                       ),
@@ -241,13 +264,25 @@ class _ScheduleLockFormState extends State<ScheduleLockForm> {
                     width: double.infinity,
                     height: 56,
                     child: ElevatedButton(
-                      onPressed: _saveSchedule,
+                      onPressed: _isSaving ? null : _saveSchedule,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.amberAccent,
                         foregroundColor: Colors.black,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       ),
-                      child: Text(widget.companionActive ? "Request Schedule" : "Save Schedule", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      child: _isSaving
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                color: Colors.black,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Text(
+                              widget.companionActive ? "Request Schedule" : "Save Schedule",
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                            ),
                     ),
                   ),
                 ],

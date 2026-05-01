@@ -622,7 +622,35 @@ class _ParentDashboardState extends ConsumerState<ParentDashboard> {
                     isDark: isDark,
                     onTap: () {
                       Navigator.push(context, MaterialPageRoute(
-                        builder: (_) => AnalyticsScreen(userId: studentId, userName: studentName),
+                        builder: (_) => AnalyticsScreen(
+                          userId: studentId, 
+                          userName: studentName,
+                          onUnlink: () async {
+                            final batch = _firestore.batch();
+                            
+                            // Remove student from parent's lists
+                            final parentRef = _firestore.collection('users').doc(_userId);
+                            batch.update(parentRef, {
+                              'linkedStudents': FieldValue.arrayRemove([studentId]),
+                              'linkedUsers': FieldValue.arrayRemove([studentId]),
+                            });
+
+                            // Remove parent from student's profile
+                            final studentRef = _firestore.collection('users').doc(studentId);
+                            batch.update(studentRef, {
+                              'linkedCompanion': FieldValue.delete(),
+                              'linkedParent': FieldValue.delete(),
+                            });
+
+                            await batch.commit();
+                            
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('$studentName has been unlinked.')),
+                              );
+                            }
+                          },
+                        ),
                       ));
                     },
                   ),
