@@ -24,31 +24,78 @@ class RemoteAppLockScreen extends StatefulWidget {
 class _RemoteAppLockScreenState extends State<RemoteAppLockScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  // Installed apps data (fetched once, then updated via stream)
   List<Map<String, dynamic>> installedApps = [];
+  Map<String, String> _iconMap = {};
+
+  // Lock state (drives the UI)
   List<String> lockedPackages = [];
   DateTime? lockEndTime;
-  bool loading = true;
-  int _selectedDuration = 60; // Default 1 hour
+
+  // UI state
+  bool _appsLoading = true;
+  bool _isRefreshingFromDevice = false;
+  int _selectedDuration = 60;
+
+  // Subscriptions
+  StreamSubscription<QuerySnapshot>? _shardsSubscription;
+  StreamSubscription<DocumentSnapshot>? _lockStateSubscription;
 
   @override
   void initState() {
     super.initState();
-    _loadData();
+    _requestDeviceRefresh();
+    _listenToShards();
+    _listenToLockState();
+    _loadIcons();
   }
 
-  /// Fetches installed apps from shards and current lock state
-  Future<void> _loadData() async {
+  @override
+  void dispose() {
+    _shardsSubscription?.cancel();
+    _lockStateSubscription?.cancel();
+    super.dispose();
+  }
+
+  /// Signals the child's device to push a fresh installed-apps list to Firestore.
+  ///
+  /// The student dashboard detects [appsRefreshRequest] == true and calls
+  /// [syncInstalledAppsToFirebase] with forceSync:true, then resets the flag.
+  Future<void> _requestDeviceRefresh() async {
     try {
-      // 1. Fetch Apps from Shards
-      final appsCollection = _firestore
-          .collection('users')
-          .doc(widget.studentId)
-          .collection('data_v2');
-      final shardsSnapshot = await appsCollection.get();
+      await _firestore.collection('users').doc(widget.studentId).update({
+        'appsRefreshRequest': true,
+      });
+      debugPrint('F_MATE: Parent requested app list refresh from child device.');
+      if (mounted) {
+        setState(() => _isRefreshingFromDevice = true);
+      }
+      // Auto-clear the "refreshing" indicator after 10 seconds regardless
+      Future.delayed(const Duration(seconds: 10), () {
+        if (mounted) setState(() => _isRefreshingFromDevice = false);
+      });
+    } catch (e) {
+      debugPrint('F_MATE: Could not set appsRefreshRequest: $e');
+    }
+  }
+
+  /// Listens to the data_v2 shard collection in real-time.
+  ///
+  /// When the child's device finishes syncing (after a force-refresh), Firestore
+  /// emits an update here and the app list in the UI is automatically refreshed.
+  void _listenToShards() {
+    _shardsSubscription = _firestore
+        .collection('users')
+        .doc(widget.studentId)
+        .collection('data_v2')
+        .snapshots()
+        .listen((snapshot) async {
+      if (!mounted) return;
+
       List<Map<String, dynamic>> allApps = [];
 
-      if (shardsSnapshot.docs.isNotEmpty) {
-        for (var doc in shardsSnapshot.docs) {
+      if (snapshot.docs.isNotEmpty) {
+        for (var doc in snapshot.docs) {
           if (doc.data().containsKey('installedApps')) {
             final shardApps = List<Map<String, dynamic>>.from(
               doc.data()['installedApps'],
@@ -56,36 +103,32 @@ class _RemoteAppLockScreenState extends State<RemoteAppLockScreen> {
             allApps.addAll(shardApps);
           }
         }
-      } else {
-        // Fallback or empty
-        debugPrint("No sharded app data found for student.");
       }
 
-      // Sort alphabetic
+      if (allApps.isEmpty) {
+        // Fallback: legacy data/installed_apps
+        try {
+          final legacyDoc = await _firestore
+              .collection('users')
+              .doc(widget.studentId)
+              .collection('data')
+              .doc('installed_apps')
+              .get();
+
+          if (legacyDoc.exists && legacyDoc.data() != null) {
+            final data = legacyDoc.data() as Map<String, dynamic>;
+            if (data.containsKey('installedApps')) {
+              allApps = List<Map<String, dynamic>>.from(data['installedApps']);
+            }
+          }
+        } catch (_) {}
+      }
+
       allApps.sort(
         (a, b) => (a['appName'] as String).toLowerCase().compareTo(
           (b['appName'] as String).toLowerCase(),
         ),
       );
-
-      // 2. Fetch App Icons
-      final iconCollection = _firestore
-          .collection('users')
-          .doc(widget.studentId)
-          .collection('app_icons');
-      final iconsSnapshot = await iconCollection.get();
-      Map<String, String> iconMap = {};
-      for (var doc in iconsSnapshot.docs) {
-        if (doc.data().containsKey('icon')) {
-          iconMap[doc.id] = doc.data()['icon'];
-        }
-      }
-
-      // 3. Fetch Lock State
-      final doc = await _firestore
-          .collection('users')
-          .doc(widget.studentId)
-          .get();
 
       if (mounted) {
         setState(() {
@@ -93,34 +136,65 @@ class _RemoteAppLockScreenState extends State<RemoteAppLockScreen> {
               .where((app) => app['packageName'] != 'com.example.focus_mate')
               .map((app) {
                 final newApp = Map<String, dynamic>.from(app);
-                final pkg = newApp['packageName'];
-                final iconBase64 = iconMap[pkg] ?? newApp['iconBytes'];
-
+                final pkg = newApp['packageName'] as String;
+                final iconBase64 = _iconMap[pkg] ?? newApp['iconBytes'];
                 if (iconBase64 != null && iconBase64 is String) {
                   try {
                     newApp['decodedIcon'] = base64Decode(iconBase64);
                   } catch (e) {
-                    debugPrint("Error decoding icon for $pkg");
+                    debugPrint('F_MATE: Error decoding icon for $pkg');
                   }
                 }
                 return newApp;
               })
               .toList();
-
-          if (doc.exists) {
-            final data = doc.data()!;
-            lockedPackages = List<String>.from(data['lockedApps'] ?? []);
-            if (data['lockEndTime'] != null) {
-              lockEndTime = (data['lockEndTime'] as Timestamp).toDate();
-            }
-          }
-          loading = false;
+          _appsLoading = false;
+          _isRefreshingFromDevice = false; // Fresh data arrived
         });
       }
+    });
+  }
+
+  /// Pre-fetches the icon map once and re-applies when apps update.
+  Future<void> _loadIcons() async {
+    try {
+      final iconsSnapshot = await _firestore
+          .collection('users')
+          .doc(widget.studentId)
+          .collection('app_icons')
+          .get();
+
+      final Map<String, String> iconMap = {};
+      for (var doc in iconsSnapshot.docs) {
+        if (doc.data().containsKey('icon')) {
+          iconMap[doc.id] = doc.data()['icon'] as String;
+        }
+      }
+
+      if (mounted) {
+        setState(() => _iconMap = iconMap);
+      }
     } catch (e) {
-      debugPrint("Error loading remote data: $e");
-      if (mounted) setState(() => loading = false);
+      debugPrint('F_MATE: Error loading icons: $e');
     }
+  }
+
+  /// Listens for lock state changes on the student's user document in real-time.
+  void _listenToLockState() {
+    _lockStateSubscription = _firestore
+        .collection('users')
+        .doc(widget.studentId)
+        .snapshots()
+        .listen((doc) {
+      if (!mounted || !doc.exists) return;
+      final data = doc.data()!;
+      setState(() {
+        lockedPackages = List<String>.from(data['lockedApps'] ?? []);
+        lockEndTime = data['lockEndTime'] != null
+            ? (data['lockEndTime'] as Timestamp).toDate()
+            : null;
+      });
+    });
   }
 
   Future<void> _toggleLock(String packageName, bool isLocked) async {
@@ -130,7 +204,6 @@ class _RemoteAppLockScreenState extends State<RemoteAppLockScreen> {
           : lockedPackages.remove(packageName);
     });
 
-    // Update Firestore
     await _firestore.collection('users').doc(widget.studentId).update({
       'lockedApps': lockedPackages,
     });
@@ -240,13 +313,27 @@ class _RemoteAppLockScreenState extends State<RemoteAppLockScreen> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text(
-          "Lock ${widget.studentName}'s Apps",
-          style: TextStyle(
-            color: isDark ? Colors.white : Colors.black87,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              "Lock ${widget.studentName}'s Apps",
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.black87,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            if (_isRefreshingFromDevice)
+              Text(
+                "Refreshing from device...",
+                style: TextStyle(
+                  color: isDark ? Colors.orangeAccent : Colors.orange.shade700,
+                  fontSize: 11,
+                ),
+              ),
+          ],
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -257,6 +344,27 @@ class _RemoteAppLockScreenState extends State<RemoteAppLockScreen> {
           ),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          IconButton(
+            icon: Icon(
+              Icons.refresh,
+              color: isDark ? Colors.white70 : Colors.black54,
+            ),
+            tooltip: "Request fresh app list from device",
+            onPressed: () {
+              setState(() => _isRefreshingFromDevice = true);
+              _requestDeviceRefresh();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    "Requesting latest apps from child device...",
+                  ),
+                  duration: Duration(seconds: 3),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: Container(
         decoration: AppTheme.screenBackground(
@@ -266,13 +374,48 @@ class _RemoteAppLockScreenState extends State<RemoteAppLockScreen> {
         child: SafeArea(
           child: Column(
             children: [
+              // Refresh banner
+              if (_isRefreshingFromDevice && !_appsLoading)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  color: Colors.orange.withValues(alpha: 0.15),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.orangeAccent,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        "Waiting for child's device to sync…",
+                        style: TextStyle(
+                          color: isDark
+                              ? Colors.orangeAccent
+                              : Colors.orange.shade800,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+              // Active lock banner
               if (isLockActive)
                 Container(
-                  margin: const EdgeInsets.all(20),
-                  padding: const EdgeInsets.all(16),
+                  margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
                     color: Colors.redAccent.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(14),
                     border: Border.all(
                       color: Colors.redAccent.withValues(alpha: 0.3),
                     ),
@@ -294,14 +437,58 @@ class _RemoteAppLockScreenState extends State<RemoteAppLockScreen> {
                 ),
 
               Expanded(
-                child: loading
-                    ? const Center(
-                        child: CircularProgressIndicator(
-                          color: Colors.orangeAccent,
+                child: _appsLoading
+                    ? Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const CircularProgressIndicator(
+                              color: Colors.orangeAccent,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              "Loading apps from child's device…",
+                              style: TextStyle(
+                                color: isDark
+                                    ? Colors.white54
+                                    : Colors.black45,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : installedApps.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.phone_android_outlined,
+                              size: 60,
+                              color: isDark ? Colors.white30 : Colors.black26,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              "No apps found on child's device.",
+                              style: TextStyle(
+                                color: isDark ? Colors.white54 : Colors.black45,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              "Make sure the child's app is open so it can sync.",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: isDark ? Colors.white38 : Colors.black38,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
                         ),
                       )
                     : GridView.builder(
-                        padding: const EdgeInsets.all(20),
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: 4,
@@ -312,8 +499,8 @@ class _RemoteAppLockScreenState extends State<RemoteAppLockScreen> {
                         itemCount: installedApps.length,
                         itemBuilder: (context, index) {
                           final app = installedApps[index];
-                          final pkg = app['packageName'];
-                          final name = app['appName'];
+                          final pkg = app['packageName'] as String;
+                          final name = app['appName'] as String;
                           final isSelected = lockedPackages.contains(pkg);
 
                           return GestureDetector(
@@ -333,7 +520,10 @@ class _RemoteAppLockScreenState extends State<RemoteAppLockScreen> {
                                   width: 2,
                                 ),
                               ),
-                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                                vertical: 8,
+                              ),
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 crossAxisAlignment: CrossAxisAlignment.center,

@@ -382,11 +382,15 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
 
   /// Unlocks a specific app manually during an active session (e.g. emergency).
   Future<void> _unlockSpecificApp(String packageName) async {
+    final currentSessionLocked = List<String>.from(_sessionData['lockedApps'] ?? []);
+    currentSessionLocked.remove(packageName);
+
     await _firestore
         .collection('companion_sessions')
         .doc(widget.sessionId)
         .update({
           'manuallyUnlockedApps': FieldValue.arrayUnion([packageName]),
+          'lockedApps': currentSessionLocked,
         });
 
     final userId = _sessionData['userId'];

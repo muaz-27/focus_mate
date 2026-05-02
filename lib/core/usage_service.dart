@@ -268,7 +268,11 @@ class UsageService {
   /// 
   /// NEW: Uses SHARDING to split the list into multiple documents in `users/{userId}/data_v2`.
   /// This prevents hitting the Firestore 1MB document limit.
-  Future<void> syncInstalledAppsToFirebase(String userId) async {
+  /// Syncs installed application metadata (name, package, icon) to Firestore.
+  /// 
+  /// [forceSync] bypasses the hash cache when set to true — used when a parent
+  /// remotely requests a fresh app list from the student's device.
+  Future<void> syncInstalledAppsToFirebase(String userId, {bool forceSync = false}) async {
     try {
       List<Application> apps = await getInstalledAppsList();
       
@@ -281,9 +285,13 @@ class UsageService {
       final prefs = await SharedPreferences.getInstance();
       final int lastHash = prefs.getInt('last_synced_apps_hash_$userId') ?? 0;
       
-      if (lastHash == packageHash) {
+      if (!forceSync && lastHash == packageHash) {
         debugPrint("F_MATE: Installed apps unchanged (hash match). Skipping sync.");
         return;
+      }
+      
+      if (forceSync) {
+        debugPrint("F_MATE: Force sync requested — bypassing hash cache.");
       }
 
       debugPrint("F_MATE: Starting App Sync for ${apps.length} apps...");

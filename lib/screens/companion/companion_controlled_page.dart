@@ -56,10 +56,10 @@ class _CompanionControlledPageState extends ConsumerState<CompanionControlledPag
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      // We are automatically navigated away by DashboardRouter, this ensures any overlay is gone
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Session ended by companion")),
       );
+      Navigator.of(context).popUntil((route) => route.isFirst);
     });
   }
 

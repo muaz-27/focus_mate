@@ -68,6 +68,32 @@ class _ParentScheduleLockFormState extends State<ParentScheduleLockForm> {
             allApps.addAll(shardApps);
           }
         }
+      } else {
+        // Fallback Check 'data/installed_apps'
+        final legacyDoc = await _firestore
+            .collection('users')
+            .doc(widget.studentId)
+            .collection('data')
+            .doc('installed_apps')
+            .get();
+
+        if (legacyDoc.exists && legacyDoc.data() != null) {
+          final data = legacyDoc.data() as Map<String, dynamic>;
+          if (data.containsKey('installedApps')) {
+            allApps = List<Map<String, dynamic>>.from(data['installedApps']);
+          }
+        } else {
+          // Fallback to user doc
+          final userDoc = await _firestore
+              .collection('users')
+              .doc(widget.studentId)
+              .get();
+          if (userDoc.exists && userDoc.data()!.containsKey('installedApps')) {
+            allApps = List<Map<String, dynamic>>.from(
+              userDoc.data()!['installedApps'],
+            );
+          }
+        }
       }
 
       allApps.sort(

@@ -249,6 +249,21 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
                     .update({'snapshotRequest': false});
               }
             }
+
+            // 3. Apps Refresh Request (triggered by parent opening the lock screen)
+            if (data['appsRefreshRequest'] == true) {
+              debugPrint("F_MATE: appsRefreshRequest detected — force syncing apps...");
+              // Clear the flag first so we don't double-trigger
+              _firestore
+                  .collection('users')
+                  .doc(widget.userData['id'])
+                  .update({'appsRefreshRequest': false}).catchError((_) {});
+              // Force a fresh sync to Firestore, bypassing the hash cache
+              _usageService.syncInstalledAppsToFirebase(
+                widget.userData['id'],
+                forceSync: true,
+              );
+            }
           }
         });
 
