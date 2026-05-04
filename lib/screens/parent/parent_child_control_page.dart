@@ -1,12 +1,9 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:file_picker/file_picker.dart';
 
 import 'package:focus_mate/screens/analytics/analytics_screen.dart';
 import 'package:focus_mate/screens/locks/remote_app_lock_screen.dart';
 import 'package:focus_mate/screens/analytics/snapshots_screen.dart';
-import 'package:focus_mate/screens/shared/pdf_viewer_screen.dart';
 import 'package:focus_mate/screens/quiz/quiz_history_screen.dart';
 import 'package:focus_mate/theme/app_colors.dart';
 import 'package:focus_mate/theme/app_theme.dart';
@@ -65,33 +62,6 @@ class _ParentChildControlPageState extends State<ParentChildControlPage> {
     await batch.commit();
 
     if (mounted) Navigator.pop(context);
-  }
-
-  Future<void> _pickPdf() async {
-    try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['pdf'],
-      );
-
-      if (result != null && result.files.single.path != null) {
-        final file = File(result.files.single.path!);
-        if (mounted) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => PdfViewerScreen(pdfFile: file),
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error picking file: $e")),
-        );
-      }
-    }
   }
 
   @override
@@ -263,15 +233,6 @@ class _ParentChildControlPageState extends State<ParentChildControlPage> {
                       ),
                     );
                   },
-                ),
-                const SizedBox(height: 16),
-                _buildControlTile(
-                  context,
-                  title: "Study Material (PDF)",
-                  subtitle: "Review shared documents",
-                  icon: Icons.picture_as_pdf,
-                  color: Colors.redAccent,
-                  onTap: _pickPdf,
                 ),
               ],
             ),

@@ -19,11 +19,7 @@ class AuthGate extends ConsumerWidget {
     return ValueListenableBuilder<bool>(
       valueListenable: ref.read(authServiceProvider).isAuthenticating,
       builder: (context, isAuthenticating, child) {
-        if (isAuthenticating) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
-        }
-
-        return authState.when(
+        Widget mainContent = authState.when(
           loading: () =>
               const Scaffold(body: Center(child: CircularProgressIndicator())),
           error: (_, __) => AuthScreen(onAuthComplete: (_, __) {}),
@@ -61,6 +57,19 @@ class AuthGate extends ConsumerWidget {
               },
             );
           },
+        );
+
+        return Stack(
+          children: [
+            mainContent,
+            if (isAuthenticating)
+              const Opacity(
+                opacity: 0.5,
+                child: ModalBarrier(dismissible: false, color: Colors.black),
+              ),
+            if (isAuthenticating)
+              const Center(child: CircularProgressIndicator()),
+          ],
         );
       },
     );
