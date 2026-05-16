@@ -939,8 +939,15 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
   /// Links a companion using the provided link code.
   Future<void> _linkCompanion() async {
     FocusScope.of(context).unfocus();
-    final code = _companionCodeController.text.trim().toUpperCase();
-    if (code.isEmpty) return;
+    final code = _companionCodeController.text.trim();
+    if (code.length != 6) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Link code must be exactly 6 digits")),
+        );
+      }
+      return;
+    }
 
     // Guard: already linked
     if (companionActive) {
@@ -2222,12 +2229,18 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
                     ),
                     child: TextField(
                       controller: _companionCodeController,
+                      keyboardType: TextInputType.number,
+                      maxLength: 6,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                      ],
                       style: TextStyle(
                         color: isDark ? Colors.white : Colors.black87,
                         fontSize: 16,
                       ),
                       decoration: InputDecoration(
-                        hintText: "Enter Link Code",
+                        hintText: "Enter 6-Digit Code",
+                        counterText: "", // Hide the counter
                         hintStyle: TextStyle(
                           color: isDark ? Colors.white30 : Colors.black38,
                         ),

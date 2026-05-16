@@ -410,9 +410,8 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
 
   /// Generates a random 8-character alphanumeric code using a secure RNG.
   String _generateCode() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     final rng = Random.secure();
-    return List.generate(8, (index) => chars[rng.nextInt(chars.length)]).join();
+    return List.generate(6, (index) => rng.nextInt(10).toString()).join();
   }
 
   /// Generates a new link code and updates it in Firestore with a 24-hour expiration.

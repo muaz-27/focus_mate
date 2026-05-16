@@ -173,9 +173,8 @@ class _ParentDashboardState extends ConsumerState<ParentDashboard> {
   }
 
   String _generateCode() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     final rng = Random.secure();
-    return List.generate(8, (index) => chars[rng.nextInt(chars.length)]).join();
+    return List.generate(6, (index) => rng.nextInt(10).toString()).join();
   }
 
   Future<void> _refreshCode() async {
