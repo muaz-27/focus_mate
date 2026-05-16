@@ -211,7 +211,12 @@ class _SnapshotsScreenState extends ConsumerState<SnapshotsScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text('Snapshots', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
-            Text(widget.studentName, style: TextStyle(fontSize: 13, color: subtextColor)),
+            Text(
+              widget.studentName,
+              style: TextStyle(fontSize: 13, color: subtextColor),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ],
         ),
         actions: [
@@ -290,7 +295,7 @@ class _SnapshotsScreenState extends ConsumerState<SnapshotsScreen> {
                       width: 16, height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                     ),
-                    label: const Text('Capturing...', style: TextStyle(fontWeight: FontWeight.bold)),
+                    label: const Text('Capturing...', style: TextStyle(fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis, maxLines: 1),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.indigo.shade400,
                       foregroundColor: Colors.white,
@@ -324,6 +329,8 @@ class _SnapshotsScreenState extends ConsumerState<SnapshotsScreen> {
               label: Text(
                 _isChildOnline ? 'Capture Screenshot' : 'Device Offline',
                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.indigo.shade600,
@@ -390,8 +397,8 @@ class _SnapshotsScreenState extends ConsumerState<SnapshotsScreen> {
 
         return GridView.builder(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
+          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: 200,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
             childAspectRatio: 0.72,

@@ -333,8 +333,11 @@ class _CompanionControlledPageState extends ConsumerState<CompanionControlledPag
       body: Container(
         decoration: AppTheme.screenBackground(context, AppColors.roleGradients['user']!),
         child: SafeArea(
-          child: Column(
-        children: [
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 600),
+              child: Column(
+                children: [
           // 1. Timer & Info
           Container(
             width: double.infinity,
@@ -434,7 +437,7 @@ class _CompanionControlledPageState extends ConsumerState<CompanionControlledPag
                               ],
                             ),
                           ),
-                          title: Text(_getDisplayName(app), style: TextStyle(color: textColor)),
+                          title: Text(_getDisplayName(app), style: TextStyle(color: textColor), maxLines: 1, overflow: TextOverflow.ellipsis),
                           trailing: _emergencyRequestPending
                               ? (isThisAppLoading 
                                   ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.orange, strokeWidth: 2))
@@ -503,10 +506,12 @@ class _CompanionControlledPageState extends ConsumerState<CompanionControlledPag
               ],
             ),
           ),
-        ],
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
-    ),
-    ),
     );
     },
    );

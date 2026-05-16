@@ -252,7 +252,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           child: SingleChildScrollView(
             padding: EdgeInsets.all(18.w),
             child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: 420.w),
+              constraints: const BoxConstraints(maxWidth: 420),
               child: Column(
                 children: [
                   Align(
@@ -337,9 +337,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(
-                              'Don\'t have an account? ',
-                              style: TextStyle(color: isDark ? Colors.grey : Colors.black54),
+                            Flexible(
+                              child: Text(
+                                'Don\'t have an account? ',
+                                style: TextStyle(color: isDark ? Colors.grey : Colors.black54),
+                              ),
                             ),
                             TextButton(
                               onPressed: widget.onSwitchToSignup,

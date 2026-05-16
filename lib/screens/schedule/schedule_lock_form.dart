@@ -142,11 +142,14 @@ class _ScheduleLockFormState extends State<ScheduleLockForm> {
             ),
           ),
           SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                   TextField(
                     controller: _nameController,
                     style: TextStyle(color: isDark ? Colors.white : Colors.black87),
@@ -243,8 +246,8 @@ class _ScheduleLockFormState extends State<ScheduleLockForm> {
                            final app = _installedApps[index];
                            final isSelected = _selectedApps.contains(app.packageName);
                            return CheckboxListTile(
-                             title: Text(app.appName, style: TextStyle(color: isDark ? Colors.white : Colors.black87)),
-                             subtitle: Text(app.packageName, style: TextStyle(fontSize: 10, color: isDark ? Colors.grey[400] : Colors.grey.shade600)),
+                             title: Text(app.appName, style: TextStyle(color: isDark ? Colors.white : Colors.black87), maxLines: 1, overflow: TextOverflow.ellipsis),
+                             subtitle: Text(app.packageName, style: TextStyle(fontSize: 10, color: isDark ? Colors.grey[400] : Colors.grey.shade600), maxLines: 1, overflow: TextOverflow.ellipsis),
                              value: isSelected,
                              onChanged: (val) {
                                setState(() {
@@ -285,7 +288,9 @@ class _ScheduleLockFormState extends State<ScheduleLockForm> {
                             ),
                     ),
                   ),
-                ],
+                    ],
+                  ),
+                ),
               ),
             ),
           ),

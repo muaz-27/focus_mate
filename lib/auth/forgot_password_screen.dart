@@ -88,35 +88,40 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           child: Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 22),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  TextButton.icon(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.arrow_back, color: Colors.white70),
-                    label: const Text(
-                      "Back",
-                      style: TextStyle(color: Colors.white70),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(26),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[900]!.withValues(alpha: 0.8),
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(
-                        color: accent.withValues(alpha: 0.3),
-                        width: 1,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 420),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextButton.icon(
+                      onPressed: () => Navigator.pop(context),
+                      icon: Icon(Icons.arrow_back, color: isDark ? Colors.white70 : Colors.black87),
+                      label: Text(
+                        "Back",
+                        style: TextStyle(color: isDark ? Colors.white70 : Colors.black87),
                       ),
                     ),
-                    child: _isSuccess
-                        ? _buildSuccessView(accent)
-                        : _buildFormView(accent),
-                  ),
-                ],
+                    const SizedBox(height: 10),
+
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(26),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.grey[900]!.withValues(alpha: 0.8)
+                            : Colors.white.withValues(alpha: 0.9),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: accent.withValues(alpha: 0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: _isSuccess
+                          ? _buildSuccessView(accent)
+                          : _buildFormView(accent),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

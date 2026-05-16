@@ -205,11 +205,14 @@ class _ParentScheduleLockFormState extends State<ParentScheduleLockForm> {
             ),
           ),
           SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                   TextField(
                     controller: _nameController,
                     style: TextStyle(
@@ -354,6 +357,8 @@ class _ParentScheduleLockFormState extends State<ParentScheduleLockForm> {
                                         ? Colors.white
                                         : Colors.black87,
                                   ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ],
@@ -364,6 +369,8 @@ class _ParentScheduleLockFormState extends State<ParentScheduleLockForm> {
                               fontSize: 10,
                               color: isDark ? Colors.grey[400] : Colors.grey.shade600,
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                           value: isSelected,
                           onChanged: (val) {
@@ -404,7 +411,9 @@ class _ParentScheduleLockFormState extends State<ParentScheduleLockForm> {
                       ),
                     ),
                   ),
-                ],
+                    ],
+                  ),
+                ),
               ),
             ),
           ),

@@ -550,10 +550,14 @@ class _ParentalLocksScreenState extends State<ParentalLocksScreen> {
         title: Text(
           app['appName'] ?? 'Unknown App',
           style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
         subtitle: Text(
           "Locked by Companion",
           style: TextStyle(color: isDark ? Colors.white54 : Colors.grey, fontSize: 12),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
         trailing: _buildRequestButton(
           packageName: pkg,
@@ -603,13 +607,25 @@ class _ParentalLocksScreenState extends State<ParentalLocksScreen> {
         title: Text(
           schedule.name,
           style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(daysText.isNotEmpty ? daysText : "No specific days", style: TextStyle(color: isDark ? Colors.white54 : Colors.grey, fontSize: 12)),
+            Text(
+              daysText.isNotEmpty ? daysText : "No specific days", 
+              style: TextStyle(color: isDark ? Colors.white54 : Colors.grey, fontSize: 12),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
             const SizedBox(height: 4),
-            Text(timeText, style: TextStyle(color: Colors.amber, fontSize: 13, fontWeight: FontWeight.bold)),
+            Text(
+              timeText, 
+              style: TextStyle(color: Colors.amber, fontSize: 13, fontWeight: FontWeight.bold),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ],
         ),
         isThreeLine: true,

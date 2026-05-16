@@ -157,9 +157,11 @@ class _AppLockScreenState extends State<AppLockScreen> {
         // Theme Detection inside modal builder
         final isDark = Theme.of(context).brightness == Brightness.dark;
 
-        return Container(
-          height: 350,
-          decoration: BoxDecoration(
+        return SafeArea(
+          child: Container(
+            height: MediaQuery.of(context).size.height * 0.45,
+            constraints: const BoxConstraints(minHeight: 300, maxHeight: 400),
+            decoration: BoxDecoration(
             color: isDark ? const Color(0xFF1E293B) : Colors.white,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             boxShadow: [
@@ -252,7 +254,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
               ),
             ],
           ),
-        );
+        ));
       },
     );
   }
@@ -463,8 +465,8 @@ class _AppLockScreenState extends State<AppLockScreen> {
                               80, // avoid FAB overlap
                         ),
                         gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 3, // larger icons
+                            const SliverGridDelegateWithMaxCrossAxisExtent(
+                              maxCrossAxisExtent: 120, // ~3 icons on a typical phone
                               childAspectRatio: 0.8,
                               crossAxisSpacing: 15,
                               mainAxisSpacing: 15,

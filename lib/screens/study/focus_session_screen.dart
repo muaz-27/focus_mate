@@ -129,68 +129,82 @@ class _FocusSessionScreenState extends State<FocusSessionScreen> {
             AppColors.roleGradients['user']!,
           ),
           child: SafeArea(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                "FOCUS MODE",
-                style: TextStyle(color: mutedColor, letterSpacing: 2),
-              ),
-              const SizedBox(height: 40),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final circleSize = (constraints.maxWidth * 0.55).clamp(150.0, 250.0);
+              return SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(height: 40),
+                      Text(
+                        "FOCUS MODE",
+                        style: TextStyle(color: mutedColor, letterSpacing: 2),
+                      ),
+                      const SizedBox(height: 40),
 
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  SizedBox(
-                    width: 250,
-                    height: 250,
-                    child: CircularProgressIndicator(
-                      value: progress,
-                      strokeWidth: 15,
-                      backgroundColor: isDark ? AppColors.cardOverlay : Colors.grey.shade200,
-                      color: isDark ? Colors.blueAccent : Colors.blue.shade700,
-                    ),
-                  ),
-                  Text(
-                    timeText,
-                    style: TextStyle(
-                      color: textColor,
-                      fontSize: 60,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
+                      Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          SizedBox(
+                            width: circleSize,
+                            height: circleSize,
+                            child: CircularProgressIndicator(
+                              value: progress,
+                              strokeWidth: circleSize * 0.06,
+                              backgroundColor: isDark ? AppColors.cardOverlay : Colors.grey.shade200,
+                              color: isDark ? Colors.blueAccent : Colors.blue.shade700,
+                            ),
+                          ),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              timeText,
+                              style: TextStyle(
+                                color: textColor,
+                                fontSize: 60,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
 
-              const SizedBox(height: 60),
+                      const SizedBox(height: 60),
 
-              const SizedBox(height: 100), // Replaced hardcoded companion badge
-
-              // Controls
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Pause/Resume
-                  FloatingActionButton(
-                    backgroundColor: isDark ? Colors.white : Colors.grey.shade800,
-                    onPressed: () {
-                      setState(() {
-                        _isPaused = !_isPaused;
-                      });
-                    },
-                    child: Icon(_isPaused ? Icons.play_arrow : Icons.pause, color: isDark ? Colors.black : Colors.white),
+                      // Controls
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // Pause/Resume
+                          FloatingActionButton(
+                            backgroundColor: isDark ? Colors.white : Colors.grey.shade800,
+                            onPressed: () {
+                              setState(() {
+                                _isPaused = !_isPaused;
+                              });
+                            },
+                            child: Icon(_isPaused ? Icons.play_arrow : Icons.pause, color: isDark ? Colors.black : Colors.white),
+                          ),
+                          const SizedBox(width: 24),
+                          
+                          // End Session
+                          FloatingActionButton(
+                            backgroundColor: Colors.redAccent,
+                            onPressed: _giveUp,
+                            child: const Icon(Icons.stop, color: Colors.white),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 40),
+                    ],
                   ),
-                  const SizedBox(width: 24),
-                  
-                  // End Session
-                  FloatingActionButton(
-                    backgroundColor: Colors.redAccent,
-                    onPressed: _giveUp,
-                    child: const Icon(Icons.stop, color: Colors.white),
-                  ),
-                ],
-              ),
-            ],
+                ),
+              );
+            },
           ),
         ),
         ),

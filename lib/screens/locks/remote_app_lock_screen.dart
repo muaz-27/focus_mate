@@ -238,9 +238,11 @@ class _RemoteAppLockScreenState extends State<RemoteAppLockScreen> {
       backgroundColor: Colors.transparent,
       builder: (ctx) {
         final isDark = Theme.of(context).brightness == Brightness.dark;
-        return Container(
-          height: 350,
-          decoration: BoxDecoration(
+        return SafeArea(
+          child: Container(
+            height: MediaQuery.of(context).size.height * 0.45,
+            constraints: const BoxConstraints(minHeight: 300, maxHeight: 400),
+            decoration: BoxDecoration(
             color: isDark ? const Color(0xFF1E293B) : Colors.white,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
@@ -299,7 +301,7 @@ class _RemoteAppLockScreenState extends State<RemoteAppLockScreen> {
               ),
             ],
           ),
-        );
+        ));
       },
     );
   }
@@ -324,6 +326,8 @@ class _RemoteAppLockScreenState extends State<RemoteAppLockScreen> {
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
             if (_isRefreshingFromDevice)
               Text(
@@ -490,8 +494,8 @@ class _RemoteAppLockScreenState extends State<RemoteAppLockScreen> {
                     : GridView.builder(
                         padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
                         gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 4,
+                            const SliverGridDelegateWithMaxCrossAxisExtent(
+                              maxCrossAxisExtent: 100,
                               childAspectRatio: 0.72,
                               crossAxisSpacing: 10,
                               mainAxisSpacing: 10,

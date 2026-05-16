@@ -175,6 +175,8 @@ class _ScheduleApprovalScreenState extends State<ScheduleApprovalScreen> {
         title: Text(
           "Approve '$scheduleName'",
           style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -224,8 +226,8 @@ class _ScheduleApprovalScreenState extends State<ScheduleApprovalScreen> {
                       child: GridView.builder(
                         padding: const EdgeInsets.all(16),
                         gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 4,
+                            const SliverGridDelegateWithMaxCrossAxisExtent(
+                              maxCrossAxisExtent: 100,
                               childAspectRatio: 0.8,
                               crossAxisSpacing: 10,
                               mainAxisSpacing: 10,

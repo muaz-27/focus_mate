@@ -83,8 +83,10 @@ class _UnlockRequestScreenState extends State<UnlockRequestScreen> {
             child: SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 500),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Container(
                       padding: const EdgeInsets.all(24),
@@ -144,6 +146,7 @@ class _UnlockRequestScreenState extends State<UnlockRequestScreen> {
                             ),
                           ),
                   ],
+                ),
                 ),
               ),
             ),

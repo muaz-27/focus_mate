@@ -213,11 +213,13 @@ class _QuizScreenState extends State<QuizScreen> {
         body: Container(
           decoration: AppTheme.screenBackground(context, AppColors.roleGradients['user']!),
           child: Center(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.symmetric(horizontal: 24.w),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 600),
+              child: SingleChildScrollView(
+                padding: EdgeInsets.symmetric(horizontal: 24.w),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
                   Icon(passed ? Icons.check_circle : Icons.error, color: passed ? Colors.green : Colors.red, size: 80.sp),
                   SizedBox(height: 20.h),
                   Text(
@@ -256,7 +258,8 @@ class _QuizScreenState extends State<QuizScreen> {
                           )
                         ],
                       )
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -281,11 +284,14 @@ class _QuizScreenState extends State<QuizScreen> {
       body: Container(
         decoration: AppTheme.screenBackground(context, AppColors.roleGradients['user']!),
         child: SafeArea(
-          child: Padding(
-            padding: EdgeInsets.all(24.w),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 800),
+              child: Padding(
+                padding: EdgeInsets.all(24.w),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
                 Text(
                   currentQuestion['question'] ?? "Unknown question?",
                   style: TextStyle(color: textColor, fontSize: 22.sp, fontWeight: FontWeight.bold),
@@ -325,7 +331,9 @@ class _QuizScreenState extends State<QuizScreen> {
                   text: _currentIndex == _activeQuestions.length - 1 ? "Finish Quiz" : "Next Question",
                   color: Colors.cyanAccent,
                 )
-              ],
+                  ],
+                ),
+              ),
             ),
           ),
         ),

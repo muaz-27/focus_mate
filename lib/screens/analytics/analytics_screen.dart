@@ -191,26 +191,21 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           fontWeight: FontWeight.bold,
         ),
         actions: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: TextButton.icon(
-              icon: const Icon(Icons.quiz_outlined, size: 20),
-              label: const Text('Quizzes'),
-              style: TextButton.styleFrom(
-                foregroundColor: isDark ? Colors.white : Colors.black87,
-              ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => QuizHistoryScreen(
-                      userId: widget.userId,
-                      isReadOnly: true,
-                    ),
+          IconButton(
+            icon: const Icon(Icons.quiz_outlined),
+            tooltip: "Quizzes",
+            color: isDark ? Colors.white : Colors.black87,
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => QuizHistoryScreen(
+                    userId: widget.userId,
+                    isReadOnly: true,
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            },
           ),
           if (widget.onUnlink != null)
             IconButton(
@@ -586,12 +581,16 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             ),
           ),
           const SizedBox(height: 4),
-          Text(
-            value,
-            style: TextStyle(
-              color: isDark ? Colors.white : Colors.black87,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.black87,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],

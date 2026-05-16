@@ -567,6 +567,8 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
         title: Text(
           "Control - $studentName",
           style: TextStyle(color: textColor),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -590,8 +592,11 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
               ? const Center(
                   child: CircularProgressIndicator(color: Colors.cyanAccent),
                 )
-              : Column(
-                  children: [
+              : Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 800),
+                    child: Column(
+                      children: [
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
@@ -679,8 +684,8 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
                       child: GridView.builder(
                         padding: const EdgeInsets.all(16),
                         gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 4,
+                            const SliverGridDelegateWithMaxCrossAxisExtent(
+                              maxCrossAxisExtent: 100,
                               childAspectRatio: 0.8,
                               crossAxisSpacing: 10,
                               mainAxisSpacing: 10,
@@ -824,7 +829,9 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
                               ),
                             ),
                     ),
-                  ],
+                      ],
+                    ),
+                  ),
                 ),
         ),
       ),

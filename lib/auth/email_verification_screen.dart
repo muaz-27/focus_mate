@@ -114,6 +114,11 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final user = _auth.currentUser;
 
+    final primaryText = isDark ? Colors.white : Colors.black87;
+    final secondaryText = isDark ? Colors.white.withValues(alpha: 0.8) : Colors.black54;
+    final tertiaryText = isDark ? Colors.white.withValues(alpha: 0.6) : Colors.black45;
+    final cancelText = isDark ? Colors.white54 : Colors.black45;
+
     return Scaffold(
       body: Container(
         padding: const EdgeInsets.all(24),
@@ -129,95 +134,98 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.mark_email_unread_outlined,
-                    size: 100,
-                    color: Colors.cyanAccent,
-                  ),
-                  const SizedBox(height: 32),
-                  const Text(
-                    "Verify your email",
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    "We've sent a verification email to:\n${user?.email ?? 'your email'}",
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white.withValues(alpha: 0.8),
-                      height: 1.5,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    "Please check your inbox and click the link to verify your account.",
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white.withValues(alpha: 0.6),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 48),
-                  SizedBox(
-                    width: double.infinity,
-                    child: CustomButton(
-                      text: "I've Verified (Refresh)",
-                      onPressed: _isChecking ? null : _manualCheck,
-                      isLoading: _isChecking,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 420),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.mark_email_unread_outlined,
+                      size: 100,
                       color: Colors.cyanAccent,
-                      textColor: Colors.black,
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        side: const BorderSide(color: Colors.cyanAccent),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                    const SizedBox(height: 32),
+                    Text(
+                      "Verify your email",
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: primaryText,
                       ),
-                      onPressed: _isResending ? null : _resendVerificationEmail,
-                      child: _isResending
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                color: Colors.cyanAccent,
-                                strokeWidth: 2,
-                              ),
-                            )
-                          : const Text(
-                              "Resend Email",
-                              style: TextStyle(
-                                color: Colors.cyanAccent,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                      textAlign: TextAlign.center,
                     ),
-                  ),
-                  const SizedBox(height: 32),
-                  TextButton.icon(
-                    onPressed: () => AuthService().signOut(),
-                    icon: const Icon(Icons.arrow_back, color: Colors.white54),
-                    label: const Text(
-                      "Cancel",
-                      style: TextStyle(color: Colors.white54, fontSize: 16),
+                    const SizedBox(height: 16),
+                    Text(
+                      "We've sent a verification email to:\n${user?.email ?? 'your email'}",
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: secondaryText,
+                        height: 1.5,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 8),
+                    Text(
+                      "Please check your inbox and click the link to verify your account.",
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: tertiaryText,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 48),
+                    SizedBox(
+                      width: double.infinity,
+                      child: CustomButton(
+                        text: "I've Verified (Refresh)",
+                        onPressed: _isChecking ? null : _manualCheck,
+                        isLoading: _isChecking,
+                        color: Colors.cyanAccent,
+                        textColor: Colors.black,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          side: const BorderSide(color: Colors.cyanAccent),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: _isResending ? null : _resendVerificationEmail,
+                        child: _isResending
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.cyanAccent,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text(
+                                "Resend Email",
+                                style: TextStyle(
+                                  color: Colors.cyanAccent,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    TextButton.icon(
+                      onPressed: () => AuthService().signOut(),
+                      icon: Icon(Icons.arrow_back, color: cancelText),
+                      label: Text(
+                        "Cancel",
+                        style: TextStyle(color: cancelText, fontSize: 16),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

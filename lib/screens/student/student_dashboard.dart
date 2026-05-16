@@ -1906,7 +1906,7 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
                   const SizedBox(width: 16),
                   // Progress Circle OR Enable Button
                   if (_hasPermission) ...[
-                    Container(
+                    SizedBox(
                       width: 60,
                       height: 60,
                       child: Stack(
@@ -2037,30 +2037,32 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
                 ),
               ),
               SizedBox(width: 16.w),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "COMPANION MODE",
-                    style: TextStyle(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.9)
-                          : Colors.black87,
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.2,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "COMPANION MODE",
+                      style: TextStyle(
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.9)
+                            : Colors.black87,
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.2,
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    companionActive ? "Active & Linked" : "Not connected",
-                    style: TextStyle(
-                      color: companionActive ? Colors.greenAccent : Colors.grey,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 15.sp,
+                    SizedBox(height: 4.h),
+                    Text(
+                      companionActive ? "Active & Linked" : "Not connected",
+                      style: TextStyle(
+                        color: companionActive ? Colors.greenAccent : Colors.grey,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15.sp,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),

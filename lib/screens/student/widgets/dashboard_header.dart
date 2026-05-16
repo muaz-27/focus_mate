@@ -23,25 +23,29 @@ class DashboardHeader extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Welcome back,",
-                style: TextStyle(color: subtitleColor, fontSize: 13.sp, fontWeight: FontWeight.w500),
-              ),
-              SizedBox(height: 4.h),
-              Text(
-                userData['name'] ?? "Student",
-                style: AppTheme.headerTitle(context).copyWith(
-                  color: titleColor, 
-                  fontSize: 28.sp, 
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: -0.5
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Welcome back,",
+                  style: TextStyle(color: subtitleColor, fontSize: 13.sp, fontWeight: FontWeight.w500),
                 ),
-              ),
-            ],
+                SizedBox(height: 4.h),
+                Text(
+                  userData['name'] ?? "Student",
+                  style: AppTheme.headerTitle(context).copyWith(
+                    color: titleColor, 
+                    fontSize: 28.sp, 
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: -0.5
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
           ),
+          SizedBox(width: 12.w),
           Container(
             decoration: BoxDecoration(
               color: titleColor.withValues(alpha: 0.05),
