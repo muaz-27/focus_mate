@@ -1,0 +1,3 @@
+app_name: focus_mate
+app_id: com.example.focus_mate
+test_file_pattern: "**/*_test.dart"

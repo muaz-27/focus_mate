@@ -5,6 +5,9 @@ import 'package:focus_mate/theme/app_colors.dart';
 ThemeData lightTheme = ThemeData(
   brightness: Brightness.light,
   useMaterial3: true,
+  // InkSparkle loads shaders/stretch_effect.frag, which is missing in some
+  // Patrol/integration APK builds and crashes before tests can run.
+  splashFactory: InkRipple.splashFactory,
   scaffoldBackgroundColor:
       Colors.transparent, // Transparent to allow gradient backgrounds
   colorScheme: ColorScheme.light(

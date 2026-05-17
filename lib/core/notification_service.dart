@@ -61,6 +61,10 @@ class NotificationService {
       importance: Importance.max,
       priority: Priority.high,
       icon: '@mipmap/ic_launcher',
+      styleInformation: BigTextStyleInformation(
+        body,
+        contentTitle: title,
+      ),
     );
 
     final NotificationDetails platformDetails =
@@ -89,6 +93,10 @@ class NotificationService {
       channelName,
       importance: Importance.max,
       priority: Priority.high,
+      styleInformation: BigTextStyleInformation(
+        body,
+        contentTitle: title,
+      ),
     );
 
     final NotificationDetails platformDetails =

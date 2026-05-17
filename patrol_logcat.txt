@@ -1,0 +1,1801 @@
+--------- beginning of main
+05-15 22:04:13.104 D/BoundBrokerSvc(22116): onUnbind: Intent { act=com.google.android.gms.libs.gmscorelogger.service.START dat=chimera-action: cmp=com.google.android.gms/.chimera.PersistentDirectBootAwareApiService }
+05-15 22:04:41.810 I/WM-RemoteWorkerService(21594): Binding to RemoteWorkerService
+05-15 22:04:41.821 D/WM-ListenableWorkerImpl(21594): Executing work request (a1c20525-73ed-4d7c-9959-720159756bfe, com.google.apps.tiktok.contrib.work.TikTokListenableWorker)
+05-15 22:04:41.941 I/bzzu    (21594): (REDACTED) #sharesheet enabled: %s #sharesheet with image type enabled: %s
+05-15 22:04:41.942 I/bzzx    (21594): (REDACTED) AvailabilityUtils.updateAvailability() component:%s enabled:%s
+05-15 22:04:41.944 I/bzzx    (21594): (REDACTED) Update complete. %s enabled: %s
+05-15 22:04:41.944 I/bzzx    (21594): (REDACTED) AvailabilityUtils.updateAvailability() component:%s enabled:%s
+05-15 22:04:41.946 I/bzzx    (21594): (REDACTED) Update complete. %s enabled: %s
+05-15 22:04:41.948 I/bzzu    (21594): #synclet interval set for every : 12 hours
+05-15 22:04:41.951 I/evgv    (21594): #sync(). Running Synclets and scheduling next sync.
+05-15 22:04:41.985 I/bwpw    (21594): (REDACTED) #provideSyncletBinding isEmberNativeEnabled:%s enableAutofetch:%s
+05-15 22:04:42.048 I/bwpw    (21594): (REDACTED) #provideSyncletBinding isEmberNativeEnabled:%s enableAutofetch:%s
+05-15 22:04:42.067 I/bwpw    (21594): (REDACTED) #provideSyncletBinding isEmberNativeEnabled:%s enableAutofetch:%s
+05-15 22:04:42.099 I/bwpw    (21594): (REDACTED) #provideSyncletBinding isEmberNativeEnabled:%s enableAutofetch:%s
+05-15 22:04:42.144 I/evgv    (21594): (REDACTED) Running synclets: %s
+05-15 22:04:42.165 I/evgv    (21594): (REDACTED) Starting synclet: %s
+05-15 22:04:42.219 I/edyb    (21594): (REDACTED) deleted %d events
+05-15 22:04:42.221 I/edyb    (21594): (REDACTED) deleted %d events
+05-15 22:04:42.246 I/evgv    (21594): Scheduling next wakeup
+05-15 22:04:42.248 I/evhv    (21594): Scheduling next periodic WorkManager workers
+05-15 22:04:42.265 I/WM-GreedyScheduler(21594): Ignoring schedule request in non-main process
+05-15 22:04:42.290 D/WM-SystemJobScheduler(21594): Scheduling work ID 6e0e695b-cc08-44f1-8e7b-3082b968d66eJob ID 200572
+05-15 22:04:42.293 I/WM-GreedyScheduler(21594): Ignoring schedule request in a secondary process
+05-15 22:04:42.302 I/WM-GreedyScheduler(21594): Ignoring schedule request in non-main process
+05-15 22:04:42.334 D/WM-SystemJobScheduler(21594): Scheduling work ID 9231a637-bff4-4f8f-bb4d-aca73f4cf56bJob ID 200573
+05-15 22:04:42.338 I/WM-GreedyScheduler(21594): Ignoring schedule request in a secondary process
+05-15 22:04:42.346 I/WM-GreedyScheduler(21594): Ignoring schedule request in non-main process
+05-15 22:04:42.360 D/WM-SystemJobScheduler(21594): Scheduling work ID 9231a637-bff4-4f8f-bb4d-aca73f4cf56bJob ID 200574
+05-15 22:04:42.364 I/WM-GreedyScheduler(21594): Ignoring schedule request in a secondary process
+05-15 22:04:42.372 I/WM-GreedyScheduler(21594): Ignoring schedule request in non-main process
+05-15 22:04:42.389 D/WM-SystemJobScheduler(21594): Scheduling work ID 10a30a4c-8f0c-4dff-a975-8e7bf7066fe7Job ID 200575
+05-15 22:04:42.392 I/WM-GreedyScheduler(21594): Ignoring schedule request in a secondary process
+05-15 22:04:42.399 I/WM-GreedyScheduler(21594): Ignoring schedule request in non-main process
+05-15 22:04:42.409 D/WM-SystemJobScheduler(21594): Scheduling work ID ef47eb2b-0bfc-4bcc-b31e-63fd381128d2Job ID 200576
+05-15 22:04:42.412 I/WM-GreedyScheduler(21594): Ignoring schedule request in a secondary process
+05-15 22:04:42.418 I/WM-GreedyScheduler(21594): Ignoring schedule request in non-main process
+05-15 22:04:42.426 D/WM-SystemJobScheduler(21594): Scheduling work ID ec6fc8b9-a97f-4f79-ad18-f4cbde5523f1Job ID 200577
+05-15 22:04:42.428 I/WM-GreedyScheduler(21594): Ignoring schedule request in a secondary process
+05-15 22:04:42.434 I/WM-GreedyScheduler(21594): Ignoring schedule request in non-main process
+05-15 22:04:42.436 D/WM-ListenableWorkerImpl(21594): Interrupting work with id (a1c20525-73ed-4d7c-9959-720159756bfe)
+05-15 22:04:42.441 I/WM-GreedyScheduler(21594): Ignoring schedule request in a secondary process
+05-15 22:04:42.449 I/evhv    (21594): Successfully scheduled next periodic workers
+05-15 22:04:42.452 I/evgv    (21594): #sync() complete
+05-15 22:05:00.410 D/BoundBrokerSvc(22116): onRebind: Intent { act=com.google.android.gms.libs.gmscorelogger.service.START dat=chimera-action: cmp=com.google.android.gms/.chimera.PersistentDirectBootAwareApiService }
+05-15 22:05:11.596 I/FusedLocation(22116): (REDACTED) location delivery to %s blocked - too close
+05-15 22:05:11.605 I/FusedLocation(22116): (REDACTED) location delivery to %s blocked - too close
+05-15 22:05:11.607 I/FusedLocation(22116): (REDACTED) location delivery to %s blocked - too close
+05-15 22:05:11.608 I/FusedLocation(22116): (REDACTED) location delivery to %s blocked - too close
+05-15 22:05:15.483 D/BoundBrokerSvc(22116): onUnbind: Intent { act=com.google.android.gms.libs.gmscorelogger.service.START dat=chimera-action: cmp=com.google.android.gms/.chimera.PersistentDirectBootAwareApiService }
+05-15 22:05:32.570 E/chromium(16975): [ERROR:net/socket/ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -101
+05-15 22:05:32.687 E/chromium(16975): [ERROR:net/socket/ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -101
+05-15 22:05:32.748 E/chromium(16975): [ERROR:net/socket/ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -101
+05-15 22:05:32.862 E/chromium(16975): [ERROR:net/socket/ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -101
+05-15 22:05:39.255 E/chromium(16975): [ERROR:net/socket/ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -101
+05-15 22:05:39.375 E/chromium(16975): [ERROR:net/socket/ssl_client_socket_impl.cc:924] handshake failed; returned -1, SSL error code 1, net_error -101
+05-15 22:05:53.014 D/ProcessState(23249): Binder ioctl to enable oneway spam detection failed: Invalid argument
+05-15 22:05:53.022 E/Parcel  (23249): Reading a NULL string not supported here.
+05-15 22:05:53.031 W/service (23249): type=1400 audit(0.0:33398): avc: denied { call } for scontext=u:r:shell:s0 tcontext=u:r:mtk_hal_gnss:s0 tclass=binder permissive=0
+05-15 22:05:53.031 W/service (23249): type=1400 audit(0.0:33399): avc: denied { call } for scontext=u:r:shell:s0 tcontext=u:r:mtk_hal_light:s0 tclass=binder permissive=0
+05-15 22:05:53.031 W/service (23249): type=1400 audit(0.0:33400): avc: denied { call } for scontext=u:r:shell:s0 tcontext=u:r:hal_vibrator_default:s0 tclass=binder permissive=0
+05-15 22:05:53.035 W/service (23249): type=1400 audit(0.0:33401): avc: denied { call } for scontext=u:r:shell:s0 tcontext=u:r:hal_vibrator_default:s0 tclass=binder permissive=0
+05-15 22:05:53.059 E/Parcel  (23249): Reading a NULL string not supported here.
+05-15 22:05:53.070 E/Parcel  (23249): Reading a NULL string not supported here.
+05-15 22:05:53.075 E/Parcel  (23249): Reading a NULL string not supported here.
+05-15 22:05:53.081 E/Parcel  (23249): Reading a NULL string not supported here.
+05-15 22:05:53.102 E/Parcel  (23249): Reading a NULL string not supported here.
+05-15 22:05:53.112 E/Parcel  (23249): Reading a NULL string not supported here.
+05-15 22:05:53.114 E/Parcel  (23249): Reading a NULL string not supported here.
+05-15 22:05:53.120 E/Parcel  (23249): Reading a NULL string not supported here.
+05-15 22:05:53.121 E/Parcel  (23249): Reading a NULL string not supported here.
+05-15 22:05:53.139 E/Parcel  (23249): Reading a NULL string not supported here.
+05-15 22:05:53.153 E/Parcel  (23249): Reading a NULL string not supported here.
+05-15 22:05:53.207 E/Parcel  (23249): Reading a NULL string not supported here.
+05-15 22:05:53.209 E/Parcel  (23249): Reading a NULL string not supported here.
+05-15 22:05:53.313 E/Parcel  (23249): Reading a NULL string not supported here.
+05-15 22:05:53.354 E/Parcel  (23249): Reading a NULL string not supported here.
+05-15 22:05:53.378 E/Parcel  (23249): Reading a NULL string not supported here.
+05-15 22:05:53.389 E/Parcel  (23249): Reading a NULL string not supported here.
+05-15 22:05:53.402 E/Parcel  (23249): Reading a NULL string not supported here.
+05-15 22:05:53.414 E/Parcel  (23249): Reading a NULL string not supported here.
+05-15 22:05:53.442 E/Parcel  (23249): Reading a NULL string not supported here.
+05-15 22:05:53.448 E/Parcel  (23249): Reading a NULL string not supported here.
+05-15 22:05:53.483 W/service (23249): type=1400 audit(0.0:33402): avc: denied { call } for scontext=u:r:shell:s0 tcontext=u:r:wificond:s0 tclass=binder permissive=0
+05-15 22:05:53.604 D/ProcessState(23253): Binder ioctl to enable oneway spam detection failed: Invalid argument
+05-15 22:05:53.691 D/ProcessState(23256): Binder ioctl to enable oneway spam detection failed: Invalid argument
+05-15 22:05:53.694 E/Parcel  (23256): Reading a NULL string not supported here.
+05-15 22:05:53.699 W/service (23256): type=1400 audit(0.0:33403): avc: denied { call } for scontext=u:r:shell:s0 tcontext=u:r:mtk_hal_gnss:s0 tclass=binder permissive=0
+05-15 22:05:53.699 W/service (23256): type=1400 audit(0.0:33404): avc: denied { call } for scontext=u:r:shell:s0 tcontext=u:r:mtk_hal_light:s0 tclass=binder permissive=0
+05-15 22:05:53.703 W/service (23256): type=1400 audit(0.0:33405): avc: denied { call } for scontext=u:r:shell:s0 tcontext=u:r:hal_vibrator_default:s0 tclass=binder permissive=0
+05-15 22:05:53.713 E/Parcel  (23256): Reading a NULL string not supported here.
+05-15 22:05:53.721 E/Parcel  (23256): Reading a NULL string not supported here.
+05-15 22:05:53.724 E/Parcel  (23256): Reading a NULL string not supported here.
+05-15 22:05:53.728 E/Parcel  (23256): Reading a NULL string not supported here.
+05-15 22:05:53.739 E/Parcel  (23256): Reading a NULL string not supported here.
+05-15 22:05:53.743 E/Parcel  (23256): Reading a NULL string not supported here.
+05-15 22:05:53.744 E/Parcel  (23256): Reading a NULL string not supported here.
+05-15 22:05:53.748 E/Parcel  (23256): Reading a NULL string not supported here.
+05-15 22:05:53.749 E/Parcel  (23256): Reading a NULL string not supported here.
+05-15 22:05:53.755 E/Parcel  (23256): Reading a NULL string not supported here.
+05-15 22:05:53.764 E/Parcel  (23256): Reading a NULL string not supported here.
+05-15 22:05:53.782 E/Parcel  (23256): Reading a NULL string not supported here.
+05-15 22:05:53.784 E/Parcel  (23256): Reading a NULL string not supported here.
+05-15 22:05:53.798 E/Parcel  (23256): Reading a NULL string not supported here.
+05-15 22:05:53.808 E/Parcel  (23256): Reading a NULL string not supported here.
+05-15 22:05:53.824 E/Parcel  (23256): Reading a NULL string not supported here.
+05-15 22:05:53.828 E/Parcel  (23256): Reading a NULL string not supported here.
+05-15 22:05:53.836 E/Parcel  (23256): Reading a NULL string not supported here.
+05-15 22:05:53.842 E/Parcel  (23256): Reading a NULL string not supported here.
+05-15 22:05:53.855 E/Parcel  (23256): Reading a NULL string not supported here.
+05-15 22:05:53.859 E/Parcel  (23256): Reading a NULL string not supported here.
+05-15 22:05:56.435 W/cr_BkgrdTaskJS(16975): Starting background task (jobId=116)
+05-15 22:06:21.148 D/CompatibilityChangeReporter(23269): Compat change id reported: 171979766; UID 99910027; state: ENABLED
+05-15 22:06:21.213 V/GraphicsEnvironment(23269): ANGLE Developer option for 'com.google.android.gsf' set to: 'default'
+05-15 22:06:21.213 V/GraphicsEnvironment(23269): Neither updatable production driver nor prerelease driver is supported.
+05-15 22:06:21.218 D/NetworkSecurityConfig(23269): No Network Security Config specified, using platform default
+05-15 22:06:21.218 D/NetworkSecurityConfig(23269): No Network Security Config specified, using platform default
+05-15 22:06:21.502 I/GoogleHttpClient(23269): GMS http client unavailable, use old client
+05-15 22:06:21.517 I/CarUiInstaller(23269): CarUiInstaller started for com.google.android.gsf
+05-15 22:06:21.889 D/BoundBrokerSvc(22773): onRebind: Intent { act=com.google.android.gms.libs.gmscorelogger.service.START dat=chimera-action: cmp=com.google.android.gms/.chimera.PersistentDirectBootAwareApiService }
+05-15 22:06:31.299 I/LocationSettings(22773): (REDACTED) Read NLP consent from settings: %b
+05-15 22:06:37.000 D/BoundBrokerSvc(22773): onUnbind: Intent { act=com.google.android.gms.libs.gmscorelogger.service.START dat=chimera-action: cmp=com.google.android.gms/.chimera.PersistentDirectBootAwareApiService }
+05-15 22:06:37.970 D/BoundBrokerSvc(22116): onRebind: Intent { act=com.google.android.gms.libs.gmscorelogger.service.START dat=chimera-action: cmp=com.google.android.gms/.chimera.PersistentDirectBootAwareApiService }
+05-15 22:06:53.045 D/BoundBrokerSvc(22116): onUnbind: Intent { act=com.google.android.gms.libs.gmscorelogger.service.START dat=chimera-action: cmp=com.google.android.gms/.chimera.PersistentDirectBootAwareApiService }
+05-15 22:06:58.487 I/AlarmManager(22116): setExactAndAllowWhileIdle [name: GCM_HB_ALARM type: 2 triggerAtMillis: 107176380]
+05-15 22:06:58.508 W/ChimeraUtils(22116): Module com.google.android.gms.gcm missing resource null(0)
+05-15 22:06:58.522 I/AlarmManager(22116): setExactAndAllowWhileIdle [name: FcmRetry type: 2 triggerAtMillis: 106036412]
+05-15 22:06:58.529 I/AlarmManager(22116): setExactAndAllowWhileIdle [name: GCM_HB_ALARM type: 2 triggerAtMillis: 107176422]
+05-15 22:06:58.546 E/FirebaseMessaging(21594): Default FirebaseApp has not been initialized. Skip logging event to GA.
+05-15 22:06:58.546 I/FirebaseMessaging(21594): FirebaseApp has not being initialized. Device might be in direct boot mode. Skip exporting delivery metrics to Big Query
+05-15 22:06:58.567 I/ecfd    (21594): Received an intent for GNP, won't process
+05-15 22:06:58.586 I/bxps    (21594): (REDACTED) Count changed: counts=%s, shown=%s
+05-15 22:06:58.593 D/WM-SystemJobScheduler(21594): Scheduling work ID cbd36272-611d-4d7b-ae9d-0902aeae36d5Job ID 200579
+05-15 22:06:58.597 I/WM-GreedyScheduler(21594): Ignoring schedule request in a secondary process
+05-15 22:06:58.605 I/bylj    (21594): Chime Filter is invoked.
+05-15 22:06:58.630 I/bylj    (21594): Notification was not filtered.
+05-15 22:06:58.647 I/GnpSdk  (21594): (REDACTED) Setting channel Id: '%s'
+05-15 22:06:58.723 I/GnpSdk  (21594): (REDACTED) Setting channel Id: '%s'
+05-15 22:06:58.776 D/WM-Processor(21594): Processor cancelling cbd36272-611d-4d7b-ae9d-0902aeae36d5
+05-15 22:06:58.776 D/WM-Processor(21594): WorkerWrapper could not be found for cbd36272-611d-4d7b-ae9d-0902aeae36d5
+05-15 22:06:58.783 I/WM-GreedyScheduler(21594): Ignoring schedule request in non-main process
+05-15 22:06:58.789 I/WM-GreedyScheduler(21594): Ignoring schedule request in a secondary process
+05-15 22:06:58.791 I/GnpSdk  (21594): Message handled by GNP Firebase handler.
+05-15 22:06:59.118 I/hbox:interacto(15209): Background young concurrent copying GC freed 141615(5472KB) AllocSpace objects, 0(0B) LOS objects, 47% free, 6114KB/11MB, paused 262us,95us total 153.930ms
+05-15 22:06:59.118 W/hbox:interacto(15209): Reducing the number of considered missed Gc histogram windows from 281 to 100
+05-15 22:07:05.181 D/CompatibilityChangeReporter(23435): Compat change id reported: 171979766; UID 10023; state: ENABLED
+05-15 22:07:05.239 V/GraphicsEnvironment(23435): ANGLE Developer option for 'com.facebook.services' set to: 'default'
+05-15 22:07:05.239 V/GraphicsEnvironment(23435): Neither updatable production driver nor prerelease driver is supported.
+05-15 22:07:05.242 D/NetworkSecurityConfig(23435): Using Network Security Config from resource fb_network_security_config debugBuild: false
+05-15 22:07:05.245 D/NetworkSecurityConfig(23435): Using Network Security Config from resource fb_network_security_config debugBuild: false
+05-15 22:07:05.319 D/d       (23435): ExceptionHandlerManager not explicitly initialized, using default mode
+05-15 22:07:05.319 D/d       (23435): initializing exception handler manager, prioritized=true
+05-15 22:07:05.328 W/SoLoader(23435): Initializing SoLoader: 0
+05-15 22:07:05.330 W/SoLoader(23435): context.getApplicationContext returned null, holding reference to original context.ApplicationSoSource fallbacks to: /data/app/~~ca0EqoWLGNrKKYD0iZPTaQ==/com.facebook.services-jg_IY6Kw7WqepOk2rtDG6Q==/lib/arm64
+05-15 22:07:05.331 I/SoLoader(23435): Recording new base apk path: /data/app/~~ca0EqoWLGNrKKYD0iZPTaQ==/com.facebook.services-jg_IY6Kw7WqepOk2rtDG6Q==/base.apk
+05-15 22:07:05.331 I/SoLoader(23435): Previously recorded 0 base apk paths.
+05-15 22:07:05.335 I/SoLoader(23435): Preparing SO source: DirectorySoSource[root = /vendor/lib64 flags = 2]
+05-15 22:07:05.335 I/SoLoader(23435): Preparing SO source: DirectorySoSource[root = /system/system_ext/lib64 flags = 2]
+05-15 22:07:05.335 I/SoLoader(23435): Preparing SO source: DirectorySoSource[root = /system/lib64 flags = 2]
+05-15 22:07:05.336 I/SoLoader(23435): Preparing SO source: ApplicationSoSource[DirectorySoSource[root = /data/app/~~ca0EqoWLGNrKKYD0iZPTaQ==/com.facebook.services-jg_IY6Kw7WqepOk2rtDG6Q==/lib/arm64 flags = 1]]
+05-15 22:07:05.339 I/SoLoader(23435): Preparing SO source: BackupSoSource[root = /data/data/com.facebook.services/lib-main flags = 1 apks = [ExtractFromZipSoSource[/data/app/~~ca0EqoWLGNrKKYD0iZPTaQ==/com.facebook.services-jg_IY6Kw7WqepOk2rtDG6Q==/base.apk]]]
+05-15 22:07:05.340 W/SoLoader(23435): SoLoader initialized: 0
+05-15 22:07:05.352 W/PreloadsBreakpadWrapper(23435): Starting breakpad manager
+05-15 22:07:05.353 W/SoLoader(23435): Loading breakpad on the main thread
+05-15 22:07:05.356 W/SoLoader[NativeDeps](23435): Falling back to custom ELF parsing when loading libbreakpad.so, this can be slow
+05-15 22:07:05.361 W/SoLoader[NativeDeps](23435): Falling back to custom ELF parsing when loading libc++_shared.so, this can be slow
+05-15 22:07:05.369 W/SoLoader[NativeDeps](23435): Falling back to custom ELF parsing when loading libandroid_aware_dlopen.so, this can be slow
+05-15 22:07:05.372 W/SoLoader[NativeDeps](23435): Falling back to custom ELF parsing when loading libforce_dlopen.so, this can be slow
+05-15 22:07:05.376 W/SoLoader[NativeDeps](23435): Falling back to custom ELF parsing when loading libsigmux.so, this can be slow
+05-15 22:07:05.384 W/SoLoader(23435): Loading breakpad_cpp_helper on the main thread
+05-15 22:07:05.384 W/SoLoader[NativeDeps](23435): Falling back to custom ELF parsing when loading libbreakpad_cpp_helper.so, this can be slow
+05-15 22:07:05.397 W/PreloadsBreakpadWrapper(23435): Enabling java stream
+05-15 22:07:05.409 W/SoLoader(23435): Running a recovery step for libacra.so due to com.facebook.soloader.SoLoaderDSONotFoundError: couldn't find DSO to load: libacra.so
+05-15 22:07:05.409 W/SoLoader(23435): 	existing SO sources: 
+05-15 22:07:05.409 W/SoLoader(23435): 		SoSource 0: BackupSoSource[root = /data/data/com.facebook.services/lib-main flags = 1 apks = [ExtractFromZipSoSource[/data/app/~~ca0EqoWLGNrKKYD0iZPTaQ==/com.facebook.services-jg_IY6Kw7WqepOk2rtDG6Q==/base.apk]]]
+05-15 22:07:05.409 W/SoLoader(23435): 		SoSource 1: ApplicationSoSource[DirectorySoSource[root = /data/app/~~ca0EqoWLGNrKKYD0iZPTaQ==/com.facebook.services-jg_IY6Kw7WqepOk2rtDG6Q==/lib/arm64 flags = 1]]
+05-15 22:07:05.409 W/SoLoader(23435): 		SoSource 2: DirectorySoSource[root = /system/lib64 flags = 2]
+05-15 22:07:05.409 W/SoLoader(23435): 		SoSource 3: DirectorySoSource[root = /system/system_ext/lib64 flags = 2]
+05-15 22:07:05.409 W/SoLoader(23435): 		SoSource 4: DirectorySoSource[root = /vendor/lib64 flags = 2]
+05-15 22:07:05.409 W/SoLoader(23435): 	Native lib dir: /data/app/~~ca0EqoWLGNrKKYD0iZPTaQ==/com.facebook.services-jg_IY6Kw7WqepOk2rtDG6Q==/lib/arm64
+05-15 22:07:05.410 W/soloader.recovery.CheckBaseApkExists(23435): Base apk exists: /data/app/~~ca0EqoWLGNrKKYD0iZPTaQ==/com.facebook.services-jg_IY6Kw7WqepOk2rtDG6Q==/base.apk
+05-15 22:07:05.410 E/SoLoader(23435): Waiting on SoSource BackupSoSource
+05-15 22:07:05.414 W/SoLoader(23435): Running a recovery step for libacra.so due to com.facebook.soloader.SoLoaderDSONotFoundError: couldn't find DSO to load: libacra.so
+05-15 22:07:05.414 W/SoLoader(23435): 	existing SO sources: 
+05-15 22:07:05.414 W/SoLoader(23435): 		SoSource 0: BackupSoSource[root = /data/data/com.facebook.services/lib-main flags = 1 apks = [ExtractFromZipSoSource[/data/app/~~ca0EqoWLGNrKKYD0iZPTaQ==/com.facebook.services-jg_IY6Kw7WqepOk2rtDG6Q==/base.apk]]]
+05-15 22:07:05.414 W/SoLoader(23435): 		SoSource 1: ApplicationSoSource[DirectorySoSource[root = /data/app/~~ca0EqoWLGNrKKYD0iZPTaQ==/com.facebook.services-jg_IY6Kw7WqepOk2rtDG6Q==/lib/arm64 flags = 1]]
+05-15 22:07:05.414 W/SoLoader(23435): 		SoSource 2: DirectorySoSource[root = /system/lib64 flags = 2]
+05-15 22:07:05.414 W/SoLoader(23435): 		SoSource 3: DirectorySoSource[root = /system/system_ext/lib64 flags = 2]
+05-15 22:07:05.414 W/SoLoader(23435): 		SoSource 4: DirectorySoSource[root = /vendor/lib64 flags = 2]
+05-15 22:07:05.414 W/SoLoader(23435): 	Native lib dir: /data/app/~~ca0EqoWLGNrKKYD0iZPTaQ==/com.facebook.services-jg_IY6Kw7WqepOk2rtDG6Q==/lib/arm64
+05-15 22:07:05.414 E/SoLoader(23435): Checking /data/app missing libraries.
+05-15 22:07:05.422 E/SoLoader(23435): No libraries missing from /data/app/~~ca0EqoWLGNrKKYD0iZPTaQ==/com.facebook.services-jg_IY6Kw7WqepOk2rtDG6Q==/lib/arm64
+05-15 22:07:05.422 E/SoLoader(23435): Checking /data/data missing libraries.
+05-15 22:07:05.422 E/SoLoader(23435): No libraries missing from unpacking so paths while recovering /data/data failure
+05-15 22:07:05.422 E/SoLoader(23435): Waiting on SoSource BackupSoSource
+05-15 22:07:05.422 W/libc    (23435): Access denied finding property "ro.vendor.perf.scroll_opt.heavy_app"
+05-15 22:07:05.424 W/SoLoader(23435): Running a recovery step for libacra.so due to com.facebook.soloader.SoLoaderDSONotFoundError: couldn't find DSO to load: libacra.so
+05-15 22:07:05.424 W/SoLoader(23435): 	existing SO sources: 
+05-15 22:07:05.424 W/SoLoader(23435): 		SoSource 0: BackupSoSource[root = /data/data/com.facebook.services/lib-main flags = 1 apks = [ExtractFromZipSoSource[/data/app/~~ca0EqoWLGNrKKYD0iZPTaQ==/com.facebook.services-jg_IY6Kw7WqepOk2rtDG6Q==/base.apk]]]
+05-15 22:07:05.424 W/SoLoader(23435): 		SoSource 1: ApplicationSoSource[DirectorySoSource[root = /data/app/~~ca0EqoWLGNrKKYD0iZPTaQ==/com.facebook.services-jg_IY6Kw7WqepOk2rtDG6Q==/lib/arm64 flags = 1]]
+05-15 22:07:05.424 W/SoLoader(23435): 		SoSource 2: DirectorySoSource[root = /system/lib64 flags = 2]
+05-15 22:07:05.424 W/SoLoader(23435): 		SoSource 3: DirectorySoSource[root = /system/system_ext/lib64 flags = 2]
+05-15 22:07:05.424 W/SoLoader(23435): 		SoSource 4: DirectorySoSource[root = /vendor/lib64 flags = 2]
+05-15 22:07:05.424 W/SoLoader(23435): 	Native lib dir: /data/app/~~ca0EqoWLGNrKKYD0iZPTaQ==/com.facebook.services-jg_IY6Kw7WqepOk2rtDG6Q==/lib/arm64
+05-15 22:07:05.424 W/SoLoader(23435): Failed to recover
+05-15 22:07:05.560 E/book.appmanage(23476): Not starting debugger since process cannot load the jdwp agent.
+05-15 22:07:05.563 D/ProcessState(23476): Binder ioctl to enable oneway spam detection failed: Invalid argument
+05-15 22:07:05.587 D/CompatibilityChangeReporter(23476): Compat change id reported: 171979766; UID 10095; state: ENABLED
+05-15 22:07:05.664 D/CompatibilityChangeReporter(23435): Compat change id reported: 160794467; UID 10023; state: ENABLED
+05-15 22:07:05.699 W/SoLoader(23435): Loading notifgateway-jni on the main thread
+05-15 22:07:05.700 W/SoLoader[NativeDeps](23435): Falling back to custom ELF parsing when loading libnotifgateway.so, this can be slow
+05-15 22:07:05.712 W/SoLoader(23435): Loading simplejni on the main thread
+05-15 22:07:05.713 W/SoLoader(23435): Loading simplejni on the main thread
+05-15 22:07:05.719 V/GraphicsEnvironment(23476): ANGLE Developer option for 'com.facebook.appmanager' set to: 'default'
+05-15 22:07:05.719 V/GraphicsEnvironment(23476): Neither updatable production driver nor prerelease driver is supported.
+05-15 22:07:05.721 W/DGW     (23435): W[reportSoftError:36] pingInterval: value 43200000 outside valid range [5000, 600000]
+05-15 22:07:05.721 W/DGW     (23435): W[reportSoftError:36] bgPingInterval: value 43200000ms outside valid range [5000ms, 600000ms]
+05-15 22:07:05.721 W/DGW     (23435): W[reportSoftError:36] stopBgPingDelay: value 3155695200s outside valid range [0s, 600s]
+05-15 22:07:05.722 D/NetworkSecurityConfig(23476): Using Network Security Config from resource fb_network_security_config debugBuild: false
+05-15 22:07:05.723 I/DGW     (23435): I[startConnection:410] ConnectivityManager start connection.
+05-15 22:07:05.726 I/DGW     (23435): I[sendRequest:85] StreamGroupConnectivityAwareNetworkLayer[notifgateway] buffering request with connection state: 0
+05-15 22:07:05.728 D/NetworkSecurityConfig(23476): Using Network Security Config from resource fb_network_security_config debugBuild: false
+05-15 22:07:05.761 D/d       (23476): ExceptionHandlerManager not explicitly initialized, using default mode
+05-15 22:07:05.761 D/d       (23476): initializing exception handler manager, prioritized=true
+05-15 22:07:05.774 W/SoLoader(23476): Initializing SoLoader: 0
+05-15 22:07:05.775 W/SoLoader(23476): context.getApplicationContext returned null, holding reference to original context.ApplicationSoSource fallbacks to: /data/app/~~QuTWgKYRdaxxMYX035pSxg==/com.facebook.appmanager-NuXRzMUCI2_9SbqHF5-Z2g==/lib/arm64
+05-15 22:07:05.775 I/SoLoader(23476): Recording new base apk path: /data/app/~~QuTWgKYRdaxxMYX035pSxg==/com.facebook.appmanager-NuXRzMUCI2_9SbqHF5-Z2g==/base.apk
+05-15 22:07:05.775 I/SoLoader(23476): Previously recorded 0 base apk paths.
+05-15 22:07:05.776 I/SoLoader(23476): Preparing SO source: DirectorySoSource[root = /vendor/lib64 flags = 2]
+05-15 22:07:05.776 I/SoLoader(23476): Preparing SO source: DirectorySoSource[root = /system/lib64 flags = 2]
+05-15 22:07:05.776 I/SoLoader(23476): Preparing SO source: DirectApkSoSource[root = [/data/app/~~QuTWgKYRdaxxMYX035pSxg==/com.facebook.appmanager-NuXRzMUCI2_9SbqHF5-Z2g==/base.apk!/lib/arm64-v8a]]
+05-15 22:07:05.789 I/SoLoader(23476): Preparing SO source: ApplicationSoSource[DirectorySoSource[root = /data/app/~~QuTWgKYRdaxxMYX035pSxg==/com.facebook.appmanager-NuXRzMUCI2_9SbqHF5-Z2g==/lib/arm64 flags = 1]]
+05-15 22:07:05.789 W/SoLoader(23476): SoLoader initialized: 8
+05-15 22:07:05.805 E/agram.barcelon(23520): Not starting debugger since process cannot load the jdwp agent.
+05-15 22:07:05.807 W/libc    (23476): Access denied finding property "ro.vendor.perf.scroll_opt.heavy_app"
+05-15 22:07:05.808 D/ProcessState(23520): Binder ioctl to enable oneway spam detection failed: Invalid argument
+05-15 22:07:05.834 D/CompatibilityChangeReporter(23520): Compat change id reported: 171979766; UID 10654; state: ENABLED
+05-15 22:07:05.864 D/CompatibilityChangeReporter(23476): Compat change id reported: 160794467; UID 10095; state: ENABLED
+05-15 22:07:05.890 D/CompatibilityChangeReporter(23435): Compat change id reported: 147600208; UID 10023; state: ENABLED
+05-15 22:07:06.317 W/agram.barcelon(23520): Entry not found
+05-15 22:07:06.321 W/agram.barcelon(23520): Entry not found
+05-15 22:07:06.326 W/agram.barcelon(23520): JIT profile information will not be recorded: profile file does not exist.
+05-15 22:07:06.326 W/agram.barcelon(23520): JIT profile information will not be recorded: profile file does not exist.
+--------- beginning of system
+05-15 22:07:06.334 E/ActivityThread(23476): Failed to find provider info for com.facebook.appmanager.nekodirect
+05-15 22:07:06.369 V/GraphicsEnvironment(23520): ANGLE Developer option for 'com.instagram.barcelona' set to: 'default'
+05-15 22:07:06.369 V/GraphicsEnvironment(23520): Neither updatable production driver nor prerelease driver is supported.
+05-15 22:07:06.372 D/NetworkSecurityConfig(23520): Using Network Security Config from resource fb_network_security_config debugBuild: false
+05-15 22:07:06.379 D/NetworkSecurityConfig(23520): Using Network Security Config from resource fb_network_security_config debugBuild: false
+05-15 22:07:06.390 D/CompatibilityChangeReporter(23476): Compat change id reported: 147600208; UID 10095; state: ENABLED
+05-15 22:07:06.410 W/SoLoader(23520): Initializing SoLoader: 1034
+05-15 22:07:06.412 W/SoLoader(23520): context.getApplicationContext returned null, holding reference to original context.ApplicationSoSource fallbacks to: /data/app/~~r7uWiN4d8QuEUE5b4PZhVA==/com.instagram.barcelona-xCTfMn1aBVCNxSm-OIWk-A==/lib/arm64
+05-15 22:07:06.420 W/SoLoader(23520): SoLoader initialized: 1034
+05-15 22:07:06.421 W/FbSoLoader(23520): Setting up native deps, useAssetManager=true
+05-15 22:07:06.422 W/FbSoLoader(23520): Failed to read native deps: native_deps.txt
+05-15 22:07:06.422 W/FbSoLoader(23520): Failed to use precomputed native lib dependencies file
+05-15 22:07:06.423 E/FbSoLoader(23520): FbSoLoader unable to determine primary compression type .spo
+05-15 22:07:06.424 W/FbSoLoader(23520): Initialized FBSoLoader
+05-15 22:07:06.442 W/CrashLoopRemedyLog(23520): unable to delete remedy log, instaCrash: false
+05-15 22:07:06.443 W/CrashLoopRemedyLog(23520): unable to delete remedy log, instaCrash: true
+05-15 22:07:06.458 W/lacrima (23520): LacrimaConfigBuilder.setUserIdActorId not called, using 0
+05-15 22:07:06.458 W/lacrima (23520): LacrimaConfigBuilder.setUserIdActingAccountId not called, using 0
+05-15 22:07:06.491 W/MemProcWatermarkReader(23520): [AI] Failed to open zoneinfo file
+05-15 22:07:06.487 W/Thread-2(23520): type=1400 audit(0.0:33408): avc: denied { read } for name="zoneinfo" dev="proc" ino=4026531860 scontext=u:r:untrusted_app:s0:c142,c258,c512,c768 tcontext=u:object_r:proc_zoneinfo:s0 tclass=file permissive=0 app=com.instagram.barcelona
+05-15 22:07:06.493 W/lacrima (23520): Start JavaAppDeathCrashDetector... X.0wj
+05-15 22:07:06.495 W/Lacrima_single_(23520): type=1400 audit(0.0:33409): avc: denied { read } for name="sdcard" dev="tmpfs" ino=789 scontext=u:r:untrusted_app:s0:c142,c258,c512,c768 tcontext=u:object_r:mnt_sdcard_file:s0 tclass=lnk_file permissive=0 app=com.instagram.barcelona
+05-15 22:07:06.495 W/Lacrima_single_(23520): type=1400 audit(0.0:33410): avc: denied { read } for name="sdcard" dev="tmpfs" ino=789 scontext=u:r:untrusted_app:s0:c142,c258,c512,c768 tcontext=u:object_r:mnt_sdcard_file:s0 tclass=lnk_file permissive=0 app=com.instagram.barcelona
+05-15 22:07:06.506 W/lacrima (23520): Sending pending reports
+05-15 22:07:06.513 W/SoLoader(23520): Loading verifier on the main thread
+05-15 22:07:06.516 W/SoLoader[NativeDeps](23520): Falling back to custom ELF parsing when loading libearlystartup.so, this can be slow
+05-15 22:07:06.528 W/SoLoader[NativeDeps](23520): Falling back to custom ELF parsing when loading libbreakpad.so, this can be slow
+05-15 22:07:06.557 W/SoLoader(23520): Loading fb on the main thread
+05-15 22:07:06.558 W/SoLoader(23520): Loading fb on the main thread
+05-15 22:07:06.561 V/v9p     (23520): Disabled
+05-15 22:07:06.562 W/SoLoader(23520): Loading dextricks on the main thread
+05-15 22:07:06.562 W/SoLoader[NativeDeps](23520): Falling back to custom ELF parsing when loading libstartup.so, this can be slow
+05-15 22:07:06.579 W/lacrima (23520): The minidump file is empty!
+05-15 22:07:06.581 W/SoLoader[NativeDeps](23520): Falling back to custom ELF parsing when loading libunwindstack_binary.so, this can be slow
+05-15 22:07:06.600 W/SoLoader[NativeDeps](23520): Falling back to custom ELF parsing when loading libfbunwindstack.so, this can be slow
+05-15 22:07:06.603 W/SoLoader[NativeDeps](23520): Falling back to custom ELF parsing when loading libc++_shared.so, this can be slow
+05-15 22:07:06.606 W/lacrima (23520): Start AnrAppDeathDetector... X.0xz
+05-15 22:07:06.609 E/HeliumCrashReporter(23520): Pending crash path /data/data/com.instagram.barcelona/cache/webview_embedded/Helium Crashpad/pending/ is not a directory
+05-15 22:07:06.674 W/DexLibLoader(23520): integrateWithLibSigChain: CALLING (failed to get GkBootstrap value)
+05-15 22:07:06.674 W/dalvik-internals(23520): sigaction64 succeeded
+05-15 22:07:06.675 D/dalvik-internals(23520): SuspendAndroid11: Found all symbols
+05-15 22:07:06.675 D/dalvik-internals(23520): SuspendAndroid11: Suspending threads.
+05-15 22:07:06.675 D/dalvik-internals(23520): SuspendAndroid11: Resuming threads.
+05-15 22:07:06.675 V/dalvik-internals(23520): hooked signal using trap ()
+05-15 22:07:06.676 V/dalvik-internals(23520): hooked sigaction using trap ()
+05-15 22:07:06.676 D/dalvik-internals(23520): SuspendAndroid11: Found all symbols
+05-15 22:07:06.676 D/dalvik-internals(23520): SuspendAndroid11: Suspending threads.
+05-15 22:07:06.677 V/dalvik-internals(23520): Hooking function _ZN3art11annotations16GetLineNumFromPCEPKNS_7DexFileEPNS_9ArtMethodEj
+05-15 22:07:06.678 V/dalvik-internals(23520): hooked _ZN3art11annotations16GetLineNumFromPCEPKNS_7DexFileEPNS_9ArtMethodEj using jump ()
+05-15 22:07:06.678 D/dalvik-internals(23520): SuspendAndroid11: Resuming threads.
+05-15 22:07:06.695 W/libc    (23520): Access denied finding property "ro.vendor.perf.scroll_opt.heavy_app"
+05-15 22:07:06.747 D/CompatibilityChangeReporter(23520): Compat change id reported: 160794467; UID 10654; state: ENABLED
+05-15 22:07:06.752 W/SoLoader(23520): Loading fbjni on the main thread
+05-15 22:07:06.752 W/SoLoader(23520): Loading profilo_apiimpl on the main thread
+05-15 22:07:06.755 W/Lacrima_startup(23520): type=1400 audit(0.0:33411): avc: denied { read } for name="memory.usage_in_bytes" dev="cgroup" ino=8 scontext=u:r:untrusted_app:s0:c142,c258,c512,c768 tcontext=u:object_r:cgroup:s0 tclass=file permissive=0 app=com.instagram.barcelona
+05-15 22:07:06.759 W/SoLoader(23520): Loading profilo_configjni on the main thread
+05-15 22:07:06.761 W/SoLoader(23520): Loading profilo_configjni on the main thread
+05-15 22:07:06.762 W/SoLoader(23520): Loading profilo_mmapbuf on the main thread
+05-15 22:07:06.762 W/SoLoader(23520): Loading profilo on the main thread
+05-15 22:07:06.762 W/Profilo/TraceControl(23520): Loom client config id: -4092440757377380311
+05-15 22:07:06.763 W/Profilo/TraceControl(23520): START PROFILO_TRACEID: GYr0E93K9Lk 30539777
+05-15 22:07:06.764 W/SoLoader(23520): Loading profilo_mmapbuf on the main thread
+05-15 22:07:06.766 W/SoLoader(23520): Loading profilo on the main thread
+05-15 22:07:06.767 W/SoLoader(23520): Loading profilo on the main thread
+05-15 22:07:06.768 W/SoLoader(23520): Loading profilo on the main thread
+05-15 22:07:06.768 W/SoLoader(23520): Loading profilo on the main thread
+05-15 22:07:06.786 W/SoLoader(23520): Loading hiddenapis2 on the main thread
+05-15 22:07:06.815 W/lacrima (23520): Start AnrDetector... com.facebook.acra.anr.multisignal.MultiSignalANRDetector
+05-15 22:07:06.815 W/MultiSignalANRDetectorLacrima(23520): Starting
+05-15 22:07:06.815 W/ProcessAnrErrorMonitor(23520): startMonitoring with delay: 0
+05-15 22:07:06.815 W/SigquitDetectorLacrima(23520): nativeInit
+05-15 22:07:06.821 W/ProcessAnrErrorMonitor(23520): Starting process monitor checks for process 'com.instagram.barcelona'
+05-15 22:07:06.821 W/MultiSignalANRDetectorLacrima(23520): Started monitoring
+05-15 22:07:06.842 W/SoLoader(23520): Loading threadutils-jni on the main thread
+05-15 22:07:06.850 I/dalvik-internals(23520): integrateWithCrashLog crashlog: /data/user/0/com.instagram.barcelona/crash_log, insta_crashlog: /data/user/0/com.instagram.barcelona/insta_crash_log
+05-15 22:07:06.850 I/dalvik-internals(23520): installed sigmux crash handler for crash log
+05-15 22:07:06.852 W/lacrima (23520): LacrimaInitializer.init
+05-15 22:07:06.853 W/lacrima (23520): Cannot find registered detector
+05-15 22:07:06.855 W/lacrima (23520): FixedLengthFiles.init() called twice.
+05-15 22:07:06.855 W/lacrima (23520): FixedLengthFiles.init() called twice.
+05-15 22:07:06.860 W/SoLoader[NativeDeps](23520): Falling back to custom ELF parsing when loading libscrollmerged.so, this can be slow
+05-15 22:07:06.912 W/LogPrintlnFixie(23520): Hook disabled by config
+05-15 22:07:06.923 W/SoLoader(23520): Loading live-tree-jni on the main thread
+05-15 22:07:06.929 W/SoLoader(23520): Loading pando-jni on the main thread
+05-15 22:07:06.931 W/agram.barcelon(23520): JNI RegisterNativeMethods: attempt to register 0 native methods for com.facebook.pando.PandoDataJNI
+05-15 22:07:06.933 W/SoLoader(23520): Loading pando-jni on the main thread
+05-15 22:07:06.934 W/SoLoader(23520): Loading pando-jni on the main thread
+05-15 22:07:06.935 W/SoLoader(23520): Loading pando-graphql-jni on the main thread
+05-15 22:07:06.938 W/IgMetaConfig(23520): Could not obtain MC: null_factory 
+05-15 22:07:06.938 W/IgMetaConfig(23520): java.lang.RuntimeException: Could not obtain MC, call-site will receive default values
+05-15 22:07:06.938 W/IgMetaConfig(23520): 	at X.2dZ.A05(:4)
+05-15 22:07:06.938 W/IgMetaConfig(23520): 	at X.2dZ.A03(:7)
+05-15 22:07:06.938 W/IgMetaConfig(23520): 	at X.2dZ.A01(:2)
+05-15 22:07:06.938 W/IgMetaConfig(23520): 	at X.3gO.invoke(:986)
+05-15 22:07:06.938 W/IgMetaConfig(23520): 	at X.2yO.invoke(:111)
+05-15 22:07:06.938 W/IgMetaConfig(23520): 	at X.258.getValue(:25)
+05-15 22:07:06.938 W/IgMetaConfig(23520): 	at X.3gV.A01(:8)
+05-15 22:07:06.938 W/IgMetaConfig(23520): 	at X.2fn.A00(:10)
+05-15 22:07:06.938 W/IgMetaConfig(23520): 	at X.2fi.invoke(:44)
+05-15 22:07:06.938 W/IgMetaConfig(23520): 	at X.258.getValue(:25)
+05-15 22:07:06.938 W/IgMetaConfig(23520): 	at X.2ez.A01(:2)
+05-15 22:07:06.938 W/IgMetaConfig(23520): 	at X.3fD.invoke(:1224)
+05-15 22:07:06.938 W/IgMetaConfig(23520): 	at X.258.getValue(:25)
+05-15 22:07:06.938 W/IgMetaConfig(23520): 	at com.instagram.user.model.User.A08(:47)
+05-15 22:07:06.938 W/IgMetaConfig(23520): 	at X.3gD.invoke(:441)
+05-15 22:07:06.938 W/IgMetaConfig(23520): 	at X.3cU.apply(:4)
+05-15 22:07:06.938 W/IgMetaConfig(23520): 	at java.util.concurrent.ConcurrentMap.computeIfAbsent(ConcurrentMap.java:332)
+05-15 22:07:06.938 W/IgMetaConfig(23520): 	at com.instagram.user.model.UserCache.A05(:64)
+05-15 22:07:06.938 W/IgMetaConfig(23520): 	at X.2AY.A02(:16)
+05-15 22:07:06.938 W/IgMetaConfig(23520): 	at X.2AY.A01(:20)
+05-15 22:07:06.938 W/IgMetaConfig(23520): 	at X.2AY.A00(:1)
+05-15 22:07:06.938 W/IgMetaConfig(23520): 	at X.2cX.<init>(:172)
+05-15 22:07:06.938 W/IgMetaConfig(23520): 	at X.3dF.invoke(:690)
+05-15 22:07:06.938 W/IgMetaConfig(23520): 	at X.258.getValue(:25)
+05-15 22:07:06.938 W/IgMetaConfig(23520): 	at X.2cY.A00(:4)
+05-15 22:07:06.938 W/IgMetaConfig(23520): 	at X.2cY.A0A(:4)
+05-15 22:07:06.938 W/IgMetaConfig(23520): 	at X.1uA.A04(:83)
+05-15 22:07:06.938 W/IgMetaConfig(23520): 	at X.1ua.A02(:39)
+05-15 22:07:06.938 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A01(:84373)
+05-15 22:07:06.938 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A08(:895)
+05-15 22:07:06.938 W/IgMetaConfig(23520): 	at com.instagram.barcelona.app.BarcelonaAppShell.onCreate(:710)
+05-15 22:07:06.938 W/IgMetaConfig(23520): 	at android.app.Instrumentation.callApplicationOnCreate(Instrumentation.java:1261)
+05-15 22:07:06.938 W/IgMetaConfig(23520): 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:7226)
+05-15 22:07:06.938 W/IgMetaConfig(23520): 	at android.app.ActivityThread.access$1800(ActivityThread.java:284)
+05-15 22:07:06.938 W/IgMetaConfig(23520): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2284)
+05-15 22:07:06.938 W/IgMetaConfig(23520): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+05-15 22:07:06.938 W/IgMetaConfig(23520): 	at android.os.Looper.loopOnce(Looper.java:233)
+05-15 22:07:06.938 W/IgMetaConfig(23520): 	at android.os.Looper.loop(Looper.java:334)
+05-15 22:07:06.938 W/IgMetaConfig(23520): 	at android.app.ActivityThread.main(ActivityThread.java:8396)
+05-15 22:07:06.938 W/IgMetaConfig(23520): 	at java.lang.reflect.Method.invoke(Native Method)
+05-15 22:07:06.938 W/IgMetaConfig(23520): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:582)
+05-15 22:07:06.938 W/IgMetaConfig(23520): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1068)
+05-15 22:07:06.939 W/IgMetaConfig(23520): Could not obtain MC: null_factory 
+05-15 22:07:06.939 W/IgMetaConfig(23520): java.lang.RuntimeException: Could not obtain MC, call-site will receive default values
+05-15 22:07:06.939 W/IgMetaConfig(23520): 	at X.2dZ.A05(:4)
+05-15 22:07:06.939 W/IgMetaConfig(23520): 	at X.2dZ.A03(:7)
+05-15 22:07:06.939 W/IgMetaConfig(23520): 	at X.2dZ.A01(:2)
+05-15 22:07:06.939 W/IgMetaConfig(23520): 	at X.3gO.invoke(:1001)
+05-15 22:07:06.939 W/IgMetaConfig(23520): 	at X.2yO.invoke(:111)
+05-15 22:07:06.939 W/IgMetaConfig(23520): 	at X.258.getValue(:25)
+05-15 22:07:06.939 W/IgMetaConfig(23520): 	at X.3gV.A01(:8)
+05-15 22:07:06.939 W/IgMetaConfig(23520): 	at X.2fn.A00(:10)
+05-15 22:07:06.939 W/IgMetaConfig(23520): 	at X.2fi.invoke(:44)
+05-15 22:07:06.939 W/IgMetaConfig(23520): 	at X.258.getValue(:25)
+05-15 22:07:06.939 W/IgMetaConfig(23520): 	at X.2ez.A01(:2)
+05-15 22:07:06.939 W/IgMetaConfig(23520): 	at X.3fD.invoke(:1224)
+05-15 22:07:06.939 W/IgMetaConfig(23520): 	at X.258.getValue(:25)
+05-15 22:07:06.939 W/IgMetaConfig(23520): 	at com.instagram.user.model.User.A08(:47)
+05-15 22:07:06.939 W/IgMetaConfig(23520): 	at X.3gD.invoke(:441)
+05-15 22:07:06.939 W/IgMetaConfig(23520): 	at X.3cU.apply(:4)
+05-15 22:07:06.939 W/IgMetaConfig(23520): 	at java.util.concurrent.ConcurrentMap.computeIfAbsent(ConcurrentMap.java:332)
+05-15 22:07:06.939 W/IgMetaConfig(23520): 	at com.instagram.user.model.UserCache.A05(:64)
+05-15 22:07:06.939 W/IgMetaConfig(23520): 	at X.2AY.A02(:16)
+05-15 22:07:06.939 W/IgMetaConfig(23520): 	at X.2AY.A01(:20)
+05-15 22:07:06.939 W/IgMetaConfig(23520): 	at X.2AY.A00(:1)
+05-15 22:07:06.939 W/IgMetaConfig(23520): 	at X.2cX.<init>(:172)
+05-15 22:07:06.939 W/IgMetaConfig(23520): 	at X.3dF.invoke(:690)
+05-15 22:07:06.939 W/IgMetaConfig(23520): 	at X.258.getValue(:25)
+05-15 22:07:06.939 W/IgMetaConfig(23520): 	at X.2cY.A00(:4)
+05-15 22:07:06.939 W/IgMetaConfig(23520): 	at X.2cY.A0A(:4)
+05-15 22:07:06.939 W/IgMetaConfig(23520): 	at X.1uA.A04(:83)
+05-15 22:07:06.939 W/IgMetaConfig(23520): 	at X.1ua.A02(:39)
+05-15 22:07:06.939 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A01(:84373)
+05-15 22:07:06.939 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A08(:895)
+05-15 22:07:06.939 W/IgMetaConfig(23520): 	at com.instagram.barcelona.app.BarcelonaAppShell.onCreate(:710)
+05-15 22:07:06.939 W/IgMetaConfig(23520): 	at android.app.Instrumentation.callApplicationOnCreate(Instrumentation.java:1261)
+05-15 22:07:06.939 W/IgMetaConfig(23520): 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:7226)
+05-15 22:07:06.939 W/IgMetaConfig(23520): 	at android.app.ActivityThread.access$1800(ActivityThread.java:284)
+05-15 22:07:06.939 W/IgMetaConfig(23520): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2284)
+05-15 22:07:06.939 W/IgMetaConfig(23520): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+05-15 22:07:06.939 W/IgMetaConfig(23520): 	at android.os.Looper.loopOnce(Looper.java:233)
+05-15 22:07:06.939 W/IgMetaConfig(23520): 	at android.os.Looper.loop(Looper.java:334)
+05-15 22:07:06.939 W/IgMetaConfig(23520): 	at android.app.ActivityThread.main(ActivityThread.java:8396)
+05-15 22:07:06.939 W/IgMetaConfig(23520): 	at java.lang.reflect.Method.invoke(Native Method)
+05-15 22:07:06.939 W/IgMetaConfig(23520): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:582)
+05-15 22:07:06.939 W/IgMetaConfig(23520): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1068)
+05-15 22:07:06.939 W/SoLoader(23520): Loading live-tree-jni on the main thread
+05-15 22:07:06.940 W/SoLoader(23520): Loading live-tree-jni on the main thread
+05-15 22:07:06.940 W/SoLoader(23520): Loading pando-jni on the main thread
+05-15 22:07:06.950 W/SoLoader(23520): Loading live-tree-jni on the main thread
+05-15 22:07:06.966 I/DGW     (23435): I[onStateChanged:168] StreamGroupConnectivityAwareNetworkLayer processing buffered requests
+05-15 22:07:06.967 W/SoLoader(23520): Loading bandwidth_estimator_jni on the main thread
+05-15 22:07:06.975 W/IgMetaConfig(23520): Could not obtain MC: null_factory 
+05-15 22:07:06.975 W/IgMetaConfig(23520): java.lang.RuntimeException: Could not obtain MC, call-site will receive default values
+05-15 22:07:06.975 W/IgMetaConfig(23520): 	at X.2dZ.A05(:4)
+05-15 22:07:06.975 W/IgMetaConfig(23520): 	at X.2dZ.A03(:7)
+05-15 22:07:06.975 W/IgMetaConfig(23520): 	at X.2dZ.A01(:2)
+05-15 22:07:06.975 W/IgMetaConfig(23520): 	at X.2kk.A00(:4)
+05-15 22:07:06.975 W/IgMetaConfig(23520): 	at X.1uw.A04(:174)
+05-15 22:07:06.975 W/IgMetaConfig(23520): 	at X.1ua.A02(:39)
+05-15 22:07:06.975 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A01(:84373)
+05-15 22:07:06.975 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A08(:895)
+05-15 22:07:06.975 W/IgMetaConfig(23520): 	at com.instagram.barcelona.app.BarcelonaAppShell.onCreate(:710)
+05-15 22:07:06.975 W/IgMetaConfig(23520): 	at android.app.Instrumentation.callApplicationOnCreate(Instrumentation.java:1261)
+05-15 22:07:06.975 W/IgMetaConfig(23520): 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:7226)
+05-15 22:07:06.975 W/IgMetaConfig(23520): 	at android.app.ActivityThread.access$1800(ActivityThread.java:284)
+05-15 22:07:06.975 W/IgMetaConfig(23520): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2284)
+05-15 22:07:06.975 W/IgMetaConfig(23520): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+05-15 22:07:06.975 W/IgMetaConfig(23520): 	at android.os.Looper.loopOnce(Looper.java:233)
+05-15 22:07:06.975 W/IgMetaConfig(23520): 	at android.os.Looper.loop(Looper.java:334)
+05-15 22:07:06.975 W/IgMetaConfig(23520): 	at android.app.ActivityThread.main(ActivityThread.java:8396)
+05-15 22:07:06.975 W/IgMetaConfig(23520): 	at java.lang.reflect.Method.invoke(Native Method)
+05-15 22:07:06.975 W/IgMetaConfig(23520): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:582)
+05-15 22:07:06.975 W/IgMetaConfig(23520): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1068)
+05-15 22:07:06.976 W/IgMetaConfig(23520): Could not obtain MC: null_factory 
+05-15 22:07:06.976 W/IgMetaConfig(23520): java.lang.RuntimeException: Could not obtain MC, call-site will receive default values
+05-15 22:07:06.976 W/IgMetaConfig(23520): 	at X.2dZ.A05(:4)
+05-15 22:07:06.976 W/IgMetaConfig(23520): 	at X.2dZ.A03(:7)
+05-15 22:07:06.976 W/IgMetaConfig(23520): 	at X.2dZ.A01(:2)
+05-15 22:07:06.976 W/IgMetaConfig(23520): 	at X.1uw.A04(:242)
+05-15 22:07:06.976 W/IgMetaConfig(23520): 	at X.1ua.A02(:39)
+05-15 22:07:06.976 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A01(:84373)
+05-15 22:07:06.976 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A08(:895)
+05-15 22:07:06.976 W/IgMetaConfig(23520): 	at com.instagram.barcelona.app.BarcelonaAppShell.onCreate(:710)
+05-15 22:07:06.976 W/IgMetaConfig(23520): 	at android.app.Instrumentation.callApplicationOnCreate(Instrumentation.java:1261)
+05-15 22:07:06.976 W/IgMetaConfig(23520): 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:7226)
+05-15 22:07:06.976 W/IgMetaConfig(23520): 	at android.app.ActivityThread.access$1800(ActivityThread.java:284)
+05-15 22:07:06.976 W/IgMetaConfig(23520): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2284)
+05-15 22:07:06.976 W/IgMetaConfig(23520): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+05-15 22:07:06.976 W/IgMetaConfig(23520): 	at android.os.Looper.loopOnce(Looper.java:233)
+05-15 22:07:06.976 W/IgMetaConfig(23520): 	at android.os.Looper.loop(Looper.java:334)
+05-15 22:07:06.976 W/IgMetaConfig(23520): 	at android.app.ActivityThread.main(ActivityThread.java:8396)
+05-15 22:07:06.976 W/IgMetaConfig(23520): 	at java.lang.reflect.Method.invoke(Native Method)
+05-15 22:07:06.976 W/IgMetaConfig(23520): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:582)
+05-15 22:07:06.976 W/IgMetaConfig(23520): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1068)
+05-15 22:07:06.976 W/IgMetaConfig(23520): Could not obtain MC: null_factory 
+05-15 22:07:06.976 W/IgMetaConfig(23520): java.lang.RuntimeException: Could not obtain MC, call-site will receive default values
+05-15 22:07:06.976 W/IgMetaConfig(23520): 	at X.2dZ.A05(:4)
+05-15 22:07:06.976 W/IgMetaConfig(23520): 	at X.2dZ.A03(:7)
+05-15 22:07:06.976 W/IgMetaConfig(23520): 	at X.2dZ.A01(:2)
+05-15 22:07:06.976 W/IgMetaConfig(23520): 	at X.1uw.A04(:257)
+05-15 22:07:06.976 W/IgMetaConfig(23520): 	at X.1ua.A02(:39)
+05-15 22:07:06.976 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A01(:84373)
+05-15 22:07:06.976 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A08(:895)
+05-15 22:07:06.976 W/IgMetaConfig(23520): 	at com.instagram.barcelona.app.BarcelonaAppShell.onCreate(:710)
+05-15 22:07:06.976 W/IgMetaConfig(23520): 	at android.app.Instrumentation.callApplicationOnCreate(Instrumentation.java:1261)
+05-15 22:07:06.976 W/IgMetaConfig(23520): 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:7226)
+05-15 22:07:06.976 W/IgMetaConfig(23520): 	at android.app.ActivityThread.access$1800(ActivityThread.java:284)
+05-15 22:07:06.976 W/IgMetaConfig(23520): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2284)
+05-15 22:07:06.976 W/IgMetaConfig(23520): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+05-15 22:07:06.976 W/IgMetaConfig(23520): 	at android.os.Looper.loopOnce(Looper.java:233)
+05-15 22:07:06.976 W/IgMetaConfig(23520): 	at android.os.Looper.loop(Looper.java:334)
+05-15 22:07:06.976 W/IgMetaConfig(23520): 	at android.app.ActivityThread.main(ActivityThread.java:8396)
+05-15 22:07:06.976 W/IgMetaConfig(23520): 	at java.lang.reflect.Method.invoke(Native Method)
+05-15 22:07:06.976 W/IgMetaConfig(23520): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:582)
+05-15 22:07:06.976 W/IgMetaConfig(23520): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1068)
+05-15 22:07:06.977 W/IgMetaConfig(23520): Could not obtain MC: null_factory 
+05-15 22:07:06.977 W/IgMetaConfig(23520): java.lang.RuntimeException: Could not obtain MC, call-site will receive default values
+05-15 22:07:06.977 W/IgMetaConfig(23520): 	at X.2dZ.A05(:4)
+05-15 22:07:06.977 W/IgMetaConfig(23520): 	at X.2dZ.A03(:7)
+05-15 22:07:06.977 W/IgMetaConfig(23520): 	at X.2dZ.A01(:2)
+05-15 22:07:06.977 W/IgMetaConfig(23520): 	at X.2kk.A00(:4)
+05-15 22:07:06.977 W/IgMetaConfig(23520): 	at X.1uw.A04(:300)
+05-15 22:07:06.977 W/IgMetaConfig(23520): 	at X.1ua.A02(:39)
+05-15 22:07:06.977 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A01(:84373)
+05-15 22:07:06.977 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A08(:895)
+05-15 22:07:06.977 W/IgMetaConfig(23520): 	at com.instagram.barcelona.app.BarcelonaAppShell.onCreate(:710)
+05-15 22:07:06.977 W/IgMetaConfig(23520): 	at android.app.Instrumentation.callApplicationOnCreate(Instrumentation.java:1261)
+05-15 22:07:06.977 W/IgMetaConfig(23520): 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:7226)
+05-15 22:07:06.977 W/IgMetaConfig(23520): 	at android.app.ActivityThread.access$1800(ActivityThread.java:284)
+05-15 22:07:06.977 W/IgMetaConfig(23520): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2284)
+05-15 22:07:06.977 W/IgMetaConfig(23520): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+05-15 22:07:06.977 W/IgMetaConfig(23520): 	at android.os.Looper.loopOnce(Looper.java:233)
+05-15 22:07:06.977 W/IgMetaConfig(23520): 	at android.os.Looper.loop(Looper.java:334)
+05-15 22:07:06.977 W/IgMetaConfig(23520): 	at android.app.ActivityThread.main(ActivityThread.java:8396)
+05-15 22:07:06.977 W/IgMetaConfig(23520): 	at java.lang.reflect.Method.invoke(Native Method)
+05-15 22:07:06.977 W/IgMetaConfig(23520): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:582)
+05-15 22:07:06.977 W/IgMetaConfig(23520): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1068)
+05-15 22:07:06.977 W/IgMetaConfig(23520): Could not obtain MC: null_factory 
+05-15 22:07:06.977 W/IgMetaConfig(23520): java.lang.RuntimeException: Could not obtain MC, call-site will receive default values
+05-15 22:07:06.977 W/IgMetaConfig(23520): 	at X.2dZ.A05(:4)
+05-15 22:07:06.977 W/IgMetaConfig(23520): 	at X.2dZ.A03(:7)
+05-15 22:07:06.977 W/IgMetaConfig(23520): 	at X.2dZ.A01(:2)
+05-15 22:07:06.977 W/IgMetaConfig(23520): 	at X.1uw.A04(:318)
+05-15 22:07:06.977 W/IgMetaConfig(23520): 	at X.1ua.A02(:39)
+05-15 22:07:06.977 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A01(:84373)
+05-15 22:07:06.977 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A08(:895)
+05-15 22:07:06.977 W/IgMetaConfig(23520): 	at com.instagram.barcelona.app.BarcelonaAppShell.onCreate(:710)
+05-15 22:07:06.977 W/IgMetaConfig(23520): 	at android.app.Instrumentation.callApplicationOnCreate(Instrumentation.java:1261)
+05-15 22:07:06.977 W/IgMetaConfig(23520): 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:7226)
+05-15 22:07:06.977 W/IgMetaConfig(23520): 	at android.app.ActivityThread.access$1800(ActivityThread.java:284)
+05-15 22:07:06.977 W/IgMetaConfig(23520): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2284)
+05-15 22:07:06.977 W/IgMetaConfig(23520): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+05-15 22:07:06.977 W/IgMetaConfig(23520): 	at android.os.Looper.loopOnce(Looper.java:233)
+05-15 22:07:06.977 W/IgMetaConfig(23520): 	at android.os.Looper.loop(Looper.java:334)
+05-15 22:07:06.977 W/IgMetaConfig(23520): 	at android.app.ActivityThread.main(ActivityThread.java:8396)
+05-15 22:07:06.977 W/IgMetaConfig(23520): 	at java.lang.reflect.Method.invoke(Native Method)
+05-15 22:07:06.977 W/IgMetaConfig(23520): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:582)
+05-15 22:07:06.977 W/IgMetaConfig(23520): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1068)
+05-15 22:07:06.978 W/IgMetaConfig(23520): Could not obtain MC: null_factory 
+05-15 22:07:06.978 W/IgMetaConfig(23520): java.lang.RuntimeException: Could not obtain MC, call-site will receive default values
+05-15 22:07:06.978 W/IgMetaConfig(23520): 	at X.2dZ.A05(:4)
+05-15 22:07:06.978 W/IgMetaConfig(23520): 	at X.2dZ.A03(:7)
+05-15 22:07:06.978 W/IgMetaConfig(23520): 	at X.2dZ.A01(:2)
+05-15 22:07:06.978 W/IgMetaConfig(23520): 	at X.2lg.A00(:9)
+05-15 22:07:06.978 W/IgMetaConfig(23520): 	at X.2lc.run(:2)
+05-15 22:07:06.978 W/IgMetaConfig(23520): 	at X.1od.run(:25)
+05-15 22:07:06.978 W/IgMetaConfig(23520): 	at X.1od.run(:25)
+05-15 22:07:06.978 W/IgMetaConfig(23520): 	at X.1ob.A00(:110)
+05-15 22:07:06.978 W/IgMetaConfig(23520): 	at X.1ob.run(:136)
+05-15 22:07:06.978 W/IgMetaConfig(23520): Could not obtain MC: null_factory 
+05-15 22:07:06.978 W/IgMetaConfig(23520): java.lang.RuntimeException: Could not obtain MC, call-site will receive default values
+05-15 22:07:06.978 W/IgMetaConfig(23520): 	at X.2dZ.A05(:4)
+05-15 22:07:06.978 W/IgMetaConfig(23520): 	at X.2dZ.A03(:7)
+05-15 22:07:06.978 W/IgMetaConfig(23520): 	at X.2dZ.A01(:2)
+05-15 22:07:06.978 W/IgMetaConfig(23520): 	at X.2lg.A00(:30)
+05-15 22:07:06.978 W/IgMetaConfig(23520): 	at X.2lc.run(:2)
+05-15 22:07:06.978 W/IgMetaConfig(23520): 	at X.1od.run(:25)
+05-15 22:07:06.978 W/IgMetaConfig(23520): 	at X.1od.run(:25)
+05-15 22:07:06.978 W/IgMetaConfig(23520): 	at X.1ob.A00(:110)
+05-15 22:07:06.978 W/IgMetaConfig(23520): 	at X.1ob.run(:136)
+05-15 22:07:06.989 W/IgMetaConfig(23520): Could not obtain MC: null_factory 
+05-15 22:07:06.989 W/IgMetaConfig(23520): java.lang.RuntimeException: Could not obtain MC, call-site will receive default values
+05-15 22:07:06.989 W/IgMetaConfig(23520): 	at X.2dZ.A05(:4)
+05-15 22:07:06.989 W/IgMetaConfig(23520): 	at X.2dZ.A03(:7)
+05-15 22:07:06.989 W/IgMetaConfig(23520): 	at X.2dZ.A01(:2)
+05-15 22:07:06.989 W/IgMetaConfig(23520): 	at X.2nr.<init>(:70)
+05-15 22:07:06.989 W/IgMetaConfig(23520): 	at X.2ku.get(:206)
+05-15 22:07:06.989 W/IgMetaConfig(23520): 	at X.2kx.A00(:41)
+05-15 22:07:06.989 W/IgMetaConfig(23520): 	at X.1uw.C8Z(:2)
+05-15 22:07:06.989 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A01(:84376)
+05-15 22:07:06.989 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A08(:895)
+05-15 22:07:06.989 W/IgMetaConfig(23520): 	at com.instagram.barcelona.app.BarcelonaAppShell.onCreate(:710)
+05-15 22:07:06.989 W/IgMetaConfig(23520): 	at android.app.Instrumentation.callApplicationOnCreate(Instrumentation.java:1261)
+05-15 22:07:06.989 W/IgMetaConfig(23520): 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:7226)
+05-15 22:07:06.989 W/IgMetaConfig(23520): 	at android.app.ActivityThread.access$1800(ActivityThread.java:284)
+05-15 22:07:06.989 W/IgMetaConfig(23520): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2284)
+05-15 22:07:06.989 W/IgMetaConfig(23520): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+05-15 22:07:06.989 W/IgMetaConfig(23520): 	at android.os.Looper.loopOnce(Looper.java:233)
+05-15 22:07:06.989 W/IgMetaConfig(23520): 	at android.os.Looper.loop(Looper.java:334)
+05-15 22:07:06.989 W/IgMetaConfig(23520): 	at android.app.ActivityThread.main(ActivityThread.java:8396)
+05-15 22:07:06.989 W/IgMetaConfig(23520): 	at java.lang.reflect.Method.invoke(Native Method)
+05-15 22:07:06.989 W/IgMetaConfig(23520): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:582)
+05-15 22:07:06.989 W/IgMetaConfig(23520): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1068)
+05-15 22:07:06.990 W/IgMetaConfig(23520): Could not obtain MC: null_factory 
+05-15 22:07:06.990 W/IgMetaConfig(23520): java.lang.RuntimeException: Could not obtain MC, call-site will receive default values
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at X.2dZ.A05(:4)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at X.2dZ.A03(:7)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at X.2dZ.A01(:2)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at X.2nr.<init>(:87)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at X.2ku.get(:206)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at X.2kx.A00(:41)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at X.1uw.C8Z(:2)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A01(:84376)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A08(:895)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at com.instagram.barcelona.app.BarcelonaAppShell.onCreate(:710)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at android.app.Instrumentation.callApplicationOnCreate(Instrumentation.java:1261)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:7226)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at android.app.ActivityThread.access$1800(ActivityThread.java:284)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2284)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at android.os.Looper.loopOnce(Looper.java:233)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at android.os.Looper.loop(Looper.java:334)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at android.app.ActivityThread.main(ActivityThread.java:8396)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at java.lang.reflect.Method.invoke(Native Method)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:582)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1068)
+05-15 22:07:06.990 W/IgMetaConfig(23520): Could not obtain MC: null_factory 
+05-15 22:07:06.990 W/IgMetaConfig(23520): java.lang.RuntimeException: Could not obtain MC, call-site will receive default values
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at X.2dZ.A05(:4)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at X.2dZ.A03(:7)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at X.2dZ.A01(:2)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at X.2nr.<init>(:104)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at X.2ku.get(:206)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at X.2kx.A00(:41)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at X.1uw.C8Z(:2)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A01(:84376)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A08(:895)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at com.instagram.barcelona.app.BarcelonaAppShell.onCreate(:710)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at android.app.Instrumentation.callApplicationOnCreate(Instrumentation.java:1261)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:7226)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at android.app.ActivityThread.access$1800(ActivityThread.java:284)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2284)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at android.os.Looper.loopOnce(Looper.java:233)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at android.os.Looper.loop(Looper.java:334)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at android.app.ActivityThread.main(ActivityThread.java:8396)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at java.lang.reflect.Method.invoke(Native Method)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:582)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1068)
+05-15 22:07:06.990 W/IgMetaConfig(23520): Could not obtain MC: null_factory 
+05-15 22:07:06.990 W/IgMetaConfig(23520): java.lang.RuntimeException: Could not obtain MC, call-site will receive default values
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at X.2dZ.A05(:4)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at X.2dZ.A03(:7)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at X.2dZ.A01(:2)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at X.2nr.<init>(:121)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at X.2ku.get(:206)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at X.2kx.A00(:41)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at X.1uw.C8Z(:2)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A01(:84376)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A08(:895)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at com.instagram.barcelona.app.BarcelonaAppShell.onCreate(:710)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at android.app.Instrumentation.callApplicationOnCreate(Instrumentation.java:1261)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:7226)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at android.app.ActivityThread.access$1800(ActivityThread.java:284)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2284)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at android.os.Looper.loopOnce(Looper.java:233)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at android.os.Looper.loop(Looper.java:334)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at android.app.ActivityThread.main(ActivityThread.java:8396)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at java.lang.reflect.Method.invoke(Native Method)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:582)
+05-15 22:07:06.990 W/IgMetaConfig(23520): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1068)
+05-15 22:07:06.991 W/IgMetaConfig(23520): Could not obtain MC: null_factory 
+05-15 22:07:06.991 W/IgMetaConfig(23520): java.lang.RuntimeException: Could not obtain MC, call-site will receive default values
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at X.2dZ.A05(:4)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at X.2dZ.A03(:7)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at X.2dZ.A01(:2)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at X.2nr.<init>(:138)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at X.2ku.get(:206)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at X.2kx.A00(:41)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at X.1uw.C8Z(:2)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A01(:84376)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A08(:895)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at com.instagram.barcelona.app.BarcelonaAppShell.onCreate(:710)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at android.app.Instrumentation.callApplicationOnCreate(Instrumentation.java:1261)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:7226)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at android.app.ActivityThread.access$1800(ActivityThread.java:284)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2284)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at android.os.Looper.loopOnce(Looper.java:233)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at android.os.Looper.loop(Looper.java:334)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at android.app.ActivityThread.main(ActivityThread.java:8396)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at java.lang.reflect.Method.invoke(Native Method)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:582)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1068)
+05-15 22:07:06.991 W/IgMetaConfig(23520): Could not obtain MC: null_factory 
+05-15 22:07:06.991 W/IgMetaConfig(23520): java.lang.RuntimeException: Could not obtain MC, call-site will receive default values
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at X.2dZ.A05(:4)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at X.2dZ.A03(:7)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at X.2dZ.A01(:2)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at X.2nr.<init>(:155)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at X.2ku.get(:206)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at X.2kx.A00(:41)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at X.1uw.C8Z(:2)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A01(:84376)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A08(:895)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at com.instagram.barcelona.app.BarcelonaAppShell.onCreate(:710)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at android.app.Instrumentation.callApplicationOnCreate(Instrumentation.java:1261)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:7226)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at android.app.ActivityThread.access$1800(ActivityThread.java:284)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2284)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at android.os.Looper.loopOnce(Looper.java:233)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at android.os.Looper.loop(Looper.java:334)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at android.app.ActivityThread.main(ActivityThread.java:8396)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at java.lang.reflect.Method.invoke(Native Method)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:582)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1068)
+05-15 22:07:06.991 W/IgMetaConfig(23520): Could not obtain MC: null_factory 
+05-15 22:07:06.991 W/IgMetaConfig(23520): java.lang.RuntimeException: Could not obtain MC, call-site will receive default values
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at X.2dZ.A05(:4)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at X.2dZ.A03(:7)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at X.2dZ.A01(:2)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at X.2nr.<init>(:172)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at X.2ku.get(:206)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at X.2kx.A00(:41)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at X.1uw.C8Z(:2)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A01(:84376)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A08(:895)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at com.instagram.barcelona.app.BarcelonaAppShell.onCreate(:710)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at android.app.Instrumentation.callApplicationOnCreate(Instrumentation.java:1261)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:7226)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at android.app.ActivityThread.access$1800(ActivityThread.java:284)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2284)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at android.os.Looper.loopOnce(Looper.java:233)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at android.os.Looper.loop(Looper.java:334)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at android.app.ActivityThread.main(ActivityThread.java:8396)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at java.lang.reflect.Method.invoke(Native Method)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:582)
+05-15 22:07:06.991 W/IgMetaConfig(23520): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1068)
+05-15 22:07:06.992 W/SoLoader(23520): Loading igtigon-jni on the main thread
+05-15 22:07:06.993 W/SoLoader(23520): Loading tigoninterceptors on the main thread
+05-15 22:07:06.994 W/IgMetaConfig(23520): Could not obtain MC: null_factory 
+05-15 22:07:06.994 W/IgMetaConfig(23520): java.lang.RuntimeException: Could not obtain MC, call-site will receive default values
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at X.2dZ.A05(:4)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at X.2dZ.A04(:7)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at X.2dZ.A00(:2)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at X.2pb.<init>(:64)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at X.2ov.A00(:25)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at X.2ku.get(:263)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at X.2kx.A00(:41)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at X.1uw.C8Z(:2)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A01(:84376)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A08(:895)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at com.instagram.barcelona.app.BarcelonaAppShell.onCreate(:710)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at android.app.Instrumentation.callApplicationOnCreate(Instrumentation.java:1261)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:7226)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at android.app.ActivityThread.access$1800(ActivityThread.java:284)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2284)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at android.os.Looper.loopOnce(Looper.java:233)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at android.os.Looper.loop(Looper.java:334)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at android.app.ActivityThread.main(ActivityThread.java:8396)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at java.lang.reflect.Method.invoke(Native Method)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:582)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1068)
+05-15 22:07:06.994 W/IgMetaConfig(23520): Could not obtain MC: null_factory 
+05-15 22:07:06.994 W/IgMetaConfig(23520): java.lang.RuntimeException: Could not obtain MC, call-site will receive default values
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at X.2dZ.A05(:4)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at X.2dZ.A04(:7)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at X.2dZ.A00(:2)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at X.2pe.<clinit>(:0)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at X.2pb.<init>(:79)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at X.2ov.A00(:25)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at X.2ku.get(:263)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at X.2kx.A00(:41)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at X.1uw.C8Z(:2)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A01(:84376)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A08(:895)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at com.instagram.barcelona.app.BarcelonaAppShell.onCreate(:710)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at android.app.Instrumentation.callApplicationOnCreate(Instrumentation.java:1261)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:7226)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at android.app.ActivityThread.access$1800(ActivityThread.java:284)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2284)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at android.os.Looper.loopOnce(Looper.java:233)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at android.os.Looper.loop(Looper.java:334)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at android.app.ActivityThread.main(ActivityThread.java:8396)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at java.lang.reflect.Method.invoke(Native Method)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:582)
+05-15 22:07:06.994 W/IgMetaConfig(23520): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1068)
+05-15 22:07:06.995 W/IgMetaConfig(23520): Could not obtain MC: null_factory 
+05-15 22:07:06.995 W/IgMetaConfig(23520): java.lang.RuntimeException: Could not obtain MC, call-site will receive default values
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at X.2dZ.A05(:4)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at X.2dZ.A04(:7)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at X.2dZ.A00(:2)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at X.2pe.<clinit>(:15)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at X.2pb.<init>(:79)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at X.2ov.A00(:25)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at X.2ku.get(:263)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at X.2kx.A00(:41)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at X.1uw.C8Z(:2)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A01(:84376)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A08(:895)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at com.instagram.barcelona.app.BarcelonaAppShell.onCreate(:710)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at android.app.Instrumentation.callApplicationOnCreate(Instrumentation.java:1261)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:7226)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at android.app.ActivityThread.access$1800(ActivityThread.java:284)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2284)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at android.os.Looper.loopOnce(Looper.java:233)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at android.os.Looper.loop(Looper.java:334)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at android.app.ActivityThread.main(ActivityThread.java:8396)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at java.lang.reflect.Method.invoke(Native Method)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:582)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1068)
+05-15 22:07:06.995 W/IgMetaConfig(23520): Could not obtain MC: null_factory 
+05-15 22:07:06.995 W/IgMetaConfig(23520): java.lang.RuntimeException: Could not obtain MC, call-site will receive default values
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at X.2dZ.A05(:4)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at X.2dZ.A04(:7)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at X.2dZ.A00(:2)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at X.2pe.<clinit>(:30)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at X.2pb.<init>(:79)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at X.2ov.A00(:25)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at X.2ku.get(:263)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at X.2kx.A00(:41)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at X.1uw.C8Z(:2)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A01(:84376)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A08(:895)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at com.instagram.barcelona.app.BarcelonaAppShell.onCreate(:710)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at android.app.Instrumentation.callApplicationOnCreate(Instrumentation.java:1261)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:7226)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at android.app.ActivityThread.access$1800(ActivityThread.java:284)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2284)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at android.os.Looper.loopOnce(Looper.java:233)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at android.os.Looper.loop(Looper.java:334)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at android.app.ActivityThread.main(ActivityThread.java:8396)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at java.lang.reflect.Method.invoke(Native Method)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:582)
+05-15 22:07:06.995 W/IgMetaConfig(23520): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1068)
+05-15 22:07:06.996 W/IgMetaConfig(23520): Could not obtain MC: null_factory 
+05-15 22:07:06.996 W/IgMetaConfig(23520): java.lang.RuntimeException: Could not obtain MC, call-site will receive default values
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at X.2dZ.A05(:4)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at X.2dZ.A04(:7)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at X.2dZ.A00(:2)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at X.2pe.<clinit>(:45)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at X.2pb.<init>(:79)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at X.2ov.A00(:25)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at X.2ku.get(:263)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at X.2kx.A00(:41)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at X.1uw.C8Z(:2)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A01(:84376)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A08(:895)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at com.instagram.barcelona.app.BarcelonaAppShell.onCreate(:710)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at android.app.Instrumentation.callApplicationOnCreate(Instrumentation.java:1261)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:7226)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at android.app.ActivityThread.access$1800(ActivityThread.java:284)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2284)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at android.os.Looper.loopOnce(Looper.java:233)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at android.os.Looper.loop(Looper.java:334)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at android.app.ActivityThread.main(ActivityThread.java:8396)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at java.lang.reflect.Method.invoke(Native Method)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:582)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1068)
+05-15 22:07:06.996 W/IgMetaConfig(23520): Could not obtain MC: null_factory 
+05-15 22:07:06.996 W/IgMetaConfig(23520): java.lang.RuntimeException: Could not obtain MC, call-site will receive default values
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at X.2dZ.A05(:4)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at X.2dZ.A04(:7)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at X.2dZ.A00(:2)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at X.2pe.<clinit>(:60)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at X.2pb.<init>(:79)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at X.2ov.A00(:25)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at X.2ku.get(:263)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at X.2kx.A00(:41)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at X.1uw.C8Z(:2)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A01(:84376)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A08(:895)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at com.instagram.barcelona.app.BarcelonaAppShell.onCreate(:710)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at android.app.Instrumentation.callApplicationOnCreate(Instrumentation.java:1261)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:7226)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at android.app.ActivityThread.access$1800(ActivityThread.java:284)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2284)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at android.os.Looper.loopOnce(Looper.java:233)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at android.os.Looper.loop(Looper.java:334)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at android.app.ActivityThread.main(ActivityThread.java:8396)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at java.lang.reflect.Method.invoke(Native Method)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:582)
+05-15 22:07:06.996 W/IgMetaConfig(23520): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1068)
+05-15 22:07:06.997 W/IgMetaConfig(23520): Could not obtain MC: null_factory 
+05-15 22:07:06.997 W/IgMetaConfig(23520): java.lang.RuntimeException: Could not obtain MC, call-site will receive default values
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at X.2dZ.A05(:4)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at X.2dZ.A04(:7)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at X.2dZ.A00(:2)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at X.2pe.<clinit>(:75)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at X.2pb.<init>(:79)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at X.2ov.A00(:25)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at X.2ku.get(:263)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at X.2kx.A00(:41)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at X.1uw.C8Z(:2)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A01(:84376)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A08(:895)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at com.instagram.barcelona.app.BarcelonaAppShell.onCreate(:710)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at android.app.Instrumentation.callApplicationOnCreate(Instrumentation.java:1261)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:7226)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at android.app.ActivityThread.access$1800(ActivityThread.java:284)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2284)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at android.os.Looper.loopOnce(Looper.java:233)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at android.os.Looper.loop(Looper.java:334)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at android.app.ActivityThread.main(ActivityThread.java:8396)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at java.lang.reflect.Method.invoke(Native Method)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:582)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1068)
+05-15 22:07:06.997 W/IgMetaConfig(23520): Could not obtain MC: null_factory 
+05-15 22:07:06.997 W/IgMetaConfig(23520): java.lang.RuntimeException: Could not obtain MC, call-site will receive default values
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at X.2dZ.A05(:4)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at X.2dZ.A04(:7)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at X.2dZ.A00(:2)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at X.2pe.<clinit>(:90)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at X.2pb.<init>(:79)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at X.2ov.A00(:25)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at X.2ku.get(:263)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at X.2kx.A00(:41)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at X.1uw.C8Z(:2)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A01(:84376)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A08(:895)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at com.instagram.barcelona.app.BarcelonaAppShell.onCreate(:710)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at android.app.Instrumentation.callApplicationOnCreate(Instrumentation.java:1261)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:7226)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at android.app.ActivityThread.access$1800(ActivityThread.java:284)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2284)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at android.os.Looper.loopOnce(Looper.java:233)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at android.os.Looper.loop(Looper.java:334)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at android.app.ActivityThread.main(ActivityThread.java:8396)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at java.lang.reflect.Method.invoke(Native Method)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:582)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1068)
+05-15 22:07:06.997 W/IgMetaConfig(23520): Could not obtain MC: null_factory 
+05-15 22:07:06.997 W/IgMetaConfig(23520): java.lang.RuntimeException: Could not obtain MC, call-site will receive default values
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at X.2dZ.A05(:4)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at X.2dZ.A04(:7)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at X.2dZ.A00(:2)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at X.2pe.<clinit>(:105)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at X.2pb.<init>(:79)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at X.2ov.A00(:25)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at X.2ku.get(:263)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at X.2kx.A00(:41)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at X.1uw.C8Z(:2)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A01(:84376)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A08(:895)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at com.instagram.barcelona.app.BarcelonaAppShell.onCreate(:710)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at android.app.Instrumentation.callApplicationOnCreate(Instrumentation.java:1261)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:7226)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at android.app.ActivityThread.access$1800(ActivityThread.java:284)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2284)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at android.os.Looper.loopOnce(Looper.java:233)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at android.os.Looper.loop(Looper.java:334)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at android.app.ActivityThread.main(ActivityThread.java:8396)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at java.lang.reflect.Method.invoke(Native Method)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:582)
+05-15 22:07:06.997 W/IgMetaConfig(23520): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1068)
+05-15 22:07:06.998 W/IgMetaConfig(23520): Could not obtain MC: null_factory 
+05-15 22:07:06.998 W/IgMetaConfig(23520): java.lang.RuntimeException: Could not obtain MC, call-site will receive default values
+05-15 22:07:06.998 W/IgMetaConfig(23520): 	at X.2dZ.A05(:4)
+05-15 22:07:06.998 W/IgMetaConfig(23520): 	at X.2dZ.A04(:7)
+05-15 22:07:06.998 W/IgMetaConfig(23520): 	at X.2dZ.A00(:2)
+05-15 22:07:06.998 W/IgMetaConfig(23520): 	at X.2pe.<clinit>(:121)
+05-15 22:07:06.998 W/IgMetaConfig(23520): 	at X.2pb.<init>(:79)
+05-15 22:07:06.998 W/IgMetaConfig(23520): 	at X.2ov.A00(:25)
+05-15 22:07:06.998 W/IgMetaConfig(23520): 	at X.2ku.get(:263)
+05-15 22:07:06.998 W/IgMetaConfig(23520): 	at X.2kx.A00(:41)
+05-15 22:07:06.998 W/IgMetaConfig(23520): 	at X.1uw.C8Z(:2)
+05-15 22:07:06.998 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A01(:84376)
+05-15 22:07:06.998 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A08(:895)
+05-15 22:07:06.998 W/IgMetaConfig(23520): 	at com.instagram.barcelona.app.BarcelonaAppShell.onCreate(:710)
+05-15 22:07:06.998 W/IgMetaConfig(23520): 	at android.app.Instrumentation.callApplicationOnCreate(Instrumentation.java:1261)
+05-15 22:07:06.998 W/IgMetaConfig(23520): 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:7226)
+05-15 22:07:06.998 W/IgMetaConfig(23520): 	at android.app.ActivityThread.access$1800(ActivityThread.java:284)
+05-15 22:07:06.998 W/IgMetaConfig(23520): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2284)
+05-15 22:07:06.998 W/IgMetaConfig(23520): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+05-15 22:07:06.998 W/IgMetaConfig(23520): 	at android.os.Looper.loopOnce(Looper.java:233)
+05-15 22:07:06.998 W/IgMetaConfig(23520): 	at android.os.Looper.loop(Looper.java:334)
+05-15 22:07:06.998 W/IgMetaConfig(23520): 	at android.app.ActivityThread.main(ActivityThread.java:8396)
+05-15 22:07:06.998 W/IgMetaConfig(23520): 	at java.lang.reflect.Method.invoke(Native Method)
+05-15 22:07:06.998 W/IgMetaConfig(23520): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:582)
+05-15 22:07:06.998 W/IgMetaConfig(23520): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1068)
+05-15 22:07:06.998 W/SoLoader(23520): Loading tigonzerocodeattestationrequestinterceptor on the main thread
+05-15 22:07:06.998 W/SoLoader(23520): Loading tntstigonrequestint on the main thread
+05-15 22:07:06.999 W/SoLoader(23520): Loading tigonxplatobserversholder on the main thread
+05-15 22:07:06.999 W/SoLoader(23520): Loading messengermcppluginregistryintegrationjni on the main thread
+05-15 22:07:07.002 W/SoLoader(23520): Loading tigonmns-jni on the main thread
+05-15 22:07:07.010 W/SoLoader(23520): Loading tigonmns-jni on the main thread
+05-15 22:07:07.010 W/SoLoader(23520): Loading mnscertificateverifier on the main thread
+05-15 22:07:07.032 W/SoLoader(23520): Loading xanalyticsadapter-jni on the main thread
+05-15 22:07:07.033 W/IgMetaConfig(23520): Could not obtain MC: null_factory 
+05-15 22:07:07.033 W/IgMetaConfig(23520): java.lang.RuntimeException: Could not obtain MC, call-site will receive default values
+05-15 22:07:07.033 W/IgMetaConfig(23520): 	at X.2dZ.A05(:4)
+05-15 22:07:07.033 W/IgMetaConfig(23520): 	at X.2dZ.A03(:7)
+05-15 22:07:07.033 W/IgMetaConfig(23520): 	at X.2dZ.A01(:2)
+05-15 22:07:07.033 W/IgMetaConfig(23520): 	at X.2rh.A00(:8)
+05-15 22:07:07.033 W/IgMetaConfig(23520): 	at X.2lc.run(:5)
+05-15 22:07:07.033 W/IgMetaConfig(23520): 	at X.1od.run(:25)
+05-15 22:07:07.033 W/IgMetaConfig(23520): 	at X.1od.run(:25)
+05-15 22:07:07.033 W/IgMetaConfig(23520): 	at X.1ob.A00(:110)
+05-15 22:07:07.033 W/IgMetaConfig(23520): 	at X.1ob.run(:136)
+05-15 22:07:07.036 W/SoLoader(23520): Loading jniexecutors on the main thread
+05-15 22:07:07.037 W/SoLoader(23520): Loading tigonjni on the main thread
+05-15 22:07:07.037 W/SoLoader(23520): Loading tigonobserver on the main thread
+05-15 22:07:07.038 E/QPLProvider(23520): QuickPerformanceLogger instance wasn't installed in provider, returning noop. Please call QuickPerformanceLoggerProvider.setQuickPerformanceLogger() before getting the instance.
+05-15 22:07:07.038 E/QPLProvider(23520): java.lang.IllegalStateException: No QPL instance provided
+05-15 22:07:07.038 E/QPLProvider(23520): 	at com.facebook.quicklog.QuickPerformanceLoggerProvider.getQPLInstance(:35)
+05-15 22:07:07.038 E/QPLProvider(23520): 	at com.facebook.quicklog.QuickPerformanceLoggerNativeProvider.getQPLInstance(:0)
+05-15 22:07:07.038 E/QPLProvider(23520): 	at com.facebook.common.jniexecutors.NativeRunnable.nativeRun(Native Method)
+05-15 22:07:07.038 E/QPLProvider(23520): 	at com.facebook.common.jniexecutors.NativeRunnable.run(:8)
+05-15 22:07:07.038 E/QPLProvider(23520): 	at com.facebook.common.jniexecutors.PooledNativeRunnable.run(:0)
+05-15 22:07:07.038 E/QPLProvider(23520): 	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:462)
+05-15 22:07:07.038 E/QPLProvider(23520): 	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+05-15 22:07:07.038 E/QPLProvider(23520): 	at java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:301)
+05-15 22:07:07.038 E/QPLProvider(23520): 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1167)
+05-15 22:07:07.038 E/QPLProvider(23520): 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:641)
+05-15 22:07:07.038 E/QPLProvider(23520): 	at java.lang.Thread.run(Thread.java:922)
+05-15 22:07:07.045 W/IgMetaConfig(23520): Could not obtain MC: null_factory 
+05-15 22:07:07.045 W/IgMetaConfig(23520): java.lang.RuntimeException: Could not obtain MC, call-site will receive default values
+05-15 22:07:07.045 W/IgMetaConfig(23520): 	at X.2dZ.A05(:4)
+05-15 22:07:07.045 W/IgMetaConfig(23520): 	at X.2dZ.A03(:7)
+05-15 22:07:07.045 W/IgMetaConfig(23520): 	at X.2dZ.A01(:2)
+05-15 22:07:07.045 W/IgMetaConfig(23520): 	at X.2ku.get(:404)
+05-15 22:07:07.045 W/IgMetaConfig(23520): 	at X.2kx.A00(:41)
+05-15 22:07:07.045 W/IgMetaConfig(23520): 	at X.1uw.C8Z(:2)
+05-15 22:07:07.045 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A01(:84376)
+05-15 22:07:07.045 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A08(:895)
+05-15 22:07:07.045 W/IgMetaConfig(23520): 	at com.instagram.barcelona.app.BarcelonaAppShell.onCreate(:710)
+05-15 22:07:07.045 W/IgMetaConfig(23520): 	at android.app.Instrumentation.callApplicationOnCreate(Instrumentation.java:1261)
+05-15 22:07:07.045 W/IgMetaConfig(23520): 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:7226)
+05-15 22:07:07.045 W/IgMetaConfig(23520): 	at android.app.ActivityThread.access$1800(ActivityThread.java:284)
+05-15 22:07:07.045 W/IgMetaConfig(23520): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2284)
+05-15 22:07:07.045 W/IgMetaConfig(23520): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+05-15 22:07:07.045 W/IgMetaConfig(23520): 	at android.os.Looper.loopOnce(Looper.java:233)
+05-15 22:07:07.045 W/IgMetaConfig(23520): 	at android.os.Looper.loop(Looper.java:334)
+05-15 22:07:07.045 W/IgMetaConfig(23520): 	at android.app.ActivityThread.main(ActivityThread.java:8396)
+05-15 22:07:07.045 W/IgMetaConfig(23520): 	at java.lang.reflect.Method.invoke(Native Method)
+05-15 22:07:07.045 W/IgMetaConfig(23520): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:582)
+05-15 22:07:07.045 W/IgMetaConfig(23520): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1068)
+05-15 22:07:07.050 W/IgMetaConfig(23520): Could not obtain MC: null_factory 
+05-15 22:07:07.050 W/IgMetaConfig(23520): java.lang.RuntimeException: Could not obtain MC, call-site will receive default values
+05-15 22:07:07.050 W/IgMetaConfig(23520): 	at X.2dZ.A05(:4)
+05-15 22:07:07.050 W/IgMetaConfig(23520): 	at X.2dZ.A03(:7)
+05-15 22:07:07.050 W/IgMetaConfig(23520): 	at X.2dZ.A01(:2)
+05-15 22:07:07.050 W/IgMetaConfig(23520): 	at X.2ku.get(:544)
+05-15 22:07:07.050 W/IgMetaConfig(23520): 	at X.2kx.A00(:41)
+05-15 22:07:07.050 W/IgMetaConfig(23520): 	at X.1uw.C8Z(:2)
+05-15 22:07:07.050 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A01(:84376)
+05-15 22:07:07.050 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A08(:895)
+05-15 22:07:07.050 W/IgMetaConfig(23520): 	at com.instagram.barcelona.app.BarcelonaAppShell.onCreate(:710)
+05-15 22:07:07.050 W/IgMetaConfig(23520): 	at android.app.Instrumentation.callApplicationOnCreate(Instrumentation.java:1261)
+05-15 22:07:07.050 W/IgMetaConfig(23520): 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:7226)
+05-15 22:07:07.050 W/IgMetaConfig(23520): 	at android.app.ActivityThread.access$1800(ActivityThread.java:284)
+05-15 22:07:07.050 W/IgMetaConfig(23520): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2284)
+05-15 22:07:07.050 W/IgMetaConfig(23520): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+05-15 22:07:07.050 W/IgMetaConfig(23520): 	at android.os.Looper.loopOnce(Looper.java:233)
+05-15 22:07:07.050 W/IgMetaConfig(23520): 	at android.os.Looper.loop(Looper.java:334)
+05-15 22:07:07.050 W/IgMetaConfig(23520): 	at android.app.ActivityThread.main(ActivityThread.java:8396)
+05-15 22:07:07.050 W/IgMetaConfig(23520): 	at java.lang.reflect.Method.invoke(Native Method)
+05-15 22:07:07.050 W/IgMetaConfig(23520): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:582)
+05-15 22:07:07.050 W/IgMetaConfig(23520): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1068)
+05-15 22:07:07.053 W/IgMetaConfig(23520): Could not obtain MC: null_factory 
+05-15 22:07:07.053 W/IgMetaConfig(23520): java.lang.RuntimeException: Could not obtain MC, call-site will receive default values
+05-15 22:07:07.053 W/IgMetaConfig(23520): 	at X.2dZ.A05(:4)
+05-15 22:07:07.053 W/IgMetaConfig(23520): 	at X.2dZ.A03(:7)
+05-15 22:07:07.053 W/IgMetaConfig(23520): 	at X.2dZ.A01(:2)
+05-15 22:07:07.053 W/IgMetaConfig(23520): 	at X.2ky.run(:167)
+05-15 22:07:07.053 W/IgMetaConfig(23520): 	at X.1od.run(:25)
+05-15 22:07:07.053 W/IgMetaConfig(23520): 	at X.2gi.run(:16)
+05-15 22:07:07.053 W/IgMetaConfig(23520): 	at X.1od.run(:25)
+05-15 22:07:07.053 W/IgMetaConfig(23520): 	at X.1od.run(:25)
+05-15 22:07:07.053 W/IgMetaConfig(23520): 	at X.1ob.A00(:110)
+05-15 22:07:07.053 W/IgMetaConfig(23520): 	at X.1ob.run(:136)
+05-15 22:07:07.071 W/SoLoader(23520): Loading mobileconfig-jni on the main thread
+05-15 22:07:07.088 W/IgMetaConfig(23520): Could not obtain MC: not_user_session session=X.3hM@8cb36c1
+05-15 22:07:07.088 W/IgMetaConfig(23520): java.lang.RuntimeException: Could not obtain MC, call-site will receive default values
+05-15 22:07:07.088 W/IgMetaConfig(23520): 	at X.2dZ.A05(:4)
+05-15 22:07:07.088 W/IgMetaConfig(23520): 	at X.2dZ.A03(:7)
+05-15 22:07:07.088 W/IgMetaConfig(23520): 	at X.2dZ.A01(:2)
+05-15 22:07:07.088 W/IgMetaConfig(23520): 	at X.1Zz.A00(:8)
+05-15 22:07:07.088 W/IgMetaConfig(23520): 	at X.1Zz.A01(:2)
+05-15 22:07:07.088 W/IgMetaConfig(23520): 	at X.3ad.A00(:8)
+05-15 22:07:07.088 W/IgMetaConfig(23520): 	at X.3aZ.<init>(:19)
+05-15 22:07:07.088 W/IgMetaConfig(23520): 	at X.3fW.invoke(:1435)
+05-15 22:07:07.088 W/IgMetaConfig(23520): 	at X.258.getValue(:25)
+05-15 22:07:07.088 W/IgMetaConfig(23520): 	at X.3fW.invoke(:1449)
+05-15 22:07:07.088 W/IgMetaConfig(23520): 	at X.2hb.A05(:32)
+05-15 22:07:07.088 W/IgMetaConfig(23520): 	at X.1uz.A04(:197)
+05-15 22:07:07.088 W/IgMetaConfig(23520): 	at X.1ua.A02(:39)
+05-15 22:07:07.088 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A01(:84373)
+05-15 22:07:07.088 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A08(:895)
+05-15 22:07:07.088 W/IgMetaConfig(23520): 	at com.instagram.barcelona.app.BarcelonaAppShell.onCreate(:710)
+05-15 22:07:07.088 W/IgMetaConfig(23520): 	at android.app.Instrumentation.callApplicationOnCreate(Instrumentation.java:1261)
+05-15 22:07:07.088 W/IgMetaConfig(23520): 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:7226)
+05-15 22:07:07.088 W/IgMetaConfig(23520): 	at android.app.ActivityThread.access$1800(ActivityThread.java:284)
+05-15 22:07:07.088 W/IgMetaConfig(23520): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2284)
+05-15 22:07:07.088 W/IgMetaConfig(23520): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+05-15 22:07:07.088 W/IgMetaConfig(23520): 	at android.os.Looper.loopOnce(Looper.java:233)
+05-15 22:07:07.088 W/IgMetaConfig(23520): 	at android.os.Looper.loop(Looper.java:334)
+05-15 22:07:07.088 W/IgMetaConfig(23520): 	at android.app.ActivityThread.main(ActivityThread.java:8396)
+05-15 22:07:07.088 W/IgMetaConfig(23520): 	at java.lang.reflect.Method.invoke(Native Method)
+05-15 22:07:07.088 W/IgMetaConfig(23520): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:582)
+05-15 22:07:07.088 W/IgMetaConfig(23520): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1068)
+05-15 22:07:07.089 W/SoLoader(23520): Loading mobileconfig-jni on the main thread
+05-15 22:07:07.090 W/SoLoader(23520): Loading mobileconfig-stub-funcs on the main thread
+05-15 22:07:07.102 W/SoLoader(23520): Loading mobileconfig-stub-funcs on the main thread
+05-15 22:07:07.134 W/QPLConfig(23520): failed to load config
+05-15 22:07:07.134 W/QPLConfig(23520): java.io.FileNotFoundException: /data/user/0/com.instagram.barcelona/app_qpl/qpl_sampling_config_v2.null: open failed: ENOENT (No such file or directory)
+05-15 22:07:07.134 W/QPLConfig(23520): 	at libcore.io.IoBridge.open(IoBridge.java:575)
+05-15 22:07:07.134 W/QPLConfig(23520): 	at java.io.FileInputStream.<init>(FileInputStream.java:160)
+05-15 22:07:07.134 W/QPLConfig(23520): 	at X.3ly.A00(:35)
+05-15 22:07:07.134 W/QPLConfig(23520): 	at X.2Uy.run(:51)
+05-15 22:07:07.134 W/QPLConfig(23520): 	at X.2gg.run(:2)
+05-15 22:07:07.134 W/QPLConfig(23520): 	at X.1od.run(:25)
+05-15 22:07:07.134 W/QPLConfig(23520): 	at X.2pa.run(:2)
+05-15 22:07:07.134 W/QPLConfig(23520): 	at X.1od.run(:25)
+05-15 22:07:07.134 W/QPLConfig(23520): 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1167)
+05-15 22:07:07.134 W/QPLConfig(23520): 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:641)
+05-15 22:07:07.134 W/QPLConfig(23520): 	at X.1om.run(:113)
+05-15 22:07:07.134 W/QPLConfig(23520): 	at java.lang.Thread.run(Thread.java:922)
+05-15 22:07:07.134 W/QPLConfig(23520): 	at X.1on.run(:8)
+05-15 22:07:07.134 W/QPLConfig(23520): Caused by: android.system.ErrnoException: open failed: ENOENT (No such file or directory)
+05-15 22:07:07.134 W/QPLConfig(23520): 	at libcore.io.Linux.open(Native Method)
+05-15 22:07:07.134 W/QPLConfig(23520): 	at libcore.io.ForwardingOs.open(ForwardingOs.java:567)
+05-15 22:07:07.134 W/QPLConfig(23520): 	at libcore.io.BlockGuardOs.open(BlockGuardOs.java:273)
+05-15 22:07:07.134 W/QPLConfig(23520): 	at libcore.io.ForwardingOs.open(ForwardingOs.java:567)
+05-15 22:07:07.134 W/QPLConfig(23520): 	at android.app.ActivityThread$AndroidOs.open(ActivityThread.java:8272)
+05-15 22:07:07.134 W/QPLConfig(23520): 	at libcore.io.IoBridge.open(IoBridge.java:561)
+05-15 22:07:07.134 W/QPLConfig(23520): 	... 12 more
+05-15 22:07:07.142 E/agram.barcelon(23520): No implementation found for void com.facebook.quicklog.QuickPerformanceLoggerNativeProvider.nativeUpdateQPLInstance() (tried Java_com_facebook_quicklog_QuickPerformanceLoggerNativeProvider_nativeUpdateQPLInstance and Java_com_facebook_quicklog_QuickPerformanceLoggerNativeProvider_nativeUpdateQPLInstance__)
+05-15 22:07:07.142 W/QPLProvider(23520): QuickPerformanceLoggerProvider failed to update native QPL instance, native library. This is expected during early app initialization
+05-15 22:07:07.156 W/SoLoader(23520): Loading perfloggerxplat_init on the main thread
+05-15 22:07:07.167 W/SoLoader(23520): Loading cache_key_generator_jni on the main thread
+05-15 22:07:07.181 W/FrscLanguagePackLoader(23520): Loading FRSC strings for locale (en)
+05-15 22:07:07.190 D/CACHE_HINTS(23520): Entering madvise file
+05-15 22:07:07.191 W/FrscLanguagePackLoader(23520): FRSC English strings buffer size - (limit : 419650, capacity : 419650)
+05-15 22:07:07.293 W/DGW     (23435): W[onSuccessfulResponse:923] StreamGroupTransport[notifgateway] on successful response. DGW is now connected.
+05-15 22:07:07.387 W/SoLoader(23520): SoLoader already initialized
+05-15 22:07:07.403 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.quickexperiment.early.UserSessionStart start
+05-15 22:07:07.404 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.quickexperiment.early.UserSessionStart end
+05-15 22:07:07.404 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.ui.widget.keyboardlistenerprovider.KeyboardChangeDetectorProvider.SessionStartHook start
+05-15 22:07:07.404 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.ui.widget.keyboardlistenerprovider.KeyboardChangeDetectorProvider.SessionStartHook end
+05-15 22:07:07.404 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.lazyload.downloadablemodules.impl.IgFallbackPrefetcherImpl start
+05-15 22:07:07.404 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.preferences.user.UserSessionStart start
+05-15 22:07:07.405 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.preferences.user.UserSessionStart end
+05-15 22:07:07.405 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.fxcache.fetainfo.UserSessionStart start
+05-15 22:07:07.406 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.common.lifecycle.lifecyclelistener.LifecycleDetector.LifecycleListenersUserSessionManager start
+05-15 22:07:07.406 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.common.lifecycle.lifecyclelistener.LifecycleDetector.LifecycleListenersUserSessionManager end
+05-15 22:07:07.406 W/SessionScopedProviderInitializer(23520): Initialize com.facebook.codecmanagement.factory.instagram.IgSessionAwareManagedCodecPoolSingleton start
+05-15 22:07:07.406 W/SessionScopedProviderInitializer(23520): Initialize com.facebook.codecmanagement.factory.instagram.IgSessionAwareManagedCodecPoolSingleton end
+05-15 22:07:07.407 W/SessionScopedProviderInitializer(23520): Initialize com.facebook.mobileboost.apps.instagram.BoostSessionScopedUpdater start
+05-15 22:07:07.407 W/SessionScopedProviderInitializer(23520): Initialize com.facebook.mobileboost.apps.instagram.BoostSessionScopedUpdater end
+05-15 22:07:07.407 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.jobscheduler.bgfetch.scheduler.IgBgFetchConfigOnUserSessionStart start
+05-15 22:07:07.408 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.jobscheduler.bgfetch.scheduler.IgBgFetchConfigOnUserSessionStart end
+05-15 22:07:07.408 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.jobscheduler.bgfetch.scheduler.UserSessionStart start
+05-15 22:07:07.409 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.jobscheduler.bgfetch.scheduler.UserSessionStart end
+05-15 22:07:07.409 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.barcelona.jobscheduler.bgfetch.BcnBgFetchSchedulerUserSessionStart start
+05-15 22:07:07.409 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.barcelona.jobscheduler.bgfetch.BcnBgFetchSchedulerUserSessionStart end
+05-15 22:07:07.409 W/SessionScopedProviderInitializer(23520): Initialize com.facebook.security.detectkitv2.ig4a.DetectController.OnSessionStart start
+05-15 22:07:07.417 W/SessionScopedProviderInitializer(23520): Initialize com.facebook.security.detectkitv2.ig4a.DetectController.OnSessionStart end
+05-15 22:07:07.417 W/SessionScopedProviderInitializer(23520): Initialize com.facebook.showreelnativesdk.instagram.dependencyprovider.UserSessionStart start
+05-15 22:07:07.417 W/SessionScopedProviderInitializer(23520): Initialize com.facebook.showreelnativesdk.instagram.dependencyprovider.UserSessionStart end
+05-15 22:07:07.417 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.analytics.videoqpl.UserSessionStart start
+05-15 22:07:07.420 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.analytics.videoqpl.UserSessionStart end
+05-15 22:07:07.422 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.audio.AudioFocusUserSessionStart start
+05-15 22:07:07.422 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.audio.AudioFocusUserSessionStart end
+05-15 22:07:07.423 W/IgMetaConfig(23520): Could not obtain MC: not_user_session session=X.3hM@8cb36c1
+05-15 22:07:07.423 W/IgMetaConfig(23520): java.lang.RuntimeException: Could not obtain MC, call-site will receive default values
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at X.2dZ.A05(:4)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at X.2dZ.A03(:7)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at X.2dZ.A01(:2)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at X.3b7.invoke(:1466)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at X.2yO.invoke(:111)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at X.258.getValue(:25)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at X.3gV.A01(:8)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at X.4fj.A00(:292)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at X.3dx.<init>(:0)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at X.3b4.A05(:1182)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at X.3b4.invoke(:5)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at X.2yO.invoke(:111)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at X.258.getValue(:25)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at X.3gV.A01(:8)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at X.3dv.A00(:45)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at X.2eL.A00(:12)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at X.2eL.AAm(:6)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at X.3an.logEvent(:442)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at com.facebook.mobileconfig.MobileConfigManagerHolderImpl.logExposureNative(Native Method)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at com.facebook.mobileconfig.MobileConfigManagerHolderImpl.logExposure(:0)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at X.3bd.logExposure(:6)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at X.3cr.A09(:79)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at X.3cr.A06(:78)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at X.3bs.B0r(:58)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at X.3cw.B0r(:27)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at X.3bm.B0r(:117)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at X.3bm.B0q(:6)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at X.3bm.B0j(:2)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at X.4mA.DmZ(:238)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at X.1Jz.A00(:53)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at X.1wA.A04(:73)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at X.1ua.A02(:39)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A01(:84373)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at com.instagram.barcelona.process.main.BarcelonaApplicationForMainProcess.A08(:895)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at com.instagram.barcelona.app.BarcelonaAppShell.onCreate(:710)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at android.app.Instrumentation.callApplicationOnCreate(Instrumentation.java:1261)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:7226)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at android.app.ActivityThread.access$1800(ActivityThread.java:284)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2284)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at android.os.Looper.loopOnce(Looper.java:233)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at android.os.Looper.loop(Looper.java:334)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at android.app.ActivityThread.main(ActivityThread.java:8396)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at java.lang.reflect.Method.invoke(Native Method)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:582)
+05-15 22:07:07.423 W/IgMetaConfig(23520): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1068)
+05-15 22:07:07.424 W/SoLoader(23520): SoLoader already initialized
+05-15 22:07:07.426 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.model.sponsored.UserSessionStart start
+05-15 22:07:07.426 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.model.sponsored.UserSessionStart end
+05-15 22:07:07.426 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.video.player.hero.IgHeroServiceController.IgHeroServiceControllerInitializerProvider start
+05-15 22:07:07.430 W/IgMetaConfig(23520): Could not obtain MC: not_user_session session=X.3hM@8cb36c1
+05-15 22:07:07.430 W/IgMetaConfig(23520): java.lang.RuntimeException: Could not obtain MC, call-site will receive default values
+05-15 22:07:07.430 W/IgMetaConfig(23520): 	at X.2dZ.A05(:4)
+05-15 22:07:07.430 W/IgMetaConfig(23520): 	at X.2dZ.A03(:7)
+05-15 22:07:07.430 W/IgMetaConfig(23520): 	at X.2dZ.A01(:2)
+05-15 22:07:07.430 W/IgMetaConfig(23520): 	at X.1Zz.A00(:8)
+05-15 22:07:07.430 W/IgMetaConfig(23520): 	at X.1Zz.A02(:7)
+05-15 22:07:07.430 W/IgMetaConfig(23520): 	at X.4gh.A00(:6)
+05-15 22:07:07.430 W/IgMetaConfig(23520): 	at X.2We.A03(:474)
+05-15 22:07:07.430 W/IgMetaConfig(23520): 	at X.2We.A08(:0)
+05-15 22:07:07.430 W/IgMetaConfig(23520): 	at X.2Xa.A01(:16)
+05-15 22:07:07.430 W/IgMetaConfig(23520): 	at X.2Vm.handleMessage(:248)
+05-15 22:07:07.430 W/IgMetaConfig(23520): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+05-15 22:07:07.430 W/IgMetaConfig(23520): 	at android.os.Looper.loopOnce(Looper.java:233)
+05-15 22:07:07.430 W/IgMetaConfig(23520): 	at android.os.Looper.loop(Looper.java:334)
+05-15 22:07:07.430 W/IgMetaConfig(23520): 	at android.os.HandlerThread.run(HandlerThread.java:67)
+05-15 22:07:07.430 W/IgMetaConfig(23520): Could not obtain MC: not_user_session session=X.3hM@8cb36c1
+05-15 22:07:07.430 W/IgMetaConfig(23520): java.lang.RuntimeException: Could not obtain MC, call-site will receive default values
+05-15 22:07:07.430 W/IgMetaConfig(23520): 	at X.2dZ.A05(:4)
+05-15 22:07:07.430 W/IgMetaConfig(23520): 	at X.2dZ.A03(:7)
+05-15 22:07:07.430 W/IgMetaConfig(23520): 	at X.2dZ.A01(:2)
+05-15 22:07:07.430 W/IgMetaConfig(23520): 	at X.1Zz.A00(:8)
+05-15 22:07:07.430 W/IgMetaConfig(23520): 	at X.1Zz.A02(:7)
+05-15 22:07:07.430 W/IgMetaConfig(23520): 	at X.4gh.A00(:6)
+05-15 22:07:07.430 W/IgMetaConfig(23520): 	at X.2We.A03(:482)
+05-15 22:07:07.430 W/IgMetaConfig(23520): 	at X.2We.A08(:0)
+05-15 22:07:07.430 W/IgMetaConfig(23520): 	at X.2Xa.A01(:16)
+05-15 22:07:07.430 W/IgMetaConfig(23520): 	at X.2Vm.handleMessage(:248)
+05-15 22:07:07.430 W/IgMetaConfig(23520): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+05-15 22:07:07.430 W/IgMetaConfig(23520): 	at android.os.Looper.loopOnce(Looper.java:233)
+05-15 22:07:07.430 W/IgMetaConfig(23520): 	at android.os.Looper.loop(Looper.java:334)
+05-15 22:07:07.430 W/IgMetaConfig(23520): 	at android.os.HandlerThread.run(HandlerThread.java:67)
+05-15 22:07:07.435 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.fxcache.fetainfo.UserSessionStart end
+05-15 22:07:07.435 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.video.player.common.VideoBoundaryTestHelper start
+05-15 22:07:07.436 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.video.player.common.VideoBoundaryTestHelper end
+05-15 22:07:07.436 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.analytics.datausage.DataUsageReporterStatic start
+05-15 22:07:07.436 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.analytics.datausage.DataUsageReporterStatic end
+05-15 22:07:07.436 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.api.tigon.appnetsessionid.igsessionidgenerator.UserSessionStart start
+05-15 22:07:07.436 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.api.tigon.appnetsessionid.igsessionidgenerator.UserSessionStart end
+05-15 22:07:07.436 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.appinitializer.session.UserSessionStart start
+05-15 22:07:07.436 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.appinitializer.session.UserSessionStart end
+05-15 22:07:07.437 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.direct.send.deduplication.UserSessionStart start
+05-15 22:07:07.437 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.direct.send.deduplication.UserSessionStart end
+05-15 22:07:07.437 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.prefetch.PrefetchScheduler.PrefetchSchedulerInitializerProvider start
+05-15 22:07:07.437 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.prefetch.PrefetchScheduler.PrefetchSchedulerInitializerProvider end
+05-15 22:07:07.437 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.appinitializer.imageinfra.ImageInfraSessionInitializerProvider start
+05-15 22:07:07.470 W/IgMetaConfig(23520): Could not obtain MC: Session not provided. Fix callsite to pass Session. 
+05-15 22:07:07.470 W/IgMetaConfig(23520): java.lang.RuntimeException: Could not obtain MC, call-site will receive default values
+05-15 22:07:07.470 W/IgMetaConfig(23520): 	at X.2dZ.A05(:4)
+05-15 22:07:07.470 W/IgMetaConfig(23520): 	at X.2dZ.A03(:7)
+05-15 22:07:07.470 W/IgMetaConfig(23520): 	at X.2dZ.A01(:2)
+05-15 22:07:07.470 W/IgMetaConfig(23520): 	at X.4yl.<init>(:4)
+05-15 22:07:07.470 W/IgMetaConfig(23520): 	at X.4yj.<init>(:21)
+05-15 22:07:07.470 W/IgMetaConfig(23520): 	at X.1vx.A09(:127)
+05-15 22:07:07.470 W/IgMetaConfig(23520): 	at X.3yl.Aem(:110)
+05-15 22:07:07.470 W/IgMetaConfig(23520): 	at X.3za.BJX(:14)
+05-15 22:07:07.470 W/IgMetaConfig(23520): 	at X.3yt.EDl(:8)
+05-15 22:07:07.470 W/IgMetaConfig(23520): 	at X.4ro.A00(:52)
+05-15 22:07:07.470 W/IgMetaConfig(23520): 	at X.4ww.DTs(:4)
+05-15 22:07:07.470 W/IgMetaConfig(23520): 	at X.3yt.A04(:15)
+05-15 22:07:07.470 W/IgMetaConfig(23520): 	at X.4lh.invoke(:2427)
+05-15 22:07:07.470 W/IgMetaConfig(23520): 	at X.1HP.call(:62)
+05-15 22:07:07.470 W/IgMetaConfig(23520): 	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+05-15 22:07:07.470 W/IgMetaConfig(23520): 	at X.4lj.run(:2)
+05-15 22:07:07.470 W/IgMetaConfig(23520): 	at X.1od.run(:25)
+05-15 22:07:07.470 W/IgMetaConfig(23520): 	at X.1od.run(:25)
+05-15 22:07:07.470 W/IgMetaConfig(23520): 	at X.1ob.A00(:110)
+05-15 22:07:07.470 W/IgMetaConfig(23520): 	at X.1ob.run(:136)
+05-15 22:07:07.472 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.appinitializer.imageinfra.ImageInfraSessionInitializerProvider end
+05-15 22:07:07.472 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.distribgw.client.DGWZeroUrlUpdaterOnUserSessionStart start
+05-15 22:07:07.472 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.distribgw.client.DGWZeroUrlUpdaterOnUserSessionStart end
+05-15 22:07:07.472 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.appinstallnotification.UserSessionStart start
+05-15 22:07:07.479 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.appinstallnotification.UserSessionStart end
+05-15 22:07:07.479 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.autocomplete.ChallengeUserSessionStart start
+05-15 22:07:07.481 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.lazyload.downloadablemodules.impl.IgFallbackPrefetcherImpl end
+05-15 22:07:07.481 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.autocomplete.HashtagUserSessionStart start
+05-15 22:07:07.488 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.autocomplete.ChallengeUserSessionStart end
+05-15 22:07:07.488 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.creation.capture.quickcapture.lifecyclemanager.UserSessionStart start
+05-15 22:07:07.490 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.autocomplete.HashtagUserSessionStart end
+05-15 22:07:07.491 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.creation.capture.quickcapture.analytics.UserSessionStart start
+05-15 22:07:07.494 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.creation.capture.quickcapture.lifecyclemanager.UserSessionStart end
+05-15 22:07:07.494 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.bugreporter.rageshake.UserSessionStart start
+05-15 22:07:07.494 W/RageShakeDialogProviderImpl(23520): onUserSessionStart start
+05-15 22:07:07.527 W/RageShakeSensorHelper(23520): initInstance Initialized | rageShakeEnabled=true | shakeForceThreshold=18.042845
+05-15 22:07:07.535 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.bugreporter.rageshake.UserSessionStart end
+05-15 22:07:07.541 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.privacy.cpdp.loggers.UserSessionStartListener start
+05-15 22:07:07.545 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.privacy.cpdp.loggers.UserSessionStartListener end
+05-15 22:07:07.545 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.barcelona.fbpay.ptt.pttmanagerprovider.UserSessionStart start
+05-15 22:07:07.558 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.barcelona.fbpay.ptt.pttmanagerprovider.UserSessionStart end
+05-15 22:07:07.558 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.barcelona.fx.cache.onsessionstart.FxBcnOnSessionStartUtil start
+05-15 22:07:07.558 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.barcelona.fx.cache.onsessionstart.FxBcnOnSessionStartUtil end
+05-15 22:07:07.558 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.barcelona.libraries.access.accountmanager.listener.BarcelonaAccountManagerListenerSessionBinder start
+05-15 22:07:07.558 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.barcelona.libraries.access.accountmanager.listener.BarcelonaAccountManagerListenerSessionBinder end
+05-15 22:07:07.559 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.barcelona.shortcuts.init.BcnShortCutsInitializer start
+05-15 22:07:07.559 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.barcelona.shortcuts.init.BcnShortCutsInitializer end
+05-15 22:07:07.559 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.barcelona.widget.init.WidgetInitializerTask start
+05-15 22:07:07.563 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.creation.capture.quickcapture.analytics.UserSessionStart end
+05-15 22:07:07.563 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.pendingmedia.store.UserSessionStart start
+05-15 22:07:07.564 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.pendingmedia.store.UserSessionStart end
+05-15 22:07:07.564 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.basel.logging.creation.UserSessionStart start
+05-15 22:07:07.565 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.barcelona.widget.init.WidgetInitializerTask end
+05-15 22:07:07.566 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.basel.logging.creation.UserSessionStart end
+05-15 22:07:07.566 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.creation.capture.quickcapture.abtest.qccmodularization.QccModularizationQeUtil start
+05-15 22:07:07.567 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.creation.capture.quickcapture.abtest.qccmodularization.QccModularizationQeUtil end
+05-15 22:07:07.568 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.maps.analytics.MapAnalyticsLogger.UserSessionStart start
+05-15 22:07:07.569 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.profilo.IgProfiloSessionManager start
+05-15 22:07:07.569 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.profilo.IgProfiloSessionManager end
+05-15 22:07:07.570 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.bugreporter.impl.BugReporterRecentErrorInfosHolder start
+05-15 22:07:07.570 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.bugreporter.impl.BugReporterRecentErrorInfosHolder end
+05-15 22:07:07.570 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.uxlogging.functioncorrectness.AwareInteractionQPLLogger start
+05-15 22:07:07.577 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.uxlogging.functioncorrectness.AwareInteractionQPLLogger end
+05-15 22:07:07.578 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.bugreporter.store.initializer.PendingBugReportInitializer start
+05-15 22:07:07.578 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.bugreporter.store.initializer.PendingBugReportInitializer end
+05-15 22:07:07.578 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.quickexperiment.util.crossaccountexperimentsutils.CrossAccountExperimentsUtils.SessionStartHandler start
+05-15 22:07:07.578 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.quickexperiment.util.crossaccountexperimentsutils.CrossAccountExperimentsUtils.SessionStartHandler end
+05-15 22:07:07.578 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.metacasper.UserSessionStart start
+05-15 22:07:07.579 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.metacasper.UserSessionStart end
+05-15 22:07:07.579 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.casper.UserSessionStart start
+05-15 22:07:07.579 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.casper.UserSessionStart end
+05-15 22:07:07.579 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.common.api.security.securebroadcast.InstagramSecureBroadcastReceiverUserSessionStart start
+05-15 22:07:07.579 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.common.api.security.securebroadcast.InstagramSecureBroadcastReceiverUserSessionStart end
+05-15 22:07:07.579 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.common.fxcacheinit.FxClientCacheOnUserSessionStart start
+05-15 22:07:07.579 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.common.fxcacheinit.FxClientCacheOnUserSessionStart end
+05-15 22:07:07.580 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.common.memory.memoryredlogger.gcredlogger.GcRedLogger.GcRedLoggerInitializer start
+05-15 22:07:07.580 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.common.memory.memoryredlogger.gcredlogger.GcRedLogger.GcRedLoggerInitializer end
+05-15 22:07:07.580 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.common.memory.memoryredlogger.MemoryRedLogger.MemoryRedLoggerInitializer start
+05-15 22:07:07.580 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.common.memory.memoryredlogger.MemoryRedLogger.MemoryRedLoggerInitializer end
+05-15 22:07:07.580 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.common.storage.cask.experimentation.StorageExperimentInitializer start
+05-15 22:07:07.580 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.common.storage.cask.experimentation.StorageExperimentInitializer end
+05-15 22:07:07.580 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.contacts.ccu.impl.XCCUWorkerScheduler start
+05-15 22:07:07.580 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.contacts.ccu.impl.XCCUWorkerScheduler end
+05-15 22:07:07.581 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.crossposting.noticestate.manager.UserSessionStart start
+05-15 22:07:07.586 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.video.player.hero.IgHeroServiceController.IgHeroServiceControllerInitializerProvider end
+05-15 22:07:07.586 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.maps.analytics.MapAnalyticsLogger.UserSessionStart end
+05-15 22:07:07.586 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.deadcodedetection.IgDeadCodeDetectionManager start
+05-15 22:07:07.586 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.wellbeing.timetools.reminder.IGTimeToolsInitializer start
+05-15 22:07:07.586 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.deadcodedetection.IgDeadCodeDetectionManager end
+05-15 22:07:07.586 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.wellbeing.timeinapp.instrumentation.IgTimeInAppActivityListenerStatic start
+05-15 22:07:07.588 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.wellbeing.timeinapp.instrumentation.IgTimeInAppActivityListenerStatic end
+05-15 22:07:07.588 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.wellbeing.timespent.listeners.InstagramLastActiveTimeLoggerUserSessionStart start
+05-15 22:07:07.588 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.wellbeing.timespent.listeners.InstagramLastActiveTimeLoggerUserSessionStart end
+05-15 22:07:07.588 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.wellbeing.timespent.listeners.InstagramTimeSpentManagerInitializer start
+05-15 22:07:07.592 D/CompatibilityChangeReporter(23704): Compat change id reported: 171979766; UID 10236; state: DISABLED
+05-15 22:07:07.593 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.crossposting.noticestate.manager.UserSessionStart end
+05-15 22:07:07.594 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.debug.image.sessionhelper.UserSessionStart start
+05-15 22:07:07.595 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.debug.image.sessionhelper.UserSessionStart end
+05-15 22:07:07.595 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.debug.plog.IgPLogSessionEndingListener start
+05-15 22:07:07.595 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.debug.plog.IgPLogSessionEndingListener end
+05-15 22:07:07.595 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.debug.quickexperiment.dumper.QuickExperimentDumperPluginUserSessionListenerStatic start
+05-15 22:07:07.595 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.debug.quickexperiment.dumper.QuickExperimentDumperPluginUserSessionListenerStatic end
+05-15 22:07:07.596 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.perf.scroll.UserSessionStart start
+05-15 22:07:07.596 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.perf.scroll.UserSessionStart end
+05-15 22:07:07.596 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.direct.msys.bugreporter.UserSessionStart start
+05-15 22:07:07.596 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.direct.msys.bugreporter.UserSessionStart end
+05-15 22:07:07.596 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.direct.mutation.util.DirectMutationUserSessionStartListener start
+05-15 22:07:07.596 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.direct.mutation.util.DirectMutationUserSessionStartListener end
+05-15 22:07:07.596 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.emergencypush.EmergencyPushPeriodicFetchWorkerInitializer start
+05-15 22:07:07.601 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.emergencypush.EmergencyPushPeriodicFetchWorkerInitializer end
+05-15 22:07:07.602 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.fbpay.executor.UserSessionStart start
+05-15 22:07:07.602 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.fbpay.executor.UserSessionStart end
+05-15 22:07:07.602 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.fileregistry.impl.UserSessionStart start
+05-15 22:07:07.602 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.fileregistry.impl.UserSessionStart end
+05-15 22:07:07.602 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.firstpartyinstalltracker.UserSessionStart start
+05-15 22:07:07.602 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.firstpartyinstalltracker.UserSessionStart end
+05-15 22:07:07.602 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.settings2.core.services.Settings2ServiceInitializer start
+05-15 22:07:07.603 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.settings2.core.services.Settings2ServiceInitializer end
+05-15 22:07:07.603 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.fx.helper.companyidentityswitcher.prefetch.SwitcherFetchFBNTAEligibilitySessionStartUtil start
+05-15 22:07:07.603 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.fx.helper.companyidentityswitcher.prefetch.SwitcherFetchFBNTAEligibilitySessionStartUtil end
+05-15 22:07:07.603 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.fx.helper.companyidentityswitcher.prefetch.SwitcherFetchImpressionCapListSessionStartUtil start
+05-15 22:07:07.622 D/ApplicationLoaders(23704): Returning zygote-cached class loader: /system/framework/android.test.base.jar
+05-15 22:07:07.630 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.wellbeing.timetools.reminder.IGTimeToolsInitializer end
+05-15 22:07:07.630 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.fx.helper.companyidentityswitcher.prefetch.SwitcherFetchImpressionCapListSessionStartUtil end
+05-15 22:07:07.630 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.igpermissions.igpermissionsutil.IGPermissionSharedAccountAccessInviteInfoSessionStart start
+05-15 22:07:07.630 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.igpermissions.igpermissionsutil.IGPermissionsFeatureControlsSessionStart start
+05-15 22:07:07.630 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.igpermissions.igpermissionsutil.IGPermissionSharedAccountAccessInviteInfoSessionStart end
+05-15 22:07:07.630 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.igpermissions.igpermissionsutil.IGPermissionsMessagingControlsSessionStart start
+05-15 22:07:07.630 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.igpermissions.igpermissionsutil.IGPermissionsFeatureControlsSessionStart end
+05-15 22:07:07.630 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.igpermissions.igpermissionsutil.IGPermissionsSharedAccountsSessionStart start
+05-15 22:07:07.630 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.igpermissions.igpermissionsutil.IGPermissionsMessagingControlsSessionStart end
+05-15 22:07:07.630 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.monetization.util.UserSessionStart start
+05-15 22:07:07.631 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.monetization.util.UserSessionStart end
+05-15 22:07:07.631 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.inappbrowser.launcher.clickidhelper.UserSessionStart start
+05-15 22:07:07.631 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.inappbrowser.launcher.clickidhelper.UserSessionStart end
+05-15 22:07:07.632 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.launcherbadges.UserSessionStart start
+05-15 22:07:07.635 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.igpermissions.igpermissionsutil.IGPermissionsSharedAccountsSessionStart end
+05-15 22:07:07.636 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.mainfeed.analytics.ClickWithRegretAnalyzer.EagerInit start
+05-15 22:07:07.636 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.mainfeed.analytics.ClickWithRegretAnalyzer.EagerInit end
+05-15 22:07:07.637 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.mainfeed.delivery.logging.UserSessionStart start
+05-15 22:07:07.637 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.mainfeed.delivery.logging.UserSessionStart end
+05-15 22:07:07.649 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.launcherbadges.UserSessionStart end
+05-15 22:07:07.650 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.odml.p13n.PersonalizationManager.UserSessionStart start
+05-15 22:07:07.650 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.odml.p13n.PersonalizationManager.UserSessionStart end
+05-15 22:07:07.651 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.partneranalytics.networkinsights.eventinsights.IGEventInsightsManagerUserSessionStart start
+05-15 22:07:07.651 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.partneranalytics.networkinsights.eventinsights.IGEventInsightsManagerUserSessionStart end
+05-15 22:07:07.651 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.pendingmedia.service.initializer.PendingMediaStoreInitializer start
+05-15 22:07:07.652 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.pendingmedia.service.initializer.PendingMediaStoreInitializer end
+05-15 22:07:07.652 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.perf.sampling.UserSessionStart start
+05-15 22:07:07.654 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.messagingconnectivitylogger.appjobdelegate.MCLAppJobDelegate.UserSessionStart start
+05-15 22:07:07.654 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.messagingconnectivitylogger.appjobdelegate.MCLAppJobDelegate.UserSessionStart end
+05-15 22:07:07.654 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.periodicreporter.UserSessionStart start
+05-15 22:07:07.655 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.periodicreporter.UserSessionStart end
+05-15 22:07:07.655 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.presence.dgw.IgPresenceDgwListener.UserSessionStart start
+05-15 22:07:07.655 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.presence.dgw.IgPresenceDgwListener.UserSessionStart end
+05-15 22:07:07.655 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.redex.dynamicanalysis.IgDynamicAnalysisUserSessionStart start
+05-15 22:07:07.655 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.redex.dynamicanalysis.IgDynamicAnalysisUserSessionStart end
+05-15 22:07:07.655 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.reliability.experiments.ReliabilityExperimentInitializer start
+05-15 22:07:07.656 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.reliability.experiments.ReliabilityExperimentInitializer end
+05-15 22:07:07.656 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.reliablemedia.UserSessionStart start
+05-15 22:07:07.660 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.perf.sampling.UserSessionStart end
+05-15 22:07:07.660 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.rtc.dgw.IGRTCDGWStartupService start
+05-15 22:07:07.660 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.rtc.dgw.IGRTCDGWStartupService end
+05-15 22:07:07.661 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.reliablemedia.UserSessionStart end
+05-15 22:07:07.661 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.shopping.analytics.shopsbau.IGShopsBAU.IGShopsBAUInitializerProvider start
+05-15 22:07:07.662 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.shopping.analytics.shopsbau.IGShopsBAU.IGShopsBAUInitializerProvider end
+05-15 22:07:07.663 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.sponsored.asyncads.igquantumsignals.core.IGQuantumSignalsSessionStarting start
+05-15 22:07:07.663 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.sponsored.asyncads.igquantumsignals.core.IGQuantumSignalsSessionStarting end
+05-15 22:07:07.665 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.sponsored.asyncads.logging.qpl.UserSessionStart start
+05-15 22:07:07.665 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.sponsored.asyncads.logging.qpl.UserSessionStart end
+05-15 22:07:07.665 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.sponsored.asyncads.ondevicesignals.OnDeviceSignalKnotsEventListener.UserSessionStart start
+05-15 22:07:07.665 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.sponsored.asyncads.ondevicesignals.OnDeviceSignalKnotsEventListener.UserSessionStart end
+05-15 22:07:07.665 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.sponsored.asyncads.requestpathsignals.sessionlevelsignals.sessiontime.SessionTimeTrackerStarting start
+05-15 22:07:07.666 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.sponsored.asyncads.requestpathsignals.sessionlevelsignals.sessiontime.SessionTimeTrackerStarting end
+05-15 22:07:07.666 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.traffic.nts.iglib.IGTrafficNTSUserSessionStarting start
+05-15 22:07:07.666 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.traffic.nts.iglib.IGTrafficNTSUserSessionStarting end
+05-15 22:07:07.666 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.util.startup.transitions.EnableColdStartTransitionsTask start
+05-15 22:07:07.666 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.util.startup.transitions.EnableColdStartTransitionsTask end
+05-15 22:07:07.666 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.wellbeing.privacyflow.util.PrivacyFlowHelper start
+05-15 22:07:07.667 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.screentime.IgScreenTimeSyncListenerStart start
+05-15 22:07:07.668 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.wellbeing.privacyflow.util.PrivacyFlowHelper end
+05-15 22:07:07.668 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.screentime.IgScreenTimeSyncListenerStart end
+05-15 22:07:07.668 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.wellbeing.timespent.provider.QuietTimeUserSessionStart start
+05-15 22:07:07.668 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.wellbeing.timespent.provider.ScreenTimeUserSessionStart start
+05-15 22:07:07.668 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.wellbeing.timespent.provider.QuietTimeUserSessionStart end
+05-15 22:07:07.668 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.wellbeing.timespent.provider.ScreenTimeUserSessionStart end
+05-15 22:07:07.668 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.zero.main.IgZeroMainInitializer start
+05-15 22:07:07.668 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.zero.main.IgZeroMainInitializer end
+05-15 22:07:07.668 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.zero.main.IgZeroMainStartupLog start
+05-15 22:07:07.669 W/SessionScopedProviderInitializer(23520): Initialize com.instagram.zero.main.IgZeroMainStartupLog end
+05-15 22:07:07.669 W/SessionScopedProviderInitializer(23520): Initialize X.5wy start
+05-15 22:07:07.672 W/SessionScopedProviderInitializer(23520): Initialize X.5wy end
+05-15 22:07:07.672 W/SessionScopedProviderInitializer(23520): Initialize X.HVi start
+05-15 22:07:07.681 W/SessionScopedProviderInitializer(23520): Initialize X.HVi end
+05-15 22:07:07.768 W/ssioncontrolle(23704): Entry not found
+05-15 22:07:07.793 W/ssioncontrolle(23704): JIT profile information will not be recorded: profile file does not exist.
+05-15 22:07:07.866 V/GraphicsEnvironment(23704): ANGLE Developer option for 'com.google.android.permissioncontroller' set to: 'default'
+05-15 22:07:07.866 V/GraphicsEnvironment(23704): Neither updatable production driver nor prerelease driver is supported.
+05-15 22:07:07.871 D/NetworkSecurityConfig(23704): No Network Security Config specified, using platform default
+05-15 22:07:07.872 D/NetworkSecurityConfig(23704): No Network Security Config specified, using platform default
+05-15 22:07:08.026 I/CarUiInstaller(23704): CarUiInstaller started for com.google.android.permissioncontroller
+05-15 22:07:08.071 W/ratelimit(23520): Single process limit 250/s drop 73 lines.
+05-15 22:07:08.071 W/RtiGracefulSystemMethodHelper(23520): [AI] Failed to start service due to IllegalStateException on Android O
+05-15 22:07:08.071 W/RtiGracefulSystemMethodHelper(23520): android.app.BackgroundServiceStartNotAllowedException: Not allowed to start service Intent { act=Orca.START cmp=com.instagram.barcelona/com.facebook.rti.pushv2.inapp.InappFbnsService (has extras) }: app is in background uid UidRecord{c3b3bd5 u0a654 RCVR idle change:idle|uncached procs:0 seq(0,0,0)}
+05-15 22:07:08.071 W/RtiGracefulSystemMethodHelper(23520): 	at android.app.ContextImpl.startServiceCommon(ContextImpl.java:1890)
+05-15 22:07:08.071 W/RtiGracefulSystemMethodHelper(23520): 	at android.app.ContextImpl.startService(ContextImpl.java:1841)
+05-15 22:07:08.071 W/RtiGracefulSystemMethodHelper(23520): 	at android.content.ContextWrapper.startService(ContextWrapper.java:776)
+05-15 22:07:08.071 W/RtiGracefulSystemMethodHelper(23520): 	at X.2pO.EJS(:30)
+05-15 22:07:08.071 W/RtiGracefulSystemMethodHelper(23520): 	at X.2pE.A01(:11)
+05-15 22:07:08.071 W/RtiGracefulSystemMethodHelper(23520): 	at X.2nd.Csb(:371)
+05-15 22:07:08.071 W/RtiGracefulSystemMethodHelper(23520): 	at com.instagram.push.FbnsInitBroadcastReceiver.onReceive(:307)
+05-15 22:07:08.071 W/RtiGracefulSystemMethodHelper(23520): 	at android.app.ActivityThread.handleReceiver(ActivityThread.java:4628)
+05-15 22:07:08.071 W/RtiGracefulSystemMethodHelper(23520): 	at android.app.ActivityThread.access$1900(ActivityThread.java:284)
+05-15 22:07:08.071 W/RtiGracefulSystemMethodHelper(23520): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2295)
+05-15 22:07:08.071 W/RtiGracefulSystemMethodHelper(23520): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+05-15 22:07:08.071 W/RtiGracefulSystemMethodHelper(23520): 	at android.os.Looper.loopOnce(Looper.java:233)
+05-15 22:07:08.071 W/RtiGracefulSystemMethodHelper(23520): 	at android.os.Looper.loop(Looper.java:334)
+05-15 22:07:08.071 W/RtiGracefulSystemMethodHelper(23520): 	at android.app.ActivityThread.main(ActivityThread.java:8396)
+05-15 22:07:08.071 W/RtiGracefulSystemMethodHelper(23520): 	at java.lang.reflect.Method.invoke(Native Method)
+05-15 22:07:08.071 W/RtiGracefulSystemMethodHelper(23520): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:582)
+05-15 22:07:08.071 W/RtiGracefulSystemMethodHelper(23520): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1068)
+05-15 22:07:08.072 W/BackgroundStartupDetector(23520): coldStartMode=DEFINITELY_BACKGROUND
+05-15 22:07:08.072 W/BackgroundStartupDetector(23520): bgMode=BACKGROUND
+05-15 22:07:08.073 I/Choreographer(23520): Skipped 81 frames!  The application may be doing too much work on its main thread.
+05-15 22:07:08.076 E/PendingMediaStoreSerializer(23520): wait for deserialization lock
+05-15 22:07:08.076 E/PendingMediaStoreSerializer(23520): calling callbacks
+05-15 22:07:08.076 I/PermissionControllerServiceImpl(23704): Updating user sensitive for uid 10095
+05-15 22:07:08.083 W/RtiGracefulSystemMethodHelper(23520): [AI] Failed to start service due to IllegalStateException on Android O
+05-15 22:07:08.083 W/RtiGracefulSystemMethodHelper(23520): android.app.BackgroundServiceStartNotAllowedException: Not allowed to start service Intent { act=Orca.START cmp=com.instagram.barcelona/com.facebook.rti.pushv2.inapp.InappFbnsService (has extras) }: app is in background uid UidRecord{c3b3bd5 u0a654 RCVR idle change:idle|uncached procs:0 seq(0,0,0)}
+05-15 22:07:08.083 W/RtiGracefulSystemMethodHelper(23520): 	at android.app.ContextImpl.startServiceCommon(ContextImpl.java:1890)
+05-15 22:07:08.083 W/RtiGracefulSystemMethodHelper(23520): 	at android.app.ContextImpl.startService(ContextImpl.java:1841)
+05-15 22:07:08.083 W/RtiGracefulSystemMethodHelper(23520): 	at android.content.ContextWrapper.startService(ContextWrapper.java:776)
+05-15 22:07:08.083 W/RtiGracefulSystemMethodHelper(23520): 	at X.2pO.EJS(:30)
+05-15 22:07:08.083 W/RtiGracefulSystemMethodHelper(23520): 	at X.2pE.A01(:11)
+05-15 22:07:08.083 W/RtiGracefulSystemMethodHelper(23520): 	at X.2nd.Csb(:371)
+05-15 22:07:08.083 W/RtiGracefulSystemMethodHelper(23520): 	at com.instagram.push.FbnsInitBroadcastReceiver.onReceive(:307)
+05-15 22:07:08.083 W/RtiGracefulSystemMethodHelper(23520): 	at android.app.LoadedApk$ReceiverDispatcher$Args.lambda$getRunnable$0$LoadedApk$ReceiverDispatcher$Args(LoadedApk.java:1754)
+05-15 22:07:08.083 W/RtiGracefulSystemMethodHelper(23520): 	at android.app.LoadedApk$ReceiverDispatcher$Args$$ExternalSyntheticLambda0.run(Unknown Source:2)
+05-15 22:07:08.083 W/RtiGracefulSystemMethodHelper(23520): 	at android.os.Handler.handleCallback(Handler.java:938)
+05-15 22:07:08.083 W/RtiGracefulSystemMethodHelper(23520): 	at android.os.Handler.dispatchMessage(Handler.java:99)
+05-15 22:07:08.083 W/RtiGracefulSystemMethodHelper(23520): 	at android.os.Looper.loopOnce(Looper.java:233)
+05-15 22:07:08.083 W/RtiGracefulSystemMethodHelper(23520): 	at android.os.Looper.loop(Looper.java:334)
+05-15 22:07:08.083 W/RtiGracefulSystemMethodHelper(23520): 	at android.app.ActivityThread.main(ActivityThread.java:8396)
+05-15 22:07:08.083 W/RtiGracefulSystemMethodHelper(23520): 	at java.lang.reflect.Method.invoke(Native Method)
+05-15 22:07:08.083 W/RtiGracefulSystemMethodHelper(23520): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:582)
+05-15 22:07:08.083 W/RtiGracefulSystemMethodHelper(23520): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1068)
+05-15 22:07:08.091 W/JavaBinder(23520): BinderProxy is being destroyed but the application did not call unlinkToDeath to unlink all of its death recipients beforehand.  Releasing leaked death recipient: X.0xj
+05-15 22:07:08.093 W/System  (23520): A resource failed to call close. 
+05-15 22:07:08.097 W/RtiGracefulSystemMethodHelper(23520): [AI] Failed to start service due to IllegalStateException on Android O
+05-15 22:07:08.097 W/RtiGracefulSystemMethodHelper(23520): android.app.BackgroundServiceStartNotAllowedException: Not allowed to start service Intent { act=Orca.START cmp=com.instagram.barcelona/com.facebook.rti.pushv2.inapp.InappFbnsService (has extras) }: app is in background uid UidRecord{c3b3bd5 u0a654 RCVR idle change:idle|uncached procs:0 seq(0,0,0)}
+05-15 22:07:08.097 W/RtiGracefulSystemMethodHelper(23520): 	at android.app.ContextImpl.startServiceCommon(ContextImpl.java:1890)
+05-15 22:07:08.097 W/RtiGracefulSystemMethodHelper(23520): 	at android.app.ContextImpl.startService(ContextImpl.java:1841)
+05-15 22:07:08.097 W/RtiGracefulSystemMethodHelper(23520): 	at android.content.ContextWrapper.startService(ContextWrapper.java:776)
+05-15 22:07:08.097 W/RtiGracefulSystemMethodHelper(23520): 	at X.2pO.EJS(:30)
+05-15 22:07:08.097 W/RtiGracefulSystemMethodHelper(23520): 	at X.2pE.A01(:11)
+05-15 22:07:08.097 W/RtiGracefulSystemMethodHelper(23520): 	at X.2nd.Csb(:371)
+05-15 22:07:08.097 W/RtiGracefulSystemMethodHelper(23520): 	at X.5yx.onQueueIdle(:32)
+05-15 22:07:08.097 W/RtiGracefulSystemMethodHelper(23520): 	at X.3ua.queueIdle(:33)
+05-15 22:07:08.097 W/RtiGracefulSystemMethodHelper(23520): 	at android.os.MessageQueue.next(MessageQueue.java:408)
+05-15 22:07:08.097 W/RtiGracefulSystemMethodHelper(23520): 	at android.os.Looper.loopOnce(Looper.java:186)
+05-15 22:07:08.097 W/RtiGracefulSystemMethodHelper(23520): 	at android.os.Looper.loop(Looper.java:334)
+05-15 22:07:08.097 W/RtiGracefulSystemMethodHelper(23520): 	at android.app.ActivityThread.main(ActivityThread.java:8396)
+05-15 22:07:08.097 W/RtiGracefulSystemMethodHelper(23520): 	at java.lang.reflect.Method.invoke(Native Method)
+05-15 22:07:08.097 W/RtiGracefulSystemMethodHelper(23520): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:582)
+05-15 22:07:08.097 W/RtiGracefulSystemMethodHelper(23520): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1068)
+05-15 22:07:08.314 W/SoLoader[NativeDeps](23520): Falling back to custom ELF parsing when loading librtcmerged.so, this can be slow
+05-15 22:07:08.318 W/SoLoader[NativeDeps](23520): Falling back to custom ELF parsing when loading libmsysmerged.so, this can be slow
+05-15 22:07:08.349 W/SoLoader[NativeDeps](23520): Falling back to custom ELF parsing when loading libvoicemsgmerged.so, this can be slow
+05-15 22:07:08.352 W/SoLoader[NativeDeps](23520): Falling back to custom ELF parsing when loading libcompphotomerged.so, this can be slow
+05-15 22:07:08.371 W/SoLoader[NativeDeps](23520): Falling back to custom ELF parsing when loading libgraphqlmerged.so, this can be slow
+05-15 22:07:08.390 I/DGW     (23520): I[startCommon:124] DGW: Starting DGW service for 63081281458
+05-15 22:07:08.390 I/DGW     (23520): I[setDGWCoreQPLSampleRates:66] DGW: Core QPL sampling rates: 100000 & 100000
+05-15 22:07:08.391 I/DGW     (23520): I[clearStream:354] DGW: Clearing stream coordinators
+05-15 22:07:08.391 I/DGW     (23520): I[onStateChanged:803] DGW: Connectivity state changed: NotStarted
+05-15 22:07:08.391 I/DGW     (23520): I[startNewStream:292] DGW: Starting new stream, traceId=968871608632495261886922160_1
+05-15 22:07:08.392 I/DGW     (23520): I[start:41] DGW: StreamGroup starting: traceId=968871608632495261886922160_1, service=rpsignaling
+05-15 22:07:08.392 W/DGW     (23520): W[setEnabled:191] StreamGroupPinger[rpsignaling]: setEnabled: 0
+05-15 22:07:08.394 I/DGW     (23520): I[addStreamCoordinator:221] DGW: Adding stream coordinator for service: mws
+05-15 22:07:08.394 I/DGW     (23520): I[establishStream:299] DGW: Establishing stream: streamId=1, service=mws
+05-15 22:07:08.394 I/DGW     (23520): I[establishStream:100] DGW: StreamGroup establishing stream: service=mws, traceId=1
+05-15 22:07:08.394 I/DGW     (23520): I[onConnecting:191] DGW: StreamGroup connecting: traceId=968871608632495261886922160_1_1
+05-15 22:07:08.526 D/BoundBrokerSvc(22116): onRebind: Intent { act=com.google.android.gms.libs.gmscorelogger.service.START dat=chimera-action: cmp=com.google.android.gms/.chimera.PersistentDirectBootAwareApiService }
+05-15 22:07:08.602 W/DGW     (23520): W[setEnabled:191] StreamGroupPinger[rpsignaling]: setEnabled: 1
+05-15 22:07:08.604 I/DGW     (23520): I[onStreamReady:601] DGW: Stream ready, streamId: 1
+05-15 22:07:08.813 W/DGW     (23520): W[onSuccessfulResponse:926] StreamGroupTransport[rpsignaling] on successful response. DGW is now connected.
+05-15 22:07:08.814 I/DGW     (23520): I[onStreamGroupCreation:782] DGW: StreamGroup ready
+05-15 22:07:08.858 W/MultiSignalANRDetectorLacrima(23520): Pausing error state checks
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520): Failed to get feed items from cache
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520): java.lang.IllegalStateException: Migration didn't properly handle: barcelona_user_feed_items(com.instagram.barcelona.feed.data.cache.BarcelonaFeedItemEntity).
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):  Expected:
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520): TableInfo {
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):     name = 'barcelona_user_feed_items',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):     columns = {    
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         Column {
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            name = 'data',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            type = 'BLOB',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            affinity = '5',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            notNull = 'true',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            primaryKeyPosition = '0',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            defaultValue = 'undefined'
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         },
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         Column {
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            name = 'global_cache_rerank_score',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            type = 'REAL',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            affinity = '4',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            notNull = 'false',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            primaryKeyPosition = '0',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            defaultValue = 'undefined'
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         },
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         Column {
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            name = 'id',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            type = 'TEXT',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            affinity = '2',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            notNull = 'true',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            primaryKeyPosition = '1',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            defaultValue = 'undefined'
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         },
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         Column {
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            name = 'item_type',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            type = 'TEXT',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            affinity = '2',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            notNull = 'true',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            primaryKeyPosition = '0',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            defaultValue = ''media''
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         },
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         Column {
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            name = 'media_age',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            type = 'INTEGER',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            affinity = '3',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            notNull = 'false',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            primaryKeyPosition = '0',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            defaultValue = 'undefined'
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         },
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         Column {
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            name = 'ranking_weight',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            type = 'REAL',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            affinity = '4',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            notNull = 'false',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            primaryKeyPosition = '0',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            defaultValue = 'undefined'
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         },
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         Column {
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            name = 'source',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            type = 'TEXT',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            affinity = '2',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            notNull = 'false',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            primaryKeyPosition = '0',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            defaultValue = 'undefined'
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         },
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         Column {
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            name = 'stored_age',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            type = 'INTEGER',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            affinity = '3',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            notNull = 'true',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            primaryKeyPosition = '0',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            defaultValue = 'undefined'
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         }
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):     },
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):     foreignKeys = { }
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):     indices = {    
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         Index {
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            name = 'index_barcelona_user_feed_items_global_cache_rerank_score',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            unique = 'false',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            columns = {X.BKW
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            orders = {X.BKW
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         },
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         Index {
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            name = 'index_barcelona_user_feed_items_item_type',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            unique = 'false',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            columns = {X.BKW
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            orders = {X.BKW
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         },
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         Index {
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            name = 'index_barcelona_user_feed_items_media_age',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            unique = 'false',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            columns = {X.BKW
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            orders = {X.BKW
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         },
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         Index {
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            name = 'index_barcelona_user_feed_items_ranking_weight',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            unique = 'false',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            columns = {X.BKW
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            orders = {X.BKW
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         },
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         Index {
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            name = 'index_barcelona_user_feed_items_source',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            unique = 'false',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            columns = {X.BKW
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            orders = {X.BKW
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         },
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         Index {
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            name = 'index_barcelona_user_feed_items_stored_age',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            unique = 'false',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            columns = {X.BKW
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            orders = {X.BKW
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         }
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):     },
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520): }
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):  Found:
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520): TableInfo {
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):     name = 'barcelona_user_feed_items',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):     columns = {    
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         Column {
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            name = 'data',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            type = 'BLOB',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            affinity = '5',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            notNull = 'true',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            primaryKeyPosition = '0',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            defaultValue = 'undefined'
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         },
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         Column {
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            name = 'global_cache_rerank_score',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            type = 'REAL',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            affinity = '4',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            notNull = 'false',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            primaryKeyPosition = '0',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            defaultValue = 'undefined'
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         },
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         Column {
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            name = 'id',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            type = 'TEXT',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            affinity = '2',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            notNull = 'true',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            primaryKeyPosition = '1',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            defaultValue = 'undefined'
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         },
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         Column {
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            name = 'item_type',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            type = 'TEXT',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            affinity = '2',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            notNull = 'true',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            primaryKeyPosition = '0',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            defaultValue = ''media''
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         },
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         Column {
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            name = 'media_age',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            type = 'INTEGER',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            affinity = '3',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            notNull = 'false',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            primaryKeyPosition = '0',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            defaultValue = 'undefined'
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         },
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         Column {
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            name = 'ranking_weight',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            type = 'REAL',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            affinity = '4',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            notNull = 'false',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            primaryKeyPosition = '0',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            defaultValue = 'undefined'
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         },
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         Column {
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            name = 'source',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            type = 'TEXT',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            affinity = '2',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            notNull = 'false',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            primaryKeyPosition = '0',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            defaultValue = 'undefined'
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         },
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         Column {
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            name = 'stored_age',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            type = 'INTEGER',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            affinity = '3',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            notNull = 'true',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            primaryKeyPosition = '0',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            defaultValue = 'undefined'
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         }
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):     },
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):     foreignKeys = { }
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):     indices = {    
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         Index {
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            name = 'index_barcelona_user_feed_items_item_type',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            unique = 'false',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            columns = {X.BKW
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            orders = {X.BKW
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         },
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         Index {
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            name = 'index_barcelona_user_feed_items_media_age',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            unique = 'false',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            columns = {X.BKW
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            orders = {X.BKW
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         },
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         Index {
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            name = 'index_barcelona_user_feed_items_ranking_weight',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            unique = 'false',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            columns = {X.BKW
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            orders = {X.BKW
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         },
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         Index {
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            name = 'index_barcelona_user_feed_items_source',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            unique = 'false',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            columns = {X.BKW
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            orders = {X.BKW
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         },
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         Index {
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            name = 'index_barcelona_user_feed_items_stored_age',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            unique = 'false',
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            columns = {X.BKW
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):            orders = {X.BKW
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):         }
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520):     },
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520): }
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520): 	at X.076.A0b(:9)
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520): 	at X.38Q.A06(:337)
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520): 	at X.38U.A05(:13)
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520): 	at X.443.onUpgrade(:14)
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520): 	at android.database.sqlite.SQLiteOpenHelper.getDatabaseLocked(SQLiteOpenHelper.java:416)
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520): 	at android.database.sqlite.SQLiteOpenHelper.getWritableDatabase(SQLiteOpenHelper.java:316)
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520): 	at X.443.A00(:143)
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520): 	at X.397.Cou(:8)
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520): 	at X.39I.EPk(:4)
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520): 	at X.384.A06(:16)
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520): 	at X.23Q.invokeSuspend(:36)
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520): 	at X.23Q.invoke(:10)
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520): 	at X.3eL.A00(:489)
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520): 	at X.3eL.invokeSuspend(:5)
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520): 	at X.3eL.invoke(:21)
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520): 	at X.1pc.A00(:13)
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520): 	at X.BID.A00(:109)
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520): 	at X.3eP.invokeSuspend(:1272)
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520): 	at X.1L5.resumeWith(:15)
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520): 	at X.BMb.run(:96)
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520): 	at X.2Hi.A08(:39)
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520): 	at X.BLB.A00(:78)
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520): 	at X.6zc.run(:21)
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520): 	at X.6ze.run(:4)
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520): 	at X.2gg.run(:2)
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520): 	at X.1od.run(:25)
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520): 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1167)
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520): 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:641)
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520): 	at X.1om.run(:113)
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520): 	at java.lang.Thread.run(Thread.java:922)
+05-15 22:07:09.102 E/BarcelonaFeedCacheRoom(23520): 	at X.1on.run(:8)
+05-15 22:07:09.432 W/IgMetaConfig(23520): Could not obtain MC: not_user_session session=X.3hM@8cb36c1
+05-15 22:07:09.432 W/IgMetaConfig(23520): java.lang.RuntimeException: Could not obtain MC, call-site will receive default values
+05-15 22:07:09.432 W/IgMetaConfig(23520): 	at X.2dZ.A05(:4)
+05-15 22:07:09.432 W/IgMetaConfig(23520): 	at X.2dZ.A03(:7)
+05-15 22:07:09.432 W/IgMetaConfig(23520): 	at X.2dZ.A01(:2)
+05-15 22:07:09.432 W/IgMetaConfig(23520): 	at X.1Zz.A00(:8)
+05-15 22:07:09.432 W/IgMetaConfig(23520): 	at X.1Zz.A02(:7)
+05-15 22:07:09.432 W/IgMetaConfig(23520): 	at X.4jf.run(:7)
+05-15 22:07:09.432 W/IgMetaConfig(23520): 	at X.1od.run(:25)
+05-15 22:07:09.432 W/IgMetaConfig(23520): 	at android.os.Handler.handleCallback(Handler.java:938)
+05-15 22:07:09.432 W/IgMetaConfig(23520): 	at android.os.Handler.dispatchMessage(Handler.java:99)
+05-15 22:07:09.432 W/IgMetaConfig(23520): 	at android.os.Looper.loopOnce(Looper.java:233)
+05-15 22:07:09.432 W/IgMetaConfig(23520): 	at android.os.Looper.loop(Looper.java:334)
+05-15 22:07:09.432 W/IgMetaConfig(23520): 	at android.os.HandlerThread.run(HandlerThread.java:67)
+05-15 22:07:10.960 D/ProfileInstaller(23435): Installing profile for com.facebook.services
+05-15 22:07:11.152 D/ProfileInstaller(23476): Installing profile for com.facebook.appmanager
+05-15 22:07:15.331 I/.gms.persisten(22116): Explicit concurrent copying GC freed 142680(7100KB) AllocSpace objects, 11(264KB) LOS objects, 49% free, 22MB/45MB, paused 198us,96us total 373.753ms
+05-15 22:07:23.581 D/BoundBrokerSvc(22116): onUnbind: Intent { act=com.google.android.gms.libs.gmscorelogger.service.START dat=chimera-action: cmp=com.google.android.gms/.chimera.PersistentDirectBootAwareApiService }

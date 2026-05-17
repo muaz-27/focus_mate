@@ -5,6 +5,7 @@ import 'package:focus_mate/theme/app_colors.dart';
 ThemeData darkTheme = ThemeData(
   brightness: Brightness.dark,
   useMaterial3: true,
+  splashFactory: InkRipple.splashFactory,
   scaffoldBackgroundColor: Colors.transparent, // Transparent to allow gradient backgrounds
   colorScheme: ColorScheme.dark(
     primary: AppColors.buttonAccent,

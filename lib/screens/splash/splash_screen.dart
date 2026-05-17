@@ -1,7 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:focus_mate/core/auth_gate.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -151,7 +150,7 @@ class _SplashScreenState extends State<SplashScreen>
                           children: [
                             Text(
                               'FocusMate',
-                              style: GoogleFonts.outfit(
+                              style: TextStyle(
                                 fontSize: 38.sp,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
@@ -164,7 +163,7 @@ class _SplashScreenState extends State<SplashScreen>
                             SizedBox(height: 6.h),
                             Text(
                               'Boost your productivity, together.',
-                              style: GoogleFonts.outfit(
+                              style: TextStyle(
                                 fontSize: 13.5.sp,
                                 color: Colors.white.withValues(alpha: 0.7),
                                 letterSpacing: 0.3,

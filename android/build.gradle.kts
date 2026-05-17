@@ -36,8 +36,14 @@ subprojects {
                 android.namespace = "fr.g123k.deviceapps"
             }
         }
+        
+        // Force compileSdkVersion to fix lStar error in plugins like device_apps
+        if (android != null) {
+            android.compileSdkVersion(36)
+        }
     }
 }
+
 
 
 

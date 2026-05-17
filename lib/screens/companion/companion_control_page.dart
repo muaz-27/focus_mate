@@ -30,11 +30,14 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
   Map<String, dynamic> _sessionData = {};
 
   List<Map<String, dynamic>> _installedApps = [];
+  Map<String, String> _iconMap = {};
   List<String> _selectedApps = [];
   List<String> _lockedApps = [];
   bool _isLoading = true;
+  bool _isRefreshingFromDevice = false;
   Timer? _timer;
   String _timeLeft = "";
+  StreamSubscription<QuerySnapshot>? _shardsSubscription;
 
   @override
   void initState() {
@@ -46,8 +49,95 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
   @override
   void dispose() {
     _sessionSubscription.cancel();
+    _shardsSubscription?.cancel();
     _timer?.cancel();
     super.dispose();
+  }
+
+  Future<void> _requestDeviceRefresh() async {
+    if (_sessionData.isEmpty) return;
+    try {
+      final studentId = _sessionData['userId'];
+      await _firestore.collection('users').doc(studentId).update({
+        'appsRefreshRequest': true,
+      });
+      if (mounted) setState(() => _isRefreshingFromDevice = true);
+      Future.delayed(const Duration(seconds: 10), () {
+        if (mounted) setState(() => _isRefreshingFromDevice = false);
+      });
+    } catch (e) {
+      debugPrint('F_MATE: Could not set appsRefreshRequest: $e');
+    }
+  }
+
+  void _listenToShards(String studentId) {
+    _shardsSubscription?.cancel();
+    _shardsSubscription = _firestore
+        .collection('users')
+        .doc(studentId)
+        .collection('data_v2')
+        .snapshots()
+        .listen((snapshot) async {
+      if (!mounted) return;
+
+      List<Map<String, dynamic>> allApps = [];
+      if (snapshot.docs.isNotEmpty) {
+        for (var doc in snapshot.docs) {
+          if (doc.data().containsKey('installedApps')) {
+            final shardApps = List<Map<String, dynamic>>.from(doc.data()['installedApps']);
+            allApps.addAll(shardApps);
+          }
+        }
+      } else {
+        // Fallback: legacy
+        try {
+          DocumentSnapshot legacyDoc = await _firestore.collection('users').doc(studentId).collection('data').doc('installed_apps').get();
+          if (legacyDoc.exists && legacyDoc.data() != null) {
+            final data = legacyDoc.data() as Map<String, dynamic>;
+            if (data.containsKey('installedApps')) {
+              allApps = List<Map<String, dynamic>>.from(data['installedApps']);
+            }
+          }
+        } catch (_) {}
+      }
+
+      const ignoredPackages = [
+        'android', 'com.android.settings', 'com.android.systemui', 'com.android.vending',
+        'com.google.android.gms', 'com.google.android.googlequicksearchbox',
+        'com.google.android.inputmethod.latin', 'com.google.android.packageinstaller',
+        'com.android.permissioncontroller', 'com.google.android.apps.docs',
+        'com.android.shell', 'com.android.providers.calendar', 'com.android.providers.contacts',
+      ];
+
+      allApps.sort((a, b) => (a['appName'] as String).toLowerCase().compareTo((b['appName'] as String).toLowerCase()));
+
+      if (mounted) {
+        setState(() {
+          _installedApps = allApps.where((app) {
+            final pkg = app['packageName'] as String;
+            if (pkg == 'com.example.focus_mate') return false;
+            if (ignoredPackages.contains(pkg)) return false;
+            if (pkg.startsWith('com.android.providers')) return false;
+            if (pkg.contains('overlay')) return false;
+            if (pkg.contains('service')) return false;
+            return true;
+          }).map((app) {
+            final newApp = Map<String, dynamic>.from(app);
+            final pkg = newApp['packageName'];
+            final iconBase64 = _iconMap[pkg] ?? newApp['iconBytes'];
+            if (iconBase64 != null && iconBase64 is String) {
+              try {
+                newApp['decodedIcon'] = base64Decode(iconBase64);
+              } catch (e) {}
+            }
+            return newApp;
+          }).toList();
+
+          _isLoading = false;
+          _isRefreshingFromDevice = false; // Fresh data arrived
+        });
+      }
+    });
   }
 
   /// Loads session data and the student's installed apps.
@@ -64,54 +154,6 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
       _sessionData = sessionDoc.data()!;
       final studentId = _sessionData['userId'];
 
-      // Get student's installed apps from Firestore
-      // UPDATED: Now fetches from the 'data_v2' sharded subcollection
-      final appsCollection = _firestore
-          .collection('users')
-          .doc(studentId)
-          .collection('data_v2');
-
-      final shardsSnapshot = await appsCollection.get();
-      List<Map<String, dynamic>> apps = [];
-
-      if (shardsSnapshot.docs.isNotEmpty) {
-        // 1. New Sharded Data
-        for (var doc in shardsSnapshot.docs) {
-          if (doc.data().containsKey('installedApps')) {
-            final shardApps = List<Map<String, dynamic>>.from(
-              doc.data()['installedApps'],
-            );
-            apps.addAll(shardApps);
-          }
-        }
-      } else {
-        // 2. Fallback: Check 'data/installed_apps' (Previous version)
-        DocumentSnapshot legacyDoc = await _firestore
-            .collection('users')
-            .doc(studentId)
-            .collection('data')
-            .doc('installed_apps')
-            .get();
-
-        if (legacyDoc.exists && legacyDoc.data() != null) {
-          final data = legacyDoc.data() as Map<String, dynamic>;
-          if (data.containsKey('installedApps')) {
-            apps = List<Map<String, dynamic>>.from(data['installedApps']);
-          }
-        } else {
-          // 3. Fallback: Check old location in user document (Oldest version)
-          final userDoc = await _firestore
-              .collection('users')
-              .doc(studentId)
-              .get();
-          if (userDoc.exists && userDoc.data()!.containsKey('installedApps')) {
-            apps = List<Map<String, dynamic>>.from(
-              userDoc.data()!['installedApps'],
-            );
-          }
-        }
-      }
-
       // Get icons from app_icons collection
       final iconCollection = _firestore
           .collection('users')
@@ -124,66 +166,14 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
           iconMap[doc.id] = doc.data()['icon'];
         }
       }
+      _iconMap = iconMap;
+
+      _listenToShards(studentId);
 
       if (mounted) {
         setState(() {
-          // Blacklist of common system apps that typically don't need to be locked
-          const ignoredPackages = [
-            'android',
-            'com.android.settings',
-            'com.android.systemui',
-            'com.android.vending',
-            'com.google.android.gms',
-            'com.google.android.googlequicksearchbox',
-            'com.google.android.inputmethod.latin',
-            'com.google.android.packageinstaller',
-            'com.android.permissioncontroller',
-            'com.google.android.apps.docs', // Drive (usually okay)
-            'com.android.shell',
-            'com.android.providers.calendar',
-            'com.android.providers.contacts',
-          ];
-
-          // Filter out our own app and unnecessary system apps
-          _installedApps = apps
-              .where((app) {
-                final pkg = app['packageName'] as String;
-                if (pkg == 'com.example.focus_mate') return false;
-
-                // Hide system apps that start with com.android or com.google.android.providers unless explicitly useful
-                if (ignoredPackages.contains(pkg)) return false;
-                if (pkg.startsWith('com.android.providers')) return false;
-                if (pkg.contains('overlay')) return false;
-                if (pkg.contains('service')) return false;
-
-                return true;
-              })
-              .map((app) {
-                final newApp = Map<String, dynamic>.from(app);
-                final pkg = newApp['packageName'];
-                final iconBase64 = iconMap[pkg] ?? newApp['iconBytes'];
-
-                if (iconBase64 != null && iconBase64 is String) {
-                  try {
-                    newApp['decodedIcon'] = base64Decode(iconBase64);
-                  } catch (e) {
-                    debugPrint("Error decoding icon for $pkg: $e");
-                  }
-                }
-                return newApp;
-              })
-              .toList();
-
-          // Sort alphabetically
-          _installedApps.sort(
-            (a, b) => (a['appName'] as String).toLowerCase().compareTo(
-              (b['appName'] as String).toLowerCase(),
-            ),
-          );
-
           _lockedApps = List<String>.from(_sessionData['lockedApps'] ?? []);
           _selectedApps = List.from(_lockedApps);
-          _isLoading = false;
         });
 
         _updateTimeLeft();
@@ -564,14 +554,44 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text(
-          "Control - $studentName",
-          style: TextStyle(color: textColor),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              "Control - $studentName",
+              style: TextStyle(color: textColor, fontSize: 18),
+            ),
+            if (_isRefreshingFromDevice)
+              Text(
+                "Refreshing from device...",
+                style: TextStyle(
+                  color: isDark ? Colors.orangeAccent : Colors.orange.shade700,
+                  fontSize: 11,
+                ),
+              ),
+          ],
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: IconThemeData(color: textColor),
         actions: [
+          IconButton(
+            icon: Icon(
+              Icons.refresh,
+              color: isDark ? Colors.white70 : Colors.black54,
+            ),
+            tooltip: "Request fresh app list from device",
+            onPressed: () {
+              _requestDeviceRefresh();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text("Requesting latest apps from child device..."),
+                  duration: Duration(seconds: 3),
+                ),
+              );
+            },
+          ),
           if (isActive)
             IconButton(
               icon: const Icon(Icons.lock_open, color: Colors.red),

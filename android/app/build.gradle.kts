@@ -11,7 +11,7 @@ plugins {
 android {
     namespace = "com.example.focus_mate"
     compileSdk = 36
-    ndkVersion = "27.0.12077973"
+    ndkVersion = "28.2.13676358"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -33,6 +33,8 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        testInstrumentationRunner = "pl.leancode.patrol.PatrolJUnitRunner"
+        testInstrumentationRunnerArguments["clearPackageData"] = "true"
     }
 
     buildTypes {
@@ -42,6 +44,13 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+
+    testOptions {
+        animationsDisabled = true
+        // ANDROIDX_TEST_ORCHESTRATOR causes Parcel NULL string errors on Vivo/BBK devices (Android 10)
+        // Using HOST execution mode instead for better device compatibility
+        execution = "HOST"
+    }
 }
 
 flutter {
@@ -50,4 +59,14 @@ flutter {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+    // 1.5.1+ required: Patrol Dart test names include a space (group + test name).
+    androidTestUtil("androidx.test:orchestrator:1.5.1")
+}
+
+configurations.all {
+    resolutionStrategy {
+        force("androidx.browser:browser:1.8.0")
+        force("androidx.core:core:1.15.0")
+        force("androidx.core:core-ktx:1.15.0")
+    }
 }

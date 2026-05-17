@@ -340,7 +340,13 @@ class _ParentDashboardState extends ConsumerState<ParentDashboard> {
                           final studentId = linked[index];
                           return Padding(
                             padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                            child: _buildStudentTile(studentId, isDark),
+                            child: _buildStudentTile(
+                              studentId,
+                              isDark,
+                              locksButtonKey: index == 0
+                                  ? const Key('patrol_parent_locks')
+                                  : null,
+                            ),
                           );
                         },
                         childCount: linked.length,
@@ -442,7 +448,11 @@ class _ParentDashboardState extends ConsumerState<ParentDashboard> {
     );
   }
 
-  Widget _buildStudentTile(String studentId, bool isDark) {
+  Widget _buildStudentTile(
+    String studentId,
+    bool isDark, {
+    Key? locksButtonKey,
+  }) {
     // Use StreamBuilder so isOnline updates live without manual refresh.
     return StreamBuilder<DocumentSnapshot>(
       stream: _firestore.collection('users').doc(studentId).snapshots(),
@@ -656,6 +666,7 @@ class _ParentDashboardState extends ConsumerState<ParentDashboard> {
                   ),
                   SizedBox(width: 8.w),
                   _buildStudentAction(
+                    key: locksButtonKey,
                     icon: Icons.lock_outline,
                     label: "Locks",
                     color: Colors.orangeAccent,
@@ -688,6 +699,7 @@ class _ParentDashboardState extends ConsumerState<ParentDashboard> {
   }
 
   Widget _buildStudentAction({
+    Key? key,
     required IconData icon,
     required String label,
     required Color color,
@@ -695,6 +707,7 @@ class _ParentDashboardState extends ConsumerState<ParentDashboard> {
     required VoidCallback onTap,
   }) {
     return Expanded(
+      key: key,
       child: Material(
         color: Colors.transparent,
         child: InkWell(

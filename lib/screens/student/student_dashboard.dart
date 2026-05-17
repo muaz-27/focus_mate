@@ -1814,13 +1814,17 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
                       children: [
                         Row(
                           children: [
-                            Text(
-                              "DAILY GOAL",
-                              style: TextStyle(
-                                color: accentColor,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1.5,
+                            Flexible(
+                              child: Text(
+                                "DAILY GOAL",
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                                style: TextStyle(
+                                  color: accentColor,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1.5,
+                                ),
                               ),
                             ),
                             const SizedBox(width: 8),
