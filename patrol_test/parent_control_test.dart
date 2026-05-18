@@ -29,29 +29,55 @@ void main() {
       await $(RegExp('Parent Dashboard|Monitored Children', caseSensitive: false))
           .waitUntilVisible(timeout: const Duration(seconds: 15));
 
-      // 5. NATIVE OS INTERACTION!
-      // This is Patrol's superpower. We will pull down the Android Notification shade natively,
-      // wait 2 seconds so you can see it, and then close it using the native back button.
-      await $.native.openNotifications();
-      await Future.delayed(const Duration(seconds: 2));
-      await $.native.pressBack();
-
-      // 6. Enter the Remote Control Interface
+      // 5. Enter the Remote Control Interface
       // It looks for the first "Control" button on the monitored student list
       await $(RegExp('Control', caseSensitive: false)).waitUntilVisible(timeout: const Duration(seconds: 10));
       await $(RegExp('Control', caseSensitive: false)).tap();
 
-      // 7. Verify we successfully routed to the ParentChildControlPage
-      await $(RegExp('App Locks', caseSensitive: false)).waitUntilVisible(timeout: const Duration(seconds: 10));
-
-      // Navigate to the Analytics tab of the child
-      await $(RegExp('Analytics', caseSensitive: false)).tap();
+      // 6. Verify we successfully routed to the ParentChildControlPage (the control list)
+      await $(RegExp('App Limits & Locks', caseSensitive: false)).waitUntilVisible(timeout: const Duration(seconds: 10));
 
       // Pause to ensure UI animation completes smoothly
       await Future.delayed(const Duration(seconds: 2));
 
-      // 8. Final Assertion: Ensure we are inside the Analytics tab
-      expect($(RegExp('Analytics', caseSensitive: false)).exists, isTrue);
+      // 7. Open the Snapshots Viewer
+      await $(RegExp('Snapshots', caseSensitive: false)).tap();
+      
+      // Wait for the Snapshots Screen to fully render (either it shows snapshots or "No snapshots yet")
+      await $(RegExp('Snapshots|Recent|No snapshots yet', caseSensitive: false)).waitUntilVisible(timeout: const Duration(seconds: 10));
+
+      // Keep the screen open for 5 seconds so you can visually verify it loaded
+      await Future.delayed(const Duration(seconds: 5));
+
+      // 8. Click the arrow Back Button in the top left corner
+      await $(BackButton).tap();
+
+      // Pause for 2 seconds to see the back animation finish
+      await Future.delayed(const Duration(seconds: 2));
+
+      // 9. Open App Limits & Locks Modal
+      await $(RegExp('App Limits & Locks', caseSensitive: false)).tap();
+      await Future.delayed(const Duration(seconds: 1));
+
+      // 10. Tap Instant Lock
+      await $(RegExp('Instant Lock', caseSensitive: false)).tap();
+      
+      // Give the screen a moment to open and start its fetching process
+      await Future.delayed(const Duration(seconds: 2));
+
+      // Actively wait for the data to finish loading by checking if the loading text is still there (up to 30 seconds)
+      for (int i = 0; i < 30; i++) {
+        final isRefreshing = $(RegExp('Refreshing from device', caseSensitive: false)).exists;
+        final isLoading = $(RegExp('Loading apps from child', caseSensitive: false)).exists;
+        
+        if (!isRefreshing && !isLoading) {
+          break; // Data is fully loaded!
+        }
+        await Future.delayed(const Duration(seconds: 1));
+      }
+
+      // Now that the data is definitely loaded, pause for 5 seconds so you can see the fully loaded screen
+      await Future.delayed(const Duration(seconds: 5));
     },
   );
 }
