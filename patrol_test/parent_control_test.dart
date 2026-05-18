@@ -76,7 +76,22 @@ void main() {
         await Future.delayed(const Duration(seconds: 1));
       }
 
-      // Now that the data is definitely loaded, pause for 5 seconds so you can see the fully loaded screen
+      // Now that the data is definitely loaded, pause for 2 seconds to see the loaded apps
+      await Future.delayed(const Duration(seconds: 2));
+
+      // 11. Select the first app in the grid
+      // We look for the first Text widget inside the GridView (which will be the name of the first app)
+      await $(GridView).$(Text).first.tap();
+      await Future.delayed(const Duration(seconds: 1)); // Pause to see the app get highlighted
+
+      // 12. Tap 'Set Timer'
+      await $(RegExp('Set Timer', caseSensitive: false)).tap();
+      await Future.delayed(const Duration(seconds: 2)); // Pause to see the bottom sheet
+
+      // 13. Tap 'Apply Lock'
+      await $(RegExp('Apply Lock', caseSensitive: false)).tap();
+
+      // Pause for 5 seconds to view the active lock banner before the test finishes
       await Future.delayed(const Duration(seconds: 5));
     },
   );
