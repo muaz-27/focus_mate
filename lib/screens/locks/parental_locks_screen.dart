@@ -32,10 +32,10 @@ class _ParentalLocksScreenState extends State<ParentalLocksScreen> {
   List<AppSchedule> _schedules = [];
   List<String> _lockedPackageNames = [];
   Map<String, String> _iconMap = {};
-  
+
   // To keep track of installed apps metadata so we can filter locally on stream update
   List<Map<String, dynamic>> _allApps = [];
-  
+
   // Track requests sent this session
   final Set<String> _pendingPackages = {};
 
@@ -47,16 +47,20 @@ class _ParentalLocksScreenState extends State<ParentalLocksScreen> {
   void initState() {
     super.initState();
     _loadDataAndListen();
-    
-    _scheduleSub = ScheduleService().getSchedulesStream(widget.studentId).listen((schedules) {
-      if (mounted) {
-        setState(() {
-          _schedules = schedules.where((s) => s.status == 'active').toList();
+
+    _scheduleSub = ScheduleService()
+        .getSchedulesStream(widget.studentId)
+        .listen((schedules) {
+          if (mounted) {
+            setState(() {
+              _schedules = schedules
+                  .where((s) => s.status == 'active')
+                  .toList();
+            });
+            // Sync schedules to native when they change
+            ScheduleService().syncSchedulesToNative(widget.studentId);
+          }
         });
-        // Sync schedules to native when they change
-        ScheduleService().syncSchedulesToNative(widget.studentId);
-      }
-    });
 
     _listenForUnlockRequests();
   }
@@ -64,7 +68,7 @@ class _ParentalLocksScreenState extends State<ParentalLocksScreen> {
   void _listenForUnlockRequests() {
     // Only listen for requests created recently to avoid old ones
     final cutoff = DateTime.now().subtract(const Duration(hours: 24));
-    
+
     _unlockRequestsSub = _firestore
         .collection('unlock_requests')
         .where('studentId', isEqualTo: widget.studentId)
@@ -73,61 +77,63 @@ class _ParentalLocksScreenState extends State<ParentalLocksScreen> {
         // We will filter by time in memory.
         .snapshots()
         .listen((snapshot) {
-      if (!mounted) return;
-      
-      final Map<String, Map<String, dynamic>> latestRequests = {};
-      
-      for (final doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-        final ts = data['requestedAt'] as Timestamp?;
-        final date = ts?.toDate() ?? DateTime.now(); // local cache writes have null server timestamps
-        
-        if (date.isBefore(cutoff)) continue;
-        
-        final pkg = data['packageName'] as String? ?? '';
-        if (pkg.isEmpty) continue;
-        
-        if (!latestRequests.containsKey(pkg)) {
-          latestRequests[pkg] = {'data': data, 'date': date};
-        } else {
-          final existingDate = latestRequests[pkg]!['date'] as DateTime;
-          if (date.isAfter(existingDate)) {
-            latestRequests[pkg] = {'data': data, 'date': date};
-          }
-        }
-      }
+          if (!mounted) return;
 
-      final Set<String> newPendingPkgs = {};
+          final Map<String, Map<String, dynamic>> latestRequests = {};
 
-      for (final entry in latestRequests.entries) {
-        final pkg = entry.key;
-        final data = entry.value['data'] as Map<String, dynamic>;
-        final status = data['status'] as String? ?? 'pending';
+          for (final doc in snapshot.docs) {
+            final data = doc.data();
+            final ts = data['requestedAt'] as Timestamp?;
+            final date =
+                ts?.toDate() ??
+                DateTime.now(); // local cache writes have null server timestamps
 
-        if (status == 'pending') {
-          newPendingPkgs.add(pkg);
-        } else if (status == 'approved' || status == 'rejected') {
-          if (_pendingPackages.contains(pkg)) {
-            if (status == 'approved') {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) _showStatusDialog(pkg, true);
-              });
+            if (date.isBefore(cutoff)) continue;
+
+            final pkg = data['packageName'] as String? ?? '';
+            if (pkg.isEmpty) continue;
+
+            if (!latestRequests.containsKey(pkg)) {
+              latestRequests[pkg] = {'data': data, 'date': date};
             } else {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) _showStatusDialog(pkg, false);
-              });
+              final existingDate = latestRequests[pkg]!['date'] as DateTime;
+              if (date.isAfter(existingDate)) {
+                latestRequests[pkg] = {'data': data, 'date': date};
+              }
             }
           }
-        }
-      }
 
-      if (mounted) {
-        setState(() {
-          _pendingPackages.clear();
-          _pendingPackages.addAll(newPendingPkgs);
+          final Set<String> newPendingPkgs = {};
+
+          for (final entry in latestRequests.entries) {
+            final pkg = entry.key;
+            final data = entry.value['data'] as Map<String, dynamic>;
+            final status = data['status'] as String? ?? 'pending';
+
+            if (status == 'pending') {
+              newPendingPkgs.add(pkg);
+            } else if (status == 'approved' || status == 'rejected') {
+              if (_pendingPackages.contains(pkg)) {
+                if (status == 'approved') {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted) _showStatusDialog(pkg, true);
+                  });
+                } else {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted) _showStatusDialog(pkg, false);
+                  });
+                }
+              }
+            }
+          }
+
+          if (mounted) {
+            setState(() {
+              _pendingPackages.clear();
+              _pendingPackages.addAll(newPendingPkgs);
+            });
+          }
         });
-      }
-    });
   }
 
   @override
@@ -141,17 +147,25 @@ class _ParentalLocksScreenState extends State<ParentalLocksScreen> {
   Future<void> _loadDataAndListen() async {
     try {
       // 1. Fetch app metadata from shards (one time)
-      final appsCollection = _firestore.collection('users').doc(widget.studentId).collection('data_v2');
+      final appsCollection = _firestore
+          .collection('users')
+          .doc(widget.studentId)
+          .collection('data_v2');
       final shardsSnapshot = await appsCollection.get();
-      
+
       for (var doc in shardsSnapshot.docs) {
         if (doc.data().containsKey('installedApps')) {
-          _allApps.addAll(List<Map<String, dynamic>>.from(doc.data()['installedApps']));
+          _allApps.addAll(
+            List<Map<String, dynamic>>.from(doc.data()['installedApps']),
+          );
         }
       }
 
       // 2. Fetch App Icons (one time)
-      final iconCollection = _firestore.collection('users').doc(widget.studentId).collection('app_icons');
+      final iconCollection = _firestore
+          .collection('users')
+          .doc(widget.studentId)
+          .collection('app_icons');
       final iconsSnapshot = await iconCollection.get();
       for (var doc in iconsSnapshot.docs) {
         if (doc.data().containsKey('icon')) {
@@ -164,39 +178,48 @@ class _ParentalLocksScreenState extends State<ParentalLocksScreen> {
 
     // 3. Listen to user doc for lockedApps changes
     if (mounted) {
-      _userDocSub = _firestore.collection('users').doc(widget.studentId).snapshots().listen((userDoc) {
-        if (!mounted) return;
-        if (!userDoc.exists) {
-          setState(() => _isLoading = false);
-          return;
-        }
+      _userDocSub = _firestore
+          .collection('users')
+          .doc(widget.studentId)
+          .snapshots()
+          .listen((userDoc) {
+            if (!mounted) return;
+            if (!userDoc.exists) {
+              setState(() => _isLoading = false);
+              return;
+            }
 
-        final data = userDoc.data()!;
-        _lockedPackageNames = List<String>.from(data['lockedApps'] ?? []);
+            final data = userDoc.data()!;
+            _lockedPackageNames = List<String>.from(data['lockedApps'] ?? []);
 
-        setState(() {
-          _lockedApps = _allApps
-              .where((app) => _lockedPackageNames.contains(app['packageName']))
-              .map((app) {
-                final newApp = Map<String, dynamic>.from(app);
-                final pkg = newApp['packageName'];
-                final iconBase64 = _iconMap[pkg] ?? newApp['iconBytes'];
-                
-                if (iconBase64 != null && iconBase64 is String) {
-                  try {
-                    newApp['decodedIcon'] = base64Decode(iconBase64);
-                  } catch (_) {}
-                }
-                return newApp;
-              }).toList();
-              
-          _lockedApps.sort((a, b) => 
-            (a['appName'] as String).toLowerCase().compareTo((b['appName'] as String).toLowerCase())
-          );
-          
-          _isLoading = false;
-        });
-      });
+            setState(() {
+              _lockedApps = _allApps
+                  .where(
+                    (app) => _lockedPackageNames.contains(app['packageName']),
+                  )
+                  .map((app) {
+                    final newApp = Map<String, dynamic>.from(app);
+                    final pkg = newApp['packageName'];
+                    final iconBase64 = _iconMap[pkg] ?? newApp['iconBytes'];
+
+                    if (iconBase64 != null && iconBase64 is String) {
+                      try {
+                        newApp['decodedIcon'] = base64Decode(iconBase64);
+                      } catch (_) {}
+                    }
+                    return newApp;
+                  })
+                  .toList();
+
+              _lockedApps.sort(
+                (a, b) => (a['appName'] as String).toLowerCase().compareTo(
+                  (b['appName'] as String).toLowerCase(),
+                ),
+              );
+
+              _isLoading = false;
+            });
+          });
     }
   }
 
@@ -209,7 +232,8 @@ class _ParentalLocksScreenState extends State<ParentalLocksScreen> {
         (a) => a['packageName'] == packageName,
         orElse: () => {},
       );
-      if (match.isNotEmpty) appLabel = match['appName'] as String? ?? packageName;
+      if (match.isNotEmpty)
+        appLabel = match['appName'] as String? ?? packageName;
     }
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -226,8 +250,9 @@ class _ParentalLocksScreenState extends State<ParentalLocksScreen> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: (approved ? Colors.green : Colors.redAccent)
-                    .withValues(alpha: 0.12),
+                color: (approved ? Colors.green : Colors.redAccent).withValues(
+                  alpha: 0.12,
+                ),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -265,7 +290,8 @@ class _ParentalLocksScreenState extends State<ParentalLocksScreen> {
                   backgroundColor: approved ? Colors.green : Colors.redAccent,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 child: const Text('OK'),
               ),
@@ -289,20 +315,25 @@ class _ParentalLocksScreenState extends State<ParentalLocksScreen> {
     }
 
     final reasonController = TextEditingController();
-    
+
     await showDialog(
       context: context,
       builder: (ctx) {
         final isDark = Theme.of(context).brightness == Brightness.dark;
         return AlertDialog(
           backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-          title: Text("Request Unlock", style: TextStyle(color: isDark ? Colors.white : Colors.black87)),
+          title: Text(
+            "Request Unlock",
+            style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 "Why do you need to unlock ${app['appName']}?",
-                style: TextStyle(color: isDark ? Colors.white70 : Colors.black54),
+                style: TextStyle(
+                  color: isDark ? Colors.white70 : Colors.black54,
+                ),
               ),
               const SizedBox(height: 16),
               TextField(
@@ -310,7 +341,9 @@ class _ParentalLocksScreenState extends State<ParentalLocksScreen> {
                 style: TextStyle(color: isDark ? Colors.white : Colors.black87),
                 decoration: InputDecoration(
                   hintText: "Enter your reason...",
-                  hintStyle: TextStyle(color: isDark ? Colors.white30 : Colors.black26),
+                  hintStyle: TextStyle(
+                    color: isDark ? Colors.white30 : Colors.black26,
+                  ),
                   filled: true,
                   fillColor: isDark ? Colors.black26 : Colors.grey.shade100,
                   border: OutlineInputBorder(
@@ -325,26 +358,39 @@ class _ParentalLocksScreenState extends State<ParentalLocksScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: Text("Cancel", style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey.shade600)),
+              child: Text(
+                "Cancel",
+                style: TextStyle(
+                  color: isDark ? Colors.grey[400] : Colors.grey.shade600,
+                ),
+              ),
             ),
             ElevatedButton(
               onPressed: () async {
                 final reason = reasonController.text.trim();
                 if (reason.isEmpty) return;
-                
+
                 Navigator.pop(ctx);
                 await _submitUnlockRequest(app, reason);
               },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.cyanAccent),
-              child: const Text("Submit", style: TextStyle(color: Colors.black)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.cyanAccent,
+              ),
+              child: const Text(
+                "Submit",
+                style: TextStyle(color: Colors.black),
+              ),
             ),
           ],
         );
-      }
+      },
     );
   }
 
-  Future<void> _submitUnlockRequest(Map<String, dynamic> app, String reason) async {
+  Future<void> _submitUnlockRequest(
+    Map<String, dynamic> app,
+    String reason,
+  ) async {
     final pkg = app['packageName'] as String;
     try {
       setState(() {
@@ -361,10 +407,13 @@ class _ParentalLocksScreenState extends State<ParentalLocksScreen> {
         'status': 'pending',
         'requestedAt': FieldValue.serverTimestamp(),
       });
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Unlock request sent successfully!"), backgroundColor: Colors.green),
+          const SnackBar(
+            content: Text("Unlock request sent successfully!"),
+            backgroundColor: Colors.green,
+          ),
         );
       }
     } catch (e) {
@@ -373,7 +422,10 @@ class _ParentalLocksScreenState extends State<ParentalLocksScreen> {
           _pendingPackages.remove(pkg);
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to send request: $e"), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text("Failed to send request: $e"),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -384,7 +436,9 @@ class _ParentalLocksScreenState extends State<ParentalLocksScreen> {
     if (_pendingPackages.contains(pkg)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('You already have a pending request for this schedule.'),
+          content: Text(
+            'You already have a pending request for this schedule.',
+          ),
           backgroundColor: Colors.orange,
         ),
       );
@@ -392,20 +446,25 @@ class _ParentalLocksScreenState extends State<ParentalLocksScreen> {
     }
 
     final reasonController = TextEditingController();
-    
+
     await showDialog(
       context: context,
       builder: (ctx) {
         final isDark = Theme.of(context).brightness == Brightness.dark;
         return AlertDialog(
           backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-          title: Text("Request Unlock", style: TextStyle(color: isDark ? Colors.white : Colors.black87)),
+          title: Text(
+            "Request Unlock",
+            style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 "Why do you need to unlock the schedule '${schedule.name}'?",
-                style: TextStyle(color: isDark ? Colors.white70 : Colors.black54),
+                style: TextStyle(
+                  color: isDark ? Colors.white70 : Colors.black54,
+                ),
               ),
               const SizedBox(height: 16),
               TextField(
@@ -413,7 +472,9 @@ class _ParentalLocksScreenState extends State<ParentalLocksScreen> {
                 style: TextStyle(color: isDark ? Colors.white : Colors.black87),
                 decoration: InputDecoration(
                   hintText: "Enter your reason...",
-                  hintStyle: TextStyle(color: isDark ? Colors.white30 : Colors.black26),
+                  hintStyle: TextStyle(
+                    color: isDark ? Colors.white30 : Colors.black26,
+                  ),
                   filled: true,
                   fillColor: isDark ? Colors.black26 : Colors.grey.shade100,
                   border: OutlineInputBorder(
@@ -428,26 +489,37 @@ class _ParentalLocksScreenState extends State<ParentalLocksScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: Text("Cancel", style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey.shade600)),
+              child: Text(
+                "Cancel",
+                style: TextStyle(
+                  color: isDark ? Colors.grey[400] : Colors.grey.shade600,
+                ),
+              ),
             ),
             ElevatedButton(
               onPressed: () async {
                 final reason = reasonController.text.trim();
                 if (reason.isEmpty) return;
-                
+
                 Navigator.pop(ctx);
                 await _submitScheduleUnlockRequest(schedule, reason);
               },
               style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
-              child: const Text("Submit", style: TextStyle(color: Colors.black)),
+              child: const Text(
+                "Submit",
+                style: TextStyle(color: Colors.black),
+              ),
             ),
           ],
         );
-      }
+      },
     );
   }
 
-  Future<void> _submitScheduleUnlockRequest(AppSchedule schedule, String reason) async {
+  Future<void> _submitScheduleUnlockRequest(
+    AppSchedule schedule,
+    String reason,
+  ) async {
     final pkg = 'schedule_${schedule.id}';
     try {
       setState(() {
@@ -464,10 +536,13 @@ class _ParentalLocksScreenState extends State<ParentalLocksScreen> {
         'status': 'pending',
         'requestedAt': FieldValue.serverTimestamp(),
       });
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Unlock request sent successfully!"), backgroundColor: Colors.green),
+          const SnackBar(
+            content: Text("Unlock request sent successfully!"),
+            backgroundColor: Colors.green,
+          ),
         );
       }
     } catch (e) {
@@ -476,7 +551,10 @@ class _ParentalLocksScreenState extends State<ParentalLocksScreen> {
           _pendingPackages.remove(pkg);
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to send request: $e"), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text("Failed to send request: $e"),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -508,11 +586,14 @@ class _ParentalLocksScreenState extends State<ParentalLocksScreen> {
               ),
             ),
             SizedBox(width: 6),
-            Text('Pending',
-                style: TextStyle(
-                    color: Colors.orange,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold)),
+            Text(
+              'Pending',
+              style: TextStyle(
+                color: Colors.orange,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ],
         ),
       );
@@ -536,7 +617,9 @@ class _ParentalLocksScreenState extends State<ParentalLocksScreen> {
       decoration: BoxDecoration(
         color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isDark ? Colors.white10 : Colors.grey.shade200),
+        border: Border.all(
+          color: isDark ? Colors.white10 : Colors.grey.shade200,
+        ),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -555,7 +638,10 @@ class _ParentalLocksScreenState extends State<ParentalLocksScreen> {
         ),
         subtitle: Text(
           "Locked by Companion",
-          style: TextStyle(color: isDark ? Colors.white54 : Colors.grey, fontSize: 12),
+          style: TextStyle(
+            color: isDark ? Colors.white54 : Colors.grey,
+            fontSize: 12,
+          ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
@@ -569,21 +655,36 @@ class _ParentalLocksScreenState extends State<ParentalLocksScreen> {
     );
   }
 
-  Widget _buildScheduleTile(AppSchedule schedule, Color textColor, bool isDark) {
-    String daysText = schedule.days.map((d) {
-      switch (d) {
-        case 1: return 'Mon';
-        case 2: return 'Tue';
-        case 3: return 'Wed';
-        case 4: return 'Thu';
-        case 5: return 'Fri';
-        case 6: return 'Sat';
-        case 7: return 'Sun';
-        default: return '';
-      }
-    }).join(', ');
-    
-    final timeText = "${schedule.startTime.format(context)} - ${schedule.endTime.format(context)}";
+  Widget _buildScheduleTile(
+    AppSchedule schedule,
+    Color textColor,
+    bool isDark,
+  ) {
+    String daysText = schedule.days
+        .map((d) {
+          switch (d) {
+            case 1:
+              return 'Mon';
+            case 2:
+              return 'Tue';
+            case 3:
+              return 'Wed';
+            case 4:
+              return 'Thu';
+            case 5:
+              return 'Fri';
+            case 6:
+              return 'Sat';
+            case 7:
+              return 'Sun';
+            default:
+              return '';
+          }
+        })
+        .join(', ');
+
+    final timeText =
+        "${schedule.startTime.format(context)} - ${schedule.endTime.format(context)}";
     final pkg = 'schedule_${schedule.id}';
 
     return Container(
@@ -591,7 +692,11 @@ class _ParentalLocksScreenState extends State<ParentalLocksScreen> {
       decoration: BoxDecoration(
         color: isDark ? Colors.amber.withValues(alpha: 0.05) : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isDark ? Colors.amber.withValues(alpha: 0.2) : Colors.grey.shade200),
+        border: Border.all(
+          color: isDark
+              ? Colors.amber.withValues(alpha: 0.2)
+              : Colors.grey.shade200,
+        ),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -614,15 +719,22 @@ class _ParentalLocksScreenState extends State<ParentalLocksScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              daysText.isNotEmpty ? daysText : "No specific days", 
-              style: TextStyle(color: isDark ? Colors.white54 : Colors.grey, fontSize: 12),
+              daysText.isNotEmpty ? daysText : "No specific days",
+              style: TextStyle(
+                color: isDark ? Colors.white54 : Colors.grey,
+                fontSize: 12,
+              ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 4),
             Text(
-              timeText, 
-              style: TextStyle(color: Colors.amber, fontSize: 13, fontWeight: FontWeight.bold),
+              timeText,
+              style: TextStyle(
+                color: Colors.amber,
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+              ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -647,7 +759,10 @@ class _ParentalLocksScreenState extends State<ParentalLocksScreen> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text("Parental Locks", style: TextStyle(color: textColor, fontWeight: FontWeight.bold)),
+        title: Text(
+          "Parental Locks",
+          style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: IconThemeData(color: textColor),
@@ -658,16 +773,25 @@ class _ParentalLocksScreenState extends State<ParentalLocksScreen> {
           AppColors.roleGradients['user']!,
         ),
         child: SafeArea(
-          child: _isLoading 
-            ? const Center(child: CircularProgressIndicator())
-            : (_lockedApps.isEmpty && _schedules.isEmpty)
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : (_lockedApps.isEmpty && _schedules.isEmpty)
               ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.lock_open, size: 64, color: isDark ? Colors.white24 : Colors.grey.shade300),
+                      Icon(
+                        Icons.lock_open,
+                        size: 64,
+                        color: isDark ? Colors.white24 : Colors.grey.shade300,
+                      ),
                       const SizedBox(height: 16),
-                      Text("No parental locks applied at this time.", style: TextStyle(color: isDark ? Colors.white54 : Colors.grey)),
+                      Text(
+                        "No parental locks applied at this time.",
+                        style: TextStyle(
+                          color: isDark ? Colors.white54 : Colors.grey,
+                        ),
+                      ),
                     ],
                   ),
                 )
@@ -675,15 +799,34 @@ class _ParentalLocksScreenState extends State<ParentalLocksScreen> {
                   padding: const EdgeInsets.all(16),
                   children: [
                     if (_lockedApps.isNotEmpty) ...[
-                      Text("Instant Locks", style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 18)),
+                      Text(
+                        "Instant Locks",
+                        style: TextStyle(
+                          color: textColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
                       const SizedBox(height: 12),
-                      ..._lockedApps.map((app) => _buildAppTile(app, textColor, isDark)),
+                      ..._lockedApps.map(
+                        (app) => _buildAppTile(app, textColor, isDark),
+                      ),
                       const SizedBox(height: 16),
                     ],
                     if (_schedules.isNotEmpty) ...[
-                      Text("Scheduled Locks", style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 18)),
+                      Text(
+                        "Scheduled Locks",
+                        style: TextStyle(
+                          color: textColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
                       const SizedBox(height: 12),
-                      ..._schedules.map((schedule) => _buildScheduleTile(schedule, textColor, isDark)),
+                      ..._schedules.map(
+                        (schedule) =>
+                            _buildScheduleTile(schedule, textColor, isDark),
+                      ),
                     ],
                   ],
                 ),

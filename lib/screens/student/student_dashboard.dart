@@ -26,6 +26,7 @@ import 'package:focus_mate/screens/student/widgets/session_banner.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:focus_mate/providers/schedule_provider.dart';
+import 'package:focus_mate/core/theme_picker.dart';
 
 /// Entry point that redirects back to the auth gate.
 ///
@@ -252,12 +253,15 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
 
             // 3. Apps Refresh Request (triggered by parent opening the lock screen)
             if (data['appsRefreshRequest'] == true) {
-              debugPrint("F_MATE: appsRefreshRequest detected — force syncing apps...");
+              debugPrint(
+                "F_MATE: appsRefreshRequest detected — force syncing apps...",
+              );
               // Clear the flag first so we don't double-trigger
               _firestore
                   .collection('users')
                   .doc(widget.userData['id'])
-                  .update({'appsRefreshRequest': false}).catchError((_) {});
+                  .update({'appsRefreshRequest': false})
+                  .catchError((_) {});
               // Force a fresh sync to Firestore, bypassing the hash cache
               _usageService.syncInstalledAppsToFirebase(
                 widget.userData['id'],
@@ -327,14 +331,16 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
       final today = now.weekday; // 1=Mon, 7=Sun
       for (var schedule in _schedules) {
         if (schedule.status == 'active' && schedule.days.contains(today)) {
-          final startMinutes = schedule.startTime.hour * 60 + schedule.startTime.minute;
+          final startMinutes =
+              schedule.startTime.hour * 60 + schedule.startTime.minute;
           final diff = startMinutes - nowMinutes;
           // Check if exactly 5 minutes away
           if (diff == 5) {
             NotificationService().showInstantNotification(
               id: schedule.id.hashCode,
               title: "Upcoming Session",
-              body: "Your scheduled session '${schedule.name}' starts in 5 minutes.",
+              body:
+                  "Your scheduled session '${schedule.name}' starts in 5 minutes.",
             );
           }
         }
@@ -686,7 +692,8 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
                 final newStatus = (validDoc.data() as Map)['status'];
                 final newId = validDoc.id;
 
-                if (_lastSessionId == newId && _lastSessionStatus != newStatus) {
+                if (_lastSessionId == newId &&
+                    _lastSessionStatus != newStatus) {
                   if (newStatus == 'ACTIVE') {
                     NotificationService().showInstantNotification(
                       id: validDoc.id.hashCode,
@@ -707,7 +714,7 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
 
                 setState(() {
                   _activeSessionData = validDoc!.data() as Map<String, dynamic>;
-                  _activeSessionData!['id'] = validDoc!.id;
+                  _activeSessionData!['id'] = validDoc.id;
                 });
               } else {
                 _lastSessionId = null;
@@ -1065,7 +1072,9 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
   void _showSettingsSheet() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Theme.of(context).brightness == Brightness.dark ? AppColors.cardOverlay : Colors.white.withValues(alpha: 0.95),
+      backgroundColor: Theme.of(context).brightness == Brightness.dark
+          ? AppColors.cardOverlay
+          : Colors.white.withValues(alpha: 0.95),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -1087,11 +1096,30 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
                 Text("Settings", style: AppTheme.headerTitle(context)),
                 const SizedBox(height: 24),
                 ListTile(
-                  leading: const Icon(Icons.logout, color: Colors.redAccent),
-                  title: Text(
-                    "Log Out",
-                    style: TextStyle(color: textColor),
+                  leading: Icon(
+                    Icons.palette_outlined,
+                    color: isDark ? Colors.cyanAccent : Colors.blueAccent,
                   ),
+                  title: Text("Switch Theme", style: TextStyle(color: textColor)),
+                  subtitle: Text(
+                    "Light · Dark · System",
+                    style: TextStyle(
+                      color: isDark ? Colors.white38 : Colors.black38,
+                      fontSize: 12,
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    showThemePicker(context, ref);
+                  },
+                ),
+                Divider(
+                  color: isDark ? Colors.white12 : Colors.black12,
+                  height: 1,
+                ),
+                ListTile(
+                  leading: const Icon(Icons.logout, color: Colors.redAccent),
+                  title: Text("Log Out", style: TextStyle(color: textColor)),
                   onTap: () {
                     Navigator.pop(context);
                     widget.onLogout();
@@ -1122,79 +1150,79 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
       canPop: false,
       child: Scaffold(
         backgroundColor: Colors.transparent,
-      extendBodyBehindAppBar: true,
-      body: Container(
-        decoration: AppTheme.screenBackground(
-          context,
-          AppColors.roleGradients['user']!,
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              DashboardHeader(
-                userData: widget.userData,
-                titleColor: textColor,
-                subtitleColor: subTextColor,
-                onSettingsTap: _showSettingsSheet,
-              ),
-              Expanded(
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 24.w,
-                    vertical: 12.h,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (_activeSessionData != null) ...[
-                        SessionBanner(
-                          activeSessionData: _activeSessionData!,
-                          userId: widget.userData['id'],
+        extendBodyBehindAppBar: true,
+        body: Container(
+          decoration: AppTheme.screenBackground(
+            context,
+            AppColors.roleGradients['user']!,
+          ),
+          child: SafeArea(
+            child: Column(
+              children: [
+                DashboardHeader(
+                  userData: widget.userData,
+                  titleColor: textColor,
+                  subtitleColor: subTextColor,
+                  onSettingsTap: _showSettingsSheet,
+                ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 24.w,
+                      vertical: 12.h,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (_activeSessionData != null) ...[
+                          SessionBanner(
+                            activeSessionData: _activeSessionData!,
+                            userId: widget.userData['id'],
+                          ),
+                          SizedBox(height: 24.h),
+                        ],
+                        if (_schedules.any(
+                          (s) => ScheduleService().isCurrentlyActive(s),
+                        )) ...[
+                          _buildActiveScheduleBanner(),
+                          SizedBox(height: 24.h),
+                        ],
+                        _buildDailyFocusHero(progress, remaining, isDark),
+                        SizedBox(height: 32.h),
+                        Text(
+                          "QUICK ACTIONS",
+                          style: TextStyle(
+                            color: subTextColor.withValues(alpha: 0.5),
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 1.2,
+                          ),
                         ),
-                        SizedBox(height: 24.h),
-                      ],
-                      if (_schedules.any(
-                        (s) => ScheduleService().isCurrentlyActive(s),
-                      )) ...[
-                        _buildActiveScheduleBanner(),
-                        SizedBox(height: 24.h),
-                      ],
-                      _buildDailyFocusHero(progress, remaining, isDark),
-                      SizedBox(height: 32.h),
-                      Text(
-                        "QUICK ACTIONS",
-                        style: TextStyle(
-                          color: subTextColor.withValues(alpha: 0.5),
-                          fontSize: 12.sp,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 1.2,
+                        SizedBox(height: 32.h),
+                        DashboardActionGrid(
+                          isDark: isDark,
+                          studentId: widget.userData['id'],
+                          studentName: widget.userData['name'] ?? "Student",
+                          companionId: _companionId,
+                          companionRole: _companionRole,
+                          companionName: _companionName,
+                          isSessionLocked: _activeSessionData != null,
+                          appsUnlocked: widget.appsUnlocked,
+                          onAppLockTap: _showAppLockModeDialog,
                         ),
-                      ),
-                      SizedBox(height: 32.h),
-                      DashboardActionGrid(
-                        isDark: isDark,
-                        studentId: widget.userData['id'],
-                        studentName: widget.userData['name'] ?? "Student",
-                        companionId: _companionId,
-                        companionRole: _companionRole,
-                        companionName: _companionName,
-                        isSessionLocked: _activeSessionData != null,
-                        appsUnlocked: widget.appsUnlocked,
-                        onAppLockTap: _showAppLockModeDialog,
-                      ),
-                      SizedBox(height: 32.h),
-                      _buildCompanionCard(isDark),
-                      SizedBox(height: 48.h),
-                    ],
+                        SizedBox(height: 32.h),
+                        _buildCompanionCard(isDark),
+                        SizedBox(height: 48.h),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
-    ),
     );
   }
 
@@ -1287,7 +1315,9 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
 
     await showModalBottomSheet(
       context: context,
-      backgroundColor: Theme.of(context).brightness == Brightness.dark ? AppColors.cardOverlay : Colors.white.withValues(alpha: 0.95),
+      backgroundColor: Theme.of(context).brightness == Brightness.dark
+          ? AppColors.cardOverlay
+          : Colors.white.withValues(alpha: 0.95),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -1296,7 +1326,9 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
           builder: (context, setSheeState) {
             final isDark = Theme.of(context).brightness == Brightness.dark;
             final textColor = isDark ? Colors.white : const Color(0xFF1A1A2E);
-            final mutedColor = isDark ? Colors.grey[400]! : Colors.grey.shade600;
+            final mutedColor = isDark
+                ? Colors.grey[400]!
+                : Colors.grey.shade600;
             return Container(
               padding: const EdgeInsets.all(24),
               child: Column(
@@ -1319,7 +1351,9 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
                       Text(
                         _formatMinutes(selectedGoal),
                         style: TextStyle(
-                          color: isDark ? Colors.cyanAccent : Colors.cyan.shade700,
+                          color: isDark
+                              ? Colors.cyanAccent
+                              : Colors.cyan.shade700,
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                         ),
@@ -1327,7 +1361,9 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
                       Text(
                         "Limit",
                         style: TextStyle(
-                          color: isDark ? Colors.white.withValues(alpha: 0.5) : Colors.grey.shade500,
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.5)
+                              : Colors.grey.shade500,
                         ),
                       ),
                     ],
@@ -1435,16 +1471,20 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
         setState(() {
           _localStudyTime = minutes;
         });
-        
-        if (_dailyGoal != null && minutes >= _dailyGoal! && !_limitExceededNotified) {
+
+        if (_dailyGoal != null &&
+            minutes >= _dailyGoal! &&
+            !_limitExceededNotified) {
           _limitExceededNotified = true;
           NotificationService().showInstantNotification(
             id: 999, // Specific ID for goal alert
             title: "Time Limit Exceeded",
-            body: "You've exceeded your usage goal. Time to focus or take a rest!",
+            body:
+                "You've exceeded your usage goal. Time to focus or take a rest!",
           );
         } else if (_dailyGoal != null && minutes < _dailyGoal!) {
-          _limitExceededNotified = false; // Reset if they are somehow under again (e.g. next day)
+          _limitExceededNotified =
+              false; // Reset if they are somehow under again (e.g. next day)
         }
       }
 
@@ -1707,7 +1747,9 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
             Text(
               "Track your screen time and stay focused.",
               textAlign: TextAlign.center,
-              style: TextStyle(color: isDark ? Colors.white70 : Colors.grey.shade600),
+              style: TextStyle(
+                color: isDark ? Colors.white70 : Colors.grey.shade600,
+              ),
             ),
             const SizedBox(height: 24),
             ElevatedButton(
@@ -2063,7 +2105,9 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
                     Text(
                       companionActive ? "Active & Linked" : "Not connected",
                       style: TextStyle(
-                        color: companionActive ? Colors.greenAccent : Colors.grey,
+                        color: companionActive
+                            ? Colors.greenAccent
+                            : Colors.grey,
                         fontWeight: FontWeight.w600,
                         fontSize: 15.sp,
                       ),
@@ -2140,7 +2184,10 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
                           height: 16,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.redAccent,
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                ? Colors.white
+                                : Colors.redAccent,
                           ),
                         )
                       : Icon(
@@ -2231,9 +2278,7 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
                       controller: _companionCodeController,
                       keyboardType: TextInputType.number,
                       maxLength: 6,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                      ],
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       style: TextStyle(
                         color: isDark ? Colors.white : Colors.black87,
                         fontSize: 16,
