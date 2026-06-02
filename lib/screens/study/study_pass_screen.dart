@@ -91,105 +91,104 @@ class StudyPassScreen extends ConsumerWidget {
         data: (user) {
           if (user == null) return Center(child: Text("User not found", style: TextStyle(color: textColor)));
 
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(24),
-                  width: double.infinity,
-                  decoration: AppTheme.cardContainer(context, AppColors.roleGradients['user']!),
-                  child: Column(
-                    children: [
-                      Icon(Icons.confirmation_number, size: 48, color: textColor),
-                      const SizedBox(height: 16),
-                      Text(
-                        "Available Passes",
-                        style: TextStyle(
-                          color: textColor,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        "${user.passes}",
-                        style: TextStyle(
-                          color: textColor,
-                          fontSize: 48,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        "Earn 1 pass for every 30 mins of focus",
-                        style: TextStyle(color: subTextColor),
-                      ),
-                      if (user.minutesTowardsNextPass > 0) ...[
+          return SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    width: double.infinity,
+                    decoration: AppTheme.cardContainer(context, AppColors.roleGradients['user']!),
+                    child: Column(
+                      children: [
+                        Icon(Icons.confirmation_number, size: 48, color: textColor),
                         const SizedBox(height: 16),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: LinearProgressIndicator(
-                            value: user.minutesTowardsNextPass / 30,
-                            backgroundColor: isDark ? Colors.white24 : Colors.grey.shade300,
-                            valueColor: AlwaysStoppedAnimation<Color>(accentCyan),
-                            minHeight: 8,
+                        Text(
+                          "Available Passes",
+                          style: TextStyle(
+                            color: textColor,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          "${30 - user.minutesTowardsNextPass} mins remaining for next pass",
-                          style: TextStyle(color: subTextColor, fontSize: 12),
+                          "${user.passes}",
+                          style: TextStyle(
+                            color: textColor,
+                            fontSize: 48,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
+                        const SizedBox(height: 8),
+                        Text(
+                          "Earn 1 pass for every 30 mins of focus",
+                          style: TextStyle(color: subTextColor),
+                          textAlign: TextAlign.center,
+                        ),
+                        if (user.minutesTowardsNextPass > 0) ...[
+                          const SizedBox(height: 16),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: LinearProgressIndicator(
+                              value: user.minutesTowardsNextPass / 30,
+                              backgroundColor: isDark ? Colors.white24 : Colors.grey.shade300,
+                              valueColor: AlwaysStoppedAnimation<Color>(accentCyan),
+                              minHeight: 8,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            "${30 - user.minutesTowardsNextPass} mins remaining for next pass",
+                            style: TextStyle(color: subTextColor, fontSize: 12),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 32),
-                Text(
-                  "Redeem Passes",
-                  style: TextStyle(
-                    color: textColor,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+                  const SizedBox(height: 32),
+                  Text(
+                    "Redeem Passes",
+                    style: TextStyle(
+                      color: textColor,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                Expanded(
-                  child: ListView(
-                    children: [
-                      _buildRedeemOption(
-                        context,
-                        ref,
-                        "Unlock Social Media",
-                        "15 minutes access",
-                        1,
-                        Icons.facebook,
-                        "unlock social media",
-                      ),
-                      _buildRedeemOption(
-                        context,
-                        ref,
-                        "Unlock Games",
-                        "30 minutes access",
-                        2,
-                        Icons.games,
-                        "unlock games",
-                      ),
-                      _buildRedeemOption(
-                        context,
-                        ref,
-                        "Emergency Unlock",
-                        "Unlock all apps for 5 mins",
-                        3,
-                        Icons.warning_amber_rounded,
-                        "apply emergency unlock",
-                      ),
-                    ],
+                  const SizedBox(height: 16),
+                  _buildRedeemOption(
+                    context,
+                    ref,
+                    "Unlock Social Media",
+                    "15 minutes access",
+                    1,
+                    Icons.facebook,
+                    "unlock social media",
                   ),
-                ),
-              ],
+                  _buildRedeemOption(
+                    context,
+                    ref,
+                    "Unlock Games",
+                    "30 minutes access",
+                    2,
+                    Icons.games,
+                    "unlock games",
+                  ),
+                  _buildRedeemOption(
+                    context,
+                    ref,
+                    "Emergency Unlock",
+                    "Unlock all apps for 5 mins",
+                    3,
+                    Icons.warning_amber_rounded,
+                    "apply emergency unlock",
+                  ),
+                ],
+              ),
             ),
           );
         },

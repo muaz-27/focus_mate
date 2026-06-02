@@ -12,6 +12,7 @@ import 'package:focus_mate/providers/user_provider.dart';
 import 'package:focus_mate/theme/app_colors.dart';
 import 'package:focus_mate/theme/app_theme.dart';
 import 'package:focus_mate/core/notification_service.dart';
+import 'package:focus_mate/core/theme_picker.dart';
 
 /// Dashboard for companions (parents/partners) to manage linked students and sessions.
 class CompanionDashboard extends ConsumerStatefulWidget {
@@ -48,6 +49,7 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
     _listenForSessionRequests();
     _listenForActiveSessions();
     _listenForUserChanges();
+    _loadExistingStudents(); // ← immediately start listeners for already-linked students
   }
 
   @override
@@ -62,7 +64,97 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
     super.dispose();
   }
 
-  /// Listens to the companion's own document to manage student-specific listeners.
+  /// Immediately starts real-time listeners for students that are already
+  /// linked when the dashboard first opens. Without this, existing students
+  /// only get listeners after _listenForUserChanges fires a change event.
+  Future<void> _loadExistingStudents() async {
+    try {
+      final doc = await _firestore.collection('users').doc(_userId).get();
+      if (!doc.exists || !mounted) return;
+      final data = doc.data() as Map<String, dynamic>;
+      final linkedSet = <String>{
+        ...List<String>.from(data['linkedStudents'] ?? []),
+        ...List<String>.from(data['linkedUsers'] ?? []),
+      };
+      for (var studentId in linkedSet) {
+        if (!_studentScheduleSubscriptions.containsKey(studentId)) {
+          _startStudentListeners(studentId);
+        }
+      }
+    } catch (e) {
+      debugPrint('Error loading existing students: $e');
+    }
+  }
+
+  /// Unlinks a student from this companion.
+  Future<void> _unlinkStudent(String studentId, String studentName) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Theme.of(context).brightness == Brightness.dark
+            ? const Color(0xFF1E293B)
+            : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Unlink $studentName?',
+            style: TextStyle(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white
+                    : Colors.black87)),
+        content: Text(
+          'This will remove your connection with $studentName. They will need to re-link using your code.',
+          style: TextStyle(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white70
+                  : Colors.black54),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+            child: const Text('Unlink', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true || !mounted) return;
+
+    try {
+      final batch = _firestore.batch();
+
+      // Remove student from companion's lists
+      final companionRef = _firestore.collection('users').doc(_userId);
+      batch.update(companionRef, {
+        'linkedStudents': FieldValue.arrayRemove([studentId]),
+        'linkedUsers': FieldValue.arrayRemove([studentId]),
+      });
+
+      // Remove companion from student's profile
+      final studentRef = _firestore.collection('users').doc(studentId);
+      batch.update(studentRef, {
+        'linkedCompanion': FieldValue.delete(),
+        'linkedParent': FieldValue.delete(),
+      });
+
+      await batch.commit();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$studentName has been unlinked.')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    }
+  }
+
   void _listenForUserChanges() {
     _userDocSubscription = _firestore
         .collection('users')
@@ -159,6 +251,8 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
         ...(doc.data() as Map<String, dynamic>),
       };
     }).toList();
+
+    if (!mounted) return;
 
     setState(() {
       _perStudentPendingSchedules[studentId] = allSchedules
@@ -317,9 +411,8 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
 
   /// Generates a random 8-character alphanumeric code using a secure RNG.
   String _generateCode() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     final rng = Random.secure();
-    return List.generate(8, (index) => chars[rng.nextInt(chars.length)]).join();
+    return List.generate(6, (index) => rng.nextInt(10).toString()).join();
   }
 
   /// Generates a new link code and updates it in Firestore with a 24-hour expiration.
@@ -334,6 +427,65 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
     setState(() {
       linkCode = code;
     });
+  }
+
+  /// Shows the settings bottom sheet with theme + logout options.
+  void _showSettingsSheet(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? const Color(0xFF1E1E2E) : Colors.white;
+    final textColor = isDark ? Colors.white : const Color(0xFF1A1A2E);
+    final accentColor = isDark ? Colors.cyanAccent : Colors.blueAccent;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: bg,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetCtx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Settings',
+                style: TextStyle(
+                  color: textColor,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 20),
+              ListTile(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                leading: Icon(Icons.palette_outlined, color: accentColor),
+                title: Text('Switch Theme', style: TextStyle(color: textColor)),
+                subtitle: Text(
+                  'Light · Dark · System',
+                  style: TextStyle(color: isDark ? Colors.white38 : Colors.black38, fontSize: 12),
+                ),
+                onTap: () {
+                  Navigator.pop(sheetCtx);
+                  showThemePicker(context, ref);
+                },
+              ),
+              Divider(color: isDark ? Colors.white12 : Colors.black12, height: 1),
+              ListTile(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                leading: const Icon(Icons.logout, color: Colors.redAccent),
+                title: Text('Log Out', style: TextStyle(color: textColor)),
+                onTap: () {
+                  Navigator.pop(sheetCtx);
+                  widget.onLogout();
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -359,8 +511,9 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
         elevation: 0,
         actions: [
           IconButton(
-            onPressed: () => widget.onLogout(),
-            icon: Icon(Icons.logout, color: Colors.redAccent, size: 24.sp),
+            tooltip: 'Settings',
+            onPressed: () => _showSettingsSheet(context),
+            icon: Icon(Icons.settings_outlined, color: textColor, size: 24.sp),
           ),
         ],
       ),
@@ -509,9 +662,18 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
                       final studentId = linked[index];
                       return Padding(
                         padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                        child: StudentTile(
-                          studentId: studentId,
-                          isDark: isDark,
+                        child: StreamBuilder<DocumentSnapshot>(
+                          stream: _firestore.collection('users').doc(studentId).snapshots(),
+                          builder: (context, stuSnap) {
+                            final studentName = stuSnap.hasData && stuSnap.data!.exists
+                                ? ((stuSnap.data!.data() as Map<String, dynamic>)['name'] ?? 'Student')
+                                : 'Student';
+                            return StudentTile(
+                                  studentId: studentId,
+                                  isDark: isDark,
+                                  companionId: _userId,
+                                );
+                          },
                         ),
                       );
                     }, childCount: linked.length),
@@ -743,7 +905,9 @@ class _CompanionDashboardState extends ConsumerState<CompanionDashboard> {
                   ),
                 ),
                 Text(
-                  '${session['duration'] ?? 60}m study request',
+                  session['studyGoal'] != null && session['studyGoal'].toString().trim().isNotEmpty
+                      ? '${session['studyGoal']} (${session['duration'] ?? 60}m)'
+                      : '${session['duration'] ?? 60}m App Lock request',
                   style: TextStyle(color: Colors.grey[500], fontSize: 12),
                 ),
               ],

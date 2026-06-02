@@ -189,8 +189,8 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
                         : GridView.builder(
                             padding: const EdgeInsets.symmetric(horizontal: 20),
                             gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 4,
+                                const SliverGridDelegateWithMaxCrossAxisExtent(
+                                  maxCrossAxisExtent: 90,
                                   childAspectRatio: 0.75,
                                   crossAxisSpacing: 10,
                                   mainAxisSpacing: 10,
@@ -324,8 +324,11 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
         final isDark = Theme.of(context).brightness == Brightness.dark;
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setModalState) {
-            return Container(
-              height: MediaQuery.of(context).size.height * 0.5,
+            return SafeArea(
+              child: Container(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                ),
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF1E293B) : Colors.white,
                 borderRadius: const BorderRadius.vertical(
@@ -333,6 +336,7 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
                 ),
               ),
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   const SizedBox(height: 12),
                   Container(
@@ -390,7 +394,7 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
                     },
                   ),
 
-                  const Spacer(),
+                  const SizedBox(height: 24),
 
                   // Start Button
                   Padding(
@@ -422,6 +426,7 @@ class _StudyWorkspaceScreenState extends ConsumerState<StudyWorkspaceScreen> {
                   ),
                 ],
               ),
+            ),
             );
           },
         );

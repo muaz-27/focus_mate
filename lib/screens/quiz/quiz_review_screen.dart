@@ -49,8 +49,11 @@ class QuizReviewScreen extends StatelessWidget {
       body: Container(
         decoration: AppTheme.screenBackground(context, AppColors.roleGradients['user']!),
         child: SafeArea(
-          child: CustomScrollView(
-        slivers: [
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 800),
+              child: CustomScrollView(
+                slivers: [
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(24.0),
@@ -62,7 +65,9 @@ class QuizReviewScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text("Source: $sourceName", 
-                    style: TextStyle(color: subTextColor, fontSize: 16)
+                    style: TextStyle(color: subTextColor, fontSize: 16),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 24),
                   Divider(color: dividerColor),
@@ -131,9 +136,11 @@ class QuizReviewScreen extends StatelessWidget {
               childCount: questions.length,
             ),
           ),
-        ],
+                ],
+              ),
+            ),
+          ),
         ),
-      ),
       ),
     );
   }

@@ -5,11 +5,13 @@ import 'package:focus_mate/screens/analytics/analytics_screen.dart';
 class StudentTile extends StatelessWidget {
   final String studentId;
   final bool isDark;
+  final String? companionId;
 
   const StudentTile({
     super.key,
     required this.studentId,
     required this.isDark,
+    this.companionId,
   });
 
   @override
@@ -32,7 +34,13 @@ class StudentTile extends StatelessWidget {
 
         final student = snap.data!.data() as Map<String, dynamic>;
         final studentName = student['name'] ?? "Unknown";
-        final isOnline = student['isOnline'] ?? false;
+        
+        final bool rawOnline = (student['deviceOnline'] as bool?) ?? false;
+        final Timestamp? lastSeenSnap = student['lastSeen'] as Timestamp?;
+        final bool recentHeartbeat = lastSeenSnap != null &&
+            DateTime.now().difference(lastSeenSnap.toDate()).inMinutes < 3;
+        final isOnline = rawOnline && recentHeartbeat;
+
         final studyTime = student['studyTime'] ?? 0;
         final level = student['level'] ?? 1;
         final lockedApps = List<String>.from(student['lockedApps'] ?? []);
@@ -200,6 +208,31 @@ class StudentTile extends StatelessWidget {
                           builder: (_) => AnalyticsScreen(
                             userId: studentId,
                             userName: studentName,
+                            onUnlink: companionId != null ? () async {
+                              final batch = FirebaseFirestore.instance.batch();
+                              
+                              // Remove student from companion's lists
+                              final companionRef = FirebaseFirestore.instance.collection('users').doc(companionId);
+                              batch.update(companionRef, {
+                                'linkedStudents': FieldValue.arrayRemove([studentId]),
+                                'linkedUsers': FieldValue.arrayRemove([studentId]),
+                              });
+
+                              // Remove companion from student's profile
+                              final studentRef = FirebaseFirestore.instance.collection('users').doc(studentId);
+                              batch.update(studentRef, {
+                                'linkedCompanion': FieldValue.delete(),
+                                'linkedParent': FieldValue.delete(),
+                              });
+
+                              await batch.commit();
+                              
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('$studentName has been unlinked.')),
+                                );
+                              }
+                            } : null,
                           ),
                         ),
                       );

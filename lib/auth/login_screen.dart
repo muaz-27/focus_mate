@@ -2,13 +2,15 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:focus_mate/core/models/user_model.dart';
-import 'package:focus_mate/core/auth_service.dart';
 import 'package:focus_mate/theme/app_colors.dart';
 import 'package:focus_mate/theme/app_theme.dart';
 import 'package:focus_mate/core/widgets/custom_button.dart';
 import 'package:focus_mate/core/widgets/custom_text_field.dart';
 
-class LoginScreen extends StatefulWidget {
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:focus_mate/providers/auth_provider.dart';
+
+class LoginScreen extends ConsumerStatefulWidget {
   final UserRole role;
   final VoidCallback onBack;
   final Function(UserRole role, dynamic userData) onLogin;
@@ -23,13 +25,11 @@ class LoginScreen extends StatefulWidget {
   });
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen>
+class _LoginScreenState extends ConsumerState<LoginScreen>
     with SingleTickerProviderStateMixin {
-  final AuthService _auth = AuthService();
-
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
@@ -98,7 +98,9 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   void _handleLogin() async {
+    final _auth = ref.read(authServiceProvider);
     setState(() => _isLoading = true);
+    _auth.isAuthenticating.value = true;
 
     try {
       final email = _emailController.text.trim();
@@ -113,12 +115,13 @@ class _LoginScreenState extends State<LoginScreen>
       // Verify the role
       if (userModel.role.name != widget.role.name) {
         await _auth.signOut();
-        throw Exception('Role mismatch. You are registered as a ${userModel.role.name}.');
+        throw Exception(
+          'Role mismatch. You are registered as a ${userModel.role.name}.',
+        );
       }
 
       if (!mounted) return;
       widget.onLogin(widget.role, userModel.toMap());
-
     } on FirebaseAuthException catch (e) {
       _showError(_getFriendlyErrorMessage(e.code));
     } catch (e) {
@@ -128,10 +131,136 @@ class _LoginScreenState extends State<LoginScreen>
       }
       _showError(msg);
     } finally {
+      // Small delay to let Riverpod's StreamProvider catch up with the auth state (signOut)
+      await Future.delayed(const Duration(milliseconds: 500));
+      _auth.isAuthenticating.value = false;
+
       if (mounted) {
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  void _showForgotPasswordDialog() {
+    final _auth = ref.read(authServiceProvider);
+    final resetEmailController = TextEditingController(
+      text: _emailController.text.trim(),
+    );
+    bool isSending = false;
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+              title: Text(
+                'Reset Password',
+                style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Enter your email address and we will send you a link to reset your password.',
+                    style: TextStyle(
+                      color: isDark ? Colors.white70 : Colors.black54,
+                      fontSize: 14.sp,
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+                  TextField(
+                    controller: resetEmailController,
+                    keyboardType: TextInputType.emailAddress,
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'Email address',
+                      hintStyle: TextStyle(
+                        color: isDark ? Colors.white38 : Colors.black38,
+                      ),
+                      prefixIcon: Icon(Icons.email, color: Colors.blueAccent),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ),
+                isSending
+                    ? const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 20),
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
+                    : ElevatedButton(
+                        onPressed: () async {
+                          final email = resetEmailController.text.trim();
+                          if (email.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Please enter your email.'),
+                              ),
+                            );
+                            return;
+                          }
+                          setDialogState(() => isSending = true);
+                          try {
+                            await _auth.sendPasswordResetEmail(email);
+                            if (mounted) {
+                              Navigator.pop(ctx);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Password reset email sent! Please check your inbox.',
+                                  ),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            String msg = e.toString();
+                            if (msg.startsWith('Exception: '))
+                              msg = msg.substring(11);
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(msg),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                            setDialogState(() => isSending = false);
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blueAccent,
+                        ),
+                        child: const Text(
+                          'Send Link',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -161,24 +290,32 @@ class _LoginScreenState extends State<LoginScreen>
           child: SingleChildScrollView(
             padding: EdgeInsets.all(18.w),
             child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: 420.w),
+              constraints: const BoxConstraints(maxWidth: 420),
               child: Column(
                 children: [
                   Align(
                     alignment: Alignment.centerLeft,
                     child: TextButton.icon(
                       onPressed: widget.onBack,
-                      icon: Icon(Icons.arrow_back, color: isDark ? Colors.white70 : Colors.black87),
+                      icon: Icon(
+                        Icons.arrow_back,
+                        color: isDark ? Colors.white70 : Colors.black87,
+                      ),
                       label: Text(
                         'Back',
-                        style: TextStyle(color: isDark ? Colors.white70 : Colors.black87),
+                        style: TextStyle(
+                          color: isDark ? Colors.white70 : Colors.black87,
+                        ),
                       ),
                     ),
                   ),
                   SizedBox(height: 20.h),
                   Container(
                     padding: EdgeInsets.all(20.w),
-                    decoration: AppTheme.cardContainer(context, config['colors'] as List<Color>),
+                    decoration: AppTheme.cardContainer(
+                      context,
+                      config['colors'] as List<Color>,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
@@ -186,7 +323,9 @@ class _LoginScreenState extends State<LoginScreen>
                           turns: _iconAnimation,
                           child: CircleAvatar(
                             radius: 32.r,
-                            backgroundColor: isDark ? Colors.white24 : Colors.black12,
+                            backgroundColor: isDark
+                                ? Colors.white24
+                                : Colors.black12,
                             child: Icon(
                               Icons.lock,
                               color: isDark ? Colors.white : Colors.black87,
@@ -197,9 +336,9 @@ class _LoginScreenState extends State<LoginScreen>
                         SizedBox(height: 12.h),
                         Text(
                           config['title'] as String,
-                          style: AppTheme.headerTitle(context).copyWith(
-                            fontSize: 22.sp,
-                          ),
+                          style: AppTheme.headerTitle(
+                            context,
+                          ).copyWith(fontSize: 22.sp),
                         ),
                         SizedBox(height: 4.h),
                         Text(
@@ -221,7 +360,21 @@ class _LoginScreenState extends State<LoginScreen>
                           isPassword: true,
                           accentColor: (config['colors'] as List)[0],
                         ),
-                        SizedBox(height: 20.h),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: _showForgotPasswordDialog,
+                            child: Text(
+                              'Forgot Password?',
+                              style: TextStyle(
+                                color: (config['colors'] as List)[0],
+                                fontSize: 13.sp,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 8.h),
                         CustomButton(
                           onPressed: _handleLogin,
                           text: 'Sign In',
@@ -232,9 +385,13 @@ class _LoginScreenState extends State<LoginScreen>
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(
-                              'Don\'t have an account? ',
-                              style: TextStyle(color: isDark ? Colors.grey : Colors.black54),
+                            Flexible(
+                              child: Text(
+                                'Don\'t have an account? ',
+                                style: TextStyle(
+                                  color: isDark ? Colors.grey : Colors.black54,
+                                ),
+                              ),
                             ),
                             TextButton(
                               onPressed: widget.onSwitchToSignup,

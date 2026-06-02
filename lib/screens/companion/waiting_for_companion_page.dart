@@ -112,11 +112,13 @@ class _WaitingForCompanionPageState extends State<WaitingForCompanionPage> {
         ),
         child: SafeArea(
           child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(32),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 500),
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
                   // Glass Card
                   Container(
                     padding: const EdgeInsets.all(40),
@@ -194,7 +196,8 @@ class _WaitingForCompanionPageState extends State<WaitingForCompanionPage> {
                       ),
                     ),
                   ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

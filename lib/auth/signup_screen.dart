@@ -154,7 +154,7 @@ class _SignupScreenState extends State<SignupScreen>
           child: SingleChildScrollView(
             padding: EdgeInsets.all(18.w),
             child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: 420.w),
+              constraints: const BoxConstraints(maxWidth: 420),
               child: Column(
                 children: [
                   Align(
@@ -232,9 +232,11 @@ class _SignupScreenState extends State<SignupScreen>
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(
-                              'Already have an account? ',
-                              style: TextStyle(color: isDark ? Colors.grey : Colors.black54),
+                            Flexible(
+                              child: Text(
+                                'Already have an account? ',
+                                style: TextStyle(color: isDark ? Colors.grey : Colors.black54),
+                              ),
                             ),
                             TextButton(
                               onPressed: widget.onSwitchToLogin,

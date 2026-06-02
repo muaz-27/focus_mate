@@ -13,6 +13,7 @@ import 'package:focus_mate/providers/user_provider.dart';
 import 'package:focus_mate/theme/app_colors.dart';
 import 'package:focus_mate/theme/app_theme.dart';
 import 'package:focus_mate/core/notification_service.dart';
+import 'package:focus_mate/core/theme_picker.dart';
 
 /// Dashboard for parents to manage linked children and enforce restrictions.
 class ParentDashboard extends ConsumerStatefulWidget {
@@ -173,9 +174,8 @@ class _ParentDashboardState extends ConsumerState<ParentDashboard> {
   }
 
   String _generateCode() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     final rng = Random.secure();
-    return List.generate(8, (index) => chars[rng.nextInt(chars.length)]).join();
+    return List.generate(6, (index) => rng.nextInt(10).toString()).join();
   }
 
   Future<void> _refreshCode() async {
@@ -185,6 +185,65 @@ class _ParentDashboardState extends ConsumerState<ParentDashboard> {
       'linkCodeExpiresAt': Timestamp.fromDate(DateTime.now().add(const Duration(hours: 24))),
     });
     setState(() => linkCode = code);
+  }
+
+  /// Shows the settings bottom sheet with theme + logout options.
+  void _showSettingsSheet(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? const Color(0xFF1E1E2E) : Colors.white;
+    final textColor = isDark ? Colors.white : const Color(0xFF1A1A2E);
+    final accentColor = isDark ? Colors.cyanAccent : Colors.pinkAccent;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: bg,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetCtx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Settings',
+                style: TextStyle(
+                  color: textColor,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 20),
+              ListTile(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                leading: Icon(Icons.palette_outlined, color: accentColor),
+                title: Text('Switch Theme', style: TextStyle(color: textColor)),
+                subtitle: Text(
+                  'Light · Dark · System',
+                  style: TextStyle(color: isDark ? Colors.white38 : Colors.black38, fontSize: 12),
+                ),
+                onTap: () {
+                  Navigator.pop(sheetCtx);
+                  showThemePicker(context, ref);
+                },
+              ),
+              Divider(color: isDark ? Colors.white12 : Colors.black12, height: 1),
+              ListTile(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                leading: const Icon(Icons.logout, color: Colors.redAccent),
+                title: Text('Log Out', style: TextStyle(color: textColor)),
+                onTap: () {
+                  Navigator.pop(sheetCtx);
+                  widget.onLogout();
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -206,8 +265,9 @@ class _ParentDashboardState extends ConsumerState<ParentDashboard> {
         elevation: 0,
         actions: [
           IconButton(
-            onPressed: () => widget.onLogout(),
-            icon: Icon(Icons.logout, color: Colors.redAccent, size: 24.sp),
+            tooltip: 'Settings',
+            onPressed: () => _showSettingsSheet(context),
+            icon: Icon(Icons.settings_outlined, color: textColor, size: 24.sp),
           ),
         ],
       ),
@@ -622,7 +682,35 @@ class _ParentDashboardState extends ConsumerState<ParentDashboard> {
                     isDark: isDark,
                     onTap: () {
                       Navigator.push(context, MaterialPageRoute(
-                        builder: (_) => AnalyticsScreen(userId: studentId, userName: studentName),
+                        builder: (_) => AnalyticsScreen(
+                          userId: studentId, 
+                          userName: studentName,
+                          onUnlink: () async {
+                            final batch = _firestore.batch();
+                            
+                            // Remove student from parent's lists
+                            final parentRef = _firestore.collection('users').doc(_userId);
+                            batch.update(parentRef, {
+                              'linkedStudents': FieldValue.arrayRemove([studentId]),
+                              'linkedUsers': FieldValue.arrayRemove([studentId]),
+                            });
+
+                            // Remove parent from student's profile
+                            final studentRef = _firestore.collection('users').doc(studentId);
+                            batch.update(studentRef, {
+                              'linkedCompanion': FieldValue.delete(),
+                              'linkedParent': FieldValue.delete(),
+                            });
+
+                            await batch.commit();
+                            
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('$studentName has been unlinked.')),
+                              );
+                            }
+                          },
+                        ),
                       ));
                     },
                   ),

@@ -128,6 +128,7 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
               _pdfName,
               style: TextStyle(color: subtextColor, fontSize: 12),
               overflow: TextOverflow.ellipsis,
+              maxLines: 1,
             ),
           ],
         ),
@@ -158,8 +159,11 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
         decoration: AppTheme.screenBackground(context, AppColors.roleGradients['user']!),
         child: SafeArea(
           bottom: false,
-          child: Column(
-            children: [
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 800),
+              child: Column(
+                children: [
               // PDF Viewer
               Expanded(
                 child: Container(
@@ -277,7 +281,9 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
                   ),
                 ),
               ),
-            ],
+                ],
+              ),
+            ),
           ),
         ),
       ),

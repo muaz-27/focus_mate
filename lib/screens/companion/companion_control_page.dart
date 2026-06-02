@@ -382,11 +382,15 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
 
   /// Unlocks a specific app manually during an active session (e.g. emergency).
   Future<void> _unlockSpecificApp(String packageName) async {
+    final currentSessionLocked = List<String>.from(_sessionData['lockedApps'] ?? []);
+    currentSessionLocked.remove(packageName);
+
     await _firestore
         .collection('companion_sessions')
         .doc(widget.sessionId)
         .update({
           'manuallyUnlockedApps': FieldValue.arrayUnion([packageName]),
+          'lockedApps': currentSessionLocked,
         });
 
     final userId = _sessionData['userId'];
@@ -563,6 +567,8 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
         title: Text(
           "Control - $studentName",
           style: TextStyle(color: textColor),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -586,8 +592,11 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
               ? const Center(
                   child: CircularProgressIndicator(color: Colors.cyanAccent),
                 )
-              : Column(
-                  children: [
+              : Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 800),
+                    child: Column(
+                      children: [
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
@@ -649,7 +658,7 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
                                         MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text(
-                                        "Study Duration",
+                                        "Requested Duration",
                                         style: TextStyle(
                                           color: textColor,
                                           fontWeight: FontWeight.bold,
@@ -664,22 +673,6 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
                                       ),
                                     ],
                                   ),
-                                  Slider(
-                                    value: (_sessionData['duration'] ?? 60)
-                                        .toDouble(),
-                                    min: 15,
-                                    max: 240,
-                                    divisions: 15,
-                                    activeColor: Colors.blueAccent,
-                                    inactiveColor: isDark
-                                        ? Colors.white10
-                                        : Colors.black12,
-                                    onChanged: (val) {
-                                      setState(() {
-                                        _sessionData['duration'] = val.toInt();
-                                      });
-                                    },
-                                  ),
                                 ],
                               ),
                             ),
@@ -691,8 +684,8 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
                       child: GridView.builder(
                         padding: const EdgeInsets.all(16),
                         gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 4,
+                            const SliverGridDelegateWithMaxCrossAxisExtent(
+                              maxCrossAxisExtent: 100,
                               childAspectRatio: 0.8,
                               crossAxisSpacing: 10,
                               mainAxisSpacing: 10,
@@ -836,7 +829,9 @@ class _CompanionControlPageState extends State<CompanionControlPage> {
                               ),
                             ),
                     ),
-                  ],
+                      ],
+                    ),
+                  ),
                 ),
         ),
       ),

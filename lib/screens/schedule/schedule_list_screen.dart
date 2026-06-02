@@ -45,12 +45,13 @@ class ScheduleListScreen extends ConsumerWidget {
       backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
               Text(schedule.name, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
               const SizedBox(height: 8),
               Text("${_formatTime(schedule.startTime)} - ${_formatTime(schedule.endTime)}", style: const TextStyle(fontSize: 16, color: Colors.amberAccent)),
@@ -59,7 +60,8 @@ class ScheduleListScreen extends ConsumerWidget {
               const SizedBox(height: 16),
               Text("Locked Apps: ${schedule.lockedApps.length}", style: TextStyle(fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
               const SizedBox(height: 16),
-            ],
+              ],
+            ),
           ),
         );
       },
@@ -135,7 +137,14 @@ class ScheduleListScreen extends ConsumerWidget {
                         },
                         title: Row(
                           children: [
-                            Text(schedule.name, style: TextStyle(fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
+                            Expanded(
+                              child: Text(
+                                schedule.name,
+                                style: TextStyle(fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
                             const SizedBox(width: 8),
                             if (isRequested)
                               Container(

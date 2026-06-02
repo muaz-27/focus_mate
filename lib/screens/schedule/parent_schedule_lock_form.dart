@@ -68,6 +68,32 @@ class _ParentScheduleLockFormState extends State<ParentScheduleLockForm> {
             allApps.addAll(shardApps);
           }
         }
+      } else {
+        // Fallback Check 'data/installed_apps'
+        final legacyDoc = await _firestore
+            .collection('users')
+            .doc(widget.studentId)
+            .collection('data')
+            .doc('installed_apps')
+            .get();
+
+        if (legacyDoc.exists && legacyDoc.data() != null) {
+          final data = legacyDoc.data() as Map<String, dynamic>;
+          if (data.containsKey('installedApps')) {
+            allApps = List<Map<String, dynamic>>.from(data['installedApps']);
+          }
+        } else {
+          // Fallback to user doc
+          final userDoc = await _firestore
+              .collection('users')
+              .doc(widget.studentId)
+              .get();
+          if (userDoc.exists && userDoc.data()!.containsKey('installedApps')) {
+            allApps = List<Map<String, dynamic>>.from(
+              userDoc.data()!['installedApps'],
+            );
+          }
+        }
       }
 
       allApps.sort(
@@ -179,11 +205,14 @@ class _ParentScheduleLockFormState extends State<ParentScheduleLockForm> {
             ),
           ),
           SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                   TextField(
                     controller: _nameController,
                     style: TextStyle(
@@ -328,6 +357,8 @@ class _ParentScheduleLockFormState extends State<ParentScheduleLockForm> {
                                         ? Colors.white
                                         : Colors.black87,
                                   ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ],
@@ -338,6 +369,8 @@ class _ParentScheduleLockFormState extends State<ParentScheduleLockForm> {
                               fontSize: 10,
                               color: isDark ? Colors.grey[400] : Colors.grey.shade600,
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                           value: isSelected,
                           onChanged: (val) {
@@ -378,7 +411,9 @@ class _ParentScheduleLockFormState extends State<ParentScheduleLockForm> {
                       ),
                     ),
                   ),
-                ],
+                    ],
+                  ),
+                ),
               ),
             ),
           ),

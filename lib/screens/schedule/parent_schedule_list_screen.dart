@@ -50,6 +50,8 @@ class ParentScheduleListScreen extends ConsumerWidget {
         title: Text(
           '$studentName\'s Schedules',
           style: const TextStyle(fontWeight: FontWeight.bold),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
@@ -143,6 +145,8 @@ class ParentScheduleListScreen extends ConsumerWidget {
                             fontWeight: FontWeight.bold,
                             color: isDark ? Colors.white : Colors.black87,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,

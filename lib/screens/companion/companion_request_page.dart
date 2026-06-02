@@ -45,11 +45,12 @@ class _CompanionRequestPageState extends State<CompanionRequestPage> {
       builder: (context) {
         final isDark = Theme.of(context).brightness == Brightness.dark;
         final textColor = isDark ? Colors.white : const Color(0xFF1A1A2E);
-        return Container(
-          height: 300,
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            children: [
+        return SafeArea(
+          child: Container(
+            height: 300,
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: [
               // Handle bar
               Container(
                 width: 40, height: 4,
@@ -76,8 +77,9 @@ class _CompanionRequestPageState extends State<CompanionRequestPage> {
                     },
                   ),
                 ),
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -116,11 +118,14 @@ class _CompanionRequestPageState extends State<CompanionRequestPage> {
           
           // 3. Scrollable Content
           SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                   const SizedBox(height: 12),
                   
                   // 4. Session Name Input (Glassmorphism)
@@ -244,7 +249,9 @@ class _CompanionRequestPageState extends State<CompanionRequestPage> {
                     ),
                   ),
                 ),
-                ],
+                    ],
+                  ),
+                ),
               ),
             ),
           ),

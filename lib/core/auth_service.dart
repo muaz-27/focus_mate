@@ -8,6 +8,9 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  /// Used to block premature UI routing during login role verification.
+  final ValueNotifier<bool> isAuthenticating = ValueNotifier(false);
+
   /// Creates a new user account with the specified role and links it to Firestore.
   /// 
   /// Returns a [UserModel] if successful, or null if creation failed.
@@ -19,11 +22,18 @@ class AuthService {
     required UserRole role,
   }) async {
     try {
-      UserCredential result = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      
+      UserCredential result = await _auth
+          .createUserWithEmailAndPassword(
+            email: email,
+            password: password,
+          )
+          .timeout(
+            const Duration(seconds: 15),
+            onTimeout: () => throw Exception(
+              'Connection timed out. Please check your internet connection and try again.',
+            ),
+          );
+
       if (result.user == null) return null;
 
       final newUser = UserModel(
@@ -53,15 +63,22 @@ class AuthService {
   /// Signs out immediately if the user data is missing in Firestore to prevent invalid states.
   Future<UserModel?> signIn(String email, String password) async {
     try {
-      UserCredential result = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      UserCredential result = await _auth
+          .signInWithEmailAndPassword(
+            email: email,
+            password: password,
+          )
+          .timeout(
+            const Duration(seconds: 15),
+            onTimeout: () => throw Exception(
+              'Connection timed out. Check your internet connection and try again.',
+            ),
+          );
 
       if (result.user == null) return null;
 
       final userModel = await getUserData(result.user!.uid);
-      
+
       if (userModel == null) {
         await signOut();
       }

@@ -10,11 +10,13 @@ import '../../core/widgets/app_icon_widget.dart';
 class AnalyticsScreen extends StatefulWidget {
   final String userId;
   final String userName;
+  final Future<void> Function()? onUnlink;
 
   const AnalyticsScreen({
     super.key,
     required this.userId,
     required this.userName,
+    this.onUnlink,
   });
 
   @override
@@ -190,8 +192,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.history_edu),
-            tooltip: "Study Analytics (Quizzes)",
+            icon: const Icon(Icons.quiz_outlined),
+            tooltip: "Quizzes",
+            color: isDark ? Colors.white : Colors.black87,
             onPressed: () {
               Navigator.push(
                 context,
@@ -204,6 +207,43 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               );
             },
           ),
+          if (widget.onUnlink != null)
+            IconButton(
+              icon: const Icon(Icons.link_off, color: Colors.redAccent),
+              tooltip: "Unlink Student",
+              onPressed: () async {
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                    title: Text(
+                      'Unlink Student?',
+                      style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+                    ),
+                    content: Text(
+                      'This will remove your connection with ${widget.userName}. They will need to re-link using your code.',
+                      style: TextStyle(color: isDark ? Colors.white70 : Colors.black54),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, false),
+                        child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+                      ),
+                      ElevatedButton(
+                        onPressed: () => Navigator.pop(ctx, true),
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+                        child: const Text('Unlink', style: TextStyle(color: Colors.white)),
+                      ),
+                    ],
+                  ),
+                );
+
+                if (confirm == true && mounted) {
+                  await widget.onUnlink!();
+                  if (mounted) Navigator.pop(context); // Go back after unlinking
+                }
+              },
+            ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
@@ -541,12 +581,16 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             ),
           ),
           const SizedBox(height: 4),
-          Text(
-            value,
-            style: TextStyle(
-              color: isDark ? Colors.white : Colors.black87,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.black87,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],

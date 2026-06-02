@@ -124,7 +124,7 @@ class _AuthScreenState extends State<AuthScreen> {
             padding: EdgeInsets.all(18.w),
             child: Center(
               child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: 420.w),
+                constraints: const BoxConstraints(maxWidth: 420),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -234,44 +234,42 @@ class _AuthScreenState extends State<AuthScreen> {
                                   SizedBox(height: 14.h),
 
                                   // features
-                                  GridView.builder(
-                                    physics: const NeverScrollableScrollPhysics(),
-                                    shrinkWrap: true,
-                                    itemCount: role['features'].length,
-                                    gridDelegate:
-                                        SliverGridDelegateWithFixedCrossAxisCount(
-                                          crossAxisCount: 2,
-                                          mainAxisExtent: 20.h,
-                                          crossAxisSpacing: 8.w,
+                                  Wrap(
+                                    spacing: 8.w,
+                                    runSpacing: 6.h,
+                                    children: List.generate(
+                                      role['features'].length,
+                                      (idx) => SizedBox(
+                                        width: (MediaQuery.of(context).size.width - 36.w - 40.w - 16.w) / 2 - 4.w,
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Container(
+                                              width: 6.w,
+                                              height: 6.w,
+                                              decoration: BoxDecoration(
+                                                gradient: LinearGradient(
+                                                  colors: role['color'].cast<Color>(),
+                                                ),
+                                                borderRadius: BorderRadius.circular(
+                                                  50.r,
+                                                ),
+                                              ),
+                                            ),
+                                            SizedBox(width: 6.w),
+                                            Flexible(
+                                              child: Text(
+                                                role['features'][idx],
+                                                style: TextStyle(
+                                                  color: cardSubTextColor,
+                                                  fontSize: 11.sp,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                    itemBuilder: (context, idx) {
-                                      return Row(
-                                        children: [
-                                          Container(
-                                            width: 6.w,
-                                            height: 6.w,
-                                            decoration: BoxDecoration(
-                                              gradient: LinearGradient(
-                                                colors: role['color'].cast<Color>(),
-                                              ),
-                                              borderRadius: BorderRadius.circular(
-                                                50.r,
-                                              ),
-                                            ),
-                                          ),
-                                          SizedBox(width: 6.w),
-                                          Expanded(
-                                            child: Text(
-                                              role['features'][idx],
-                                              style: TextStyle(
-                                                color: cardSubTextColor,
-                                                fontSize: 11.sp,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      );
-                                    },
+                                      ),
+                                    ),
                                   ),
 
                                   SizedBox(height: 20.h),

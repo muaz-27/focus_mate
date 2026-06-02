@@ -62,9 +62,12 @@ class _QuizHistoryScreenState extends ConsumerState<QuizHistoryScreen> {
       body: Container(
         decoration: AppTheme.screenBackground(context, AppColors.roleGradients['user']!),
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: quizzesAsync.when(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 800),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: quizzesAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, _) {
                 final errorString = error.toString().toLowerCase();
@@ -80,6 +83,8 @@ class _QuizHistoryScreenState extends ConsumerState<QuizHistoryScreen> {
                 }).toList();
                 return _buildList(completedDocs);
               },
+                ),
+              ),
             ),
           ),
         ),
