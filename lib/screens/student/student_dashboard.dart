@@ -27,6 +27,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:focus_mate/providers/schedule_provider.dart';
 import 'package:focus_mate/core/theme_picker.dart';
+import 'package:focus_mate/screens/shared/feedback_screen.dart';
 
 /// Entry point that redirects back to the auth gate.
 ///
@@ -1111,6 +1112,31 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard>
                   onTap: () {
                     Navigator.pop(context);
                     showThemePicker(context, ref);
+                  },
+                ),
+                Divider(
+                  color: isDark ? Colors.white12 : Colors.black12,
+                  height: 1,
+                ),
+                ListTile(
+                  leading: Icon(
+                    Icons.feedback_outlined,
+                    color: isDark ? Colors.amberAccent : Colors.orange,
+                  ),
+                  title: Text("Send Feedback", style: TextStyle(color: textColor)),
+                  subtitle: Text(
+                    "Report bugs or suggest features",
+                    style: TextStyle(
+                      color: isDark ? Colors.white38 : Colors.black38,
+                      fontSize: 12,
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      this.context,
+                      MaterialPageRoute(builder: (_) => const FeedbackScreen()),
+                    );
                   },
                 ),
                 Divider(

@@ -9,12 +9,79 @@ import 'package:focus_mate/core/screen_capture_service.dart';
 class PermissionManager {
   static const MethodChannel _channel = MethodChannel('com.example.focus_mate/blocker');
 
+  /// Tracks whether the user has already acknowledged the data-collection
+  /// consent dialog in this app session. Reset to false on cold start.
+  static bool _consentAcknowledged = false;
+
+  /// Shows a one-time consent dialog disclosing data-collection practices.
+  /// Returns [true] if the user taps "I Agree", [false] if they cancel.
+  static Future<bool> _showConsentDialogIfNeeded(BuildContext context) async {
+    if (_consentAcknowledged) return true;
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final agreed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          "Data & Privacy Notice",
+          style: TextStyle(
+            color: isDark ? Colors.white : Colors.black87,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Text(
+          "This app collects device usage statistics and screen captures "
+          "during active study schedules to enable linked parents/companions "
+          "to monitor academic progress and block distracting apps.",
+          style: TextStyle(
+            color: isDark ? Colors.white70 : Colors.black54,
+            height: 1.5,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(
+              "Cancel",
+              style: TextStyle(
+                color: isDark ? Colors.grey : Colors.grey.shade600,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blueAccent,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text("I Agree"),
+          ),
+        ],
+      ),
+    );
+
+    final userAgreed = agreed ?? false;
+    if (userAgreed) _consentAcknowledged = true;
+    return userAgreed;
+  }
+
   // Check if we have permission to see app usage, if not, ask for it
   static Future<bool> checkUsageStats(BuildContext context) async {
     bool granted = (await UsageStats.checkUsagePermission()) ?? false;
     if (granted) return true;
 
     if (context.mounted) {
+      // Show consent dialog before redirecting to Android Settings
+      final agreed = await _showConsentDialogIfNeeded(context);
+      if (!agreed || !context.mounted) return false;
+
       _showDialog(
         context,
         "Usage Access Required",
@@ -32,6 +99,10 @@ class PermissionManager {
       if (enabled) return true;
 
       if (context.mounted) {
+        // Show consent dialog before redirecting to Android Settings
+        final agreed = await _showConsentDialogIfNeeded(context);
+        if (!agreed || !context.mounted) return false;
+
         await _showDialogAsync(
           context,
           "Accessibility Service Required",
@@ -62,6 +133,10 @@ class PermissionManager {
       if (status.isGranted) return true;
 
       if (context.mounted) {
+        // Show consent dialog before redirecting to Android Settings
+        final agreed = await _showConsentDialogIfNeeded(context);
+        if (!agreed || !context.mounted) return false;
+
         _showDialog(
           context,
           "Notifications Required",
@@ -82,6 +157,10 @@ class PermissionManager {
       if (status.isGranted) return true;
 
       if (context.mounted) {
+        // Show consent dialog before redirecting to Android Settings
+        final agreed = await _showConsentDialogIfNeeded(context);
+        if (!agreed || !context.mounted) return false;
+
         await _showDialogAsync(
           context,
           "Allow Background Activity",

@@ -304,17 +304,38 @@ class SnapshotService : Service() {
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val ch = NotificationChannel(CHANNEL_ID, "Screen Monitoring", NotificationManager.IMPORTANCE_LOW)
+            val ch = NotificationChannel(
+                CHANNEL_ID,
+                "Study Session Monitor",
+                // IMPORTANCE_DEFAULT so the notification banner is shown prominently
+                NotificationManager.IMPORTANCE_DEFAULT
+            ).apply {
+                description = "Visible while FocusMate is monitoring an active study schedule"
+                // Prevent the user from silencing this channel while a session is running
+                setShowBadge(false)
+            }
             getSystemService(NotificationManager::class.java).createNotificationChannel(ch)
         }
     }
 
     private fun createNotification(): Notification =
         NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("FocusMate")
-            .setContentText("Screen monitoring active")
+            .setContentTitle("FocusMate – Study Session Active")
+            .setContentText("Monitoring active study session")
+            .setStyle(
+                NotificationCompat.BigTextStyle()
+                    .bigText(
+                        "Screen activity is being monitored so your linked parent/companion " +
+                        "can track academic progress and block distracting apps."
+                    )
+            )
             .setSmallIcon(R.mipmap.ic_launcher)
+            // PRIORITY_DEFAULT renders as a standard heads-up notification on first appearance
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            // Ongoing = true makes it non-dismissible by the user while the service is alive
             .setOngoing(true)
+            // Show the notification immediately on Android 12+ (no 10-second deferral)
+            .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
             .build()
 }
 

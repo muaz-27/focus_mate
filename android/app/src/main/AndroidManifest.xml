@@ -66,10 +66,14 @@
                 android:resource="@xml/accessibility_service_config" />
         </service>
 
-        <!-- 🔹 SCREEN CAPTURE SERVICE -->
+        <!-- 🔹 SCREEN CAPTURE SERVICE
+             foregroundServiceType="mediaProjection|specialUse":
+               • mediaProjection — required by Android to use the MediaProjection API in a foreground service
+               • specialUse     — required because this service performs continuous background monitoring
+             Both types must also have their corresponding <uses-permission> declared above (already present). -->
         <service
             android:name=".SnapshotService"
-            android:foregroundServiceType="mediaProjection"
+            android:foregroundServiceType="mediaProjection|specialUse"
             android:exported="false" />
 
     </application>

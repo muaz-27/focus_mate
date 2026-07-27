@@ -14,6 +14,7 @@ import 'package:focus_mate/theme/app_colors.dart';
 import 'package:focus_mate/theme/app_theme.dart';
 import 'package:focus_mate/core/notification_service.dart';
 import 'package:focus_mate/core/theme_picker.dart';
+import 'package:focus_mate/screens/shared/feedback_screen.dart';
 
 /// Dashboard for parents to manage linked children and enforce restrictions.
 class ParentDashboard extends ConsumerStatefulWidget {
@@ -227,6 +228,26 @@ class _ParentDashboardState extends ConsumerState<ParentDashboard> {
                 onTap: () {
                   Navigator.pop(sheetCtx);
                   showThemePicker(context, ref);
+                },
+              ),
+              Divider(color: isDark ? Colors.white12 : Colors.black12, height: 1),
+              ListTile(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                leading: Icon(
+                  Icons.feedback_outlined,
+                  color: isDark ? Colors.amberAccent : Colors.orange,
+                ),
+                title: Text('Send Feedback', style: TextStyle(color: textColor)),
+                subtitle: Text(
+                  'Report bugs or suggest features',
+                  style: TextStyle(color: isDark ? Colors.white38 : Colors.black38, fontSize: 12),
+                ),
+                onTap: () {
+                  Navigator.pop(sheetCtx);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const FeedbackScreen()),
+                  );
                 },
               ),
               Divider(color: isDark ? Colors.white12 : Colors.black12, height: 1),
